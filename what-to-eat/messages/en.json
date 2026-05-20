@@ -1,0 +1,59 @@
+{
+  "navigation": {
+    "brand": "What to eat",
+    "recommend": "Recommend",
+    "openAiKey": "OpenAI key",
+    "language": "中文",
+    "signIn": "Sign in"
+  },
+  "auth": {
+    "title": "Sign in",
+    "description": "Continue with Google or GitHub to generate meal recommendations.",
+    "signInWithGoogle": "Continue with Google",
+    "signInWithGitHub": "Continue with GitHub",
+    "loading": "Opening sign-in window...",
+    "error": "Sign-in failed. Try again.",
+    "close": "Close"
+  },
+  "home": {
+    "pageLabel": "What to eat home page",
+    "title": "What to eat today",
+    "primaryAction": "Start"
+  },
+  "recommend": {
+    "title": "Generate a meal recommendation",
+    "description": "The recommendation endpoint validates auth, OpenAI key state, locale, temporary preferences, and server-side rate limits before real model calls are added.",
+    "generate": "Generate",
+    "modelsTitle": "Fixed models",
+    "textModel": "Structured recommendation: {model}",
+    "imageModel": "Meal image: {model}"
+  },
+  "openAiKey": {
+    "title": "OpenAI API key",
+    "description": "Only user-owned OpenAI developer API keys are supported. ChatGPT Plus, Pro, or other consumer subscriptions are not supported.",
+    "fieldLabel": "API key",
+    "placeholder": "sk-...",
+    "save": "Save key",
+    "validate": "Re-validate",
+    "imageVerificationNote": "gpt-image-2 may require your OpenAI organization to complete verification before image generation is available."
+  },
+  "preferences": {
+    "title": "Food preferences",
+    "empty": "The preferences shell is ready. Real persistence will be connected in the next database task."
+  },
+  "history": {
+    "title": "Recommendation history",
+    "empty": "The history shell is ready. Saved recommendations will appear here after real generation is connected."
+  },
+  "errors": {
+    "unauthenticated": "Please sign in first.",
+    "validationError": "The submitted content is invalid.",
+    "missingOpenAiKey": "Configure an OpenAI API key first.",
+    "invalidOpenAiKey": "The OpenAI API key is invalid.",
+    "rateLimited": "Too many requests. Try again later.",
+    "modelResponseInvalid": "The model response format is invalid. Try again.",
+    "upstreamOpenAiError": "The OpenAI request failed. Try again later.",
+    "configurationError": "The server is missing required configuration.",
+    "notImplemented": "This feature is not connected to the real service yet."
+  }
+}

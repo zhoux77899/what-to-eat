@@ -1,0 +1,312 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 42 32% 98%;
+  --foreground: 210 18% 16%;
+  --card: 0 0% 100%;
+  --card-foreground: 210 18% 16%;
+  --muted: 210 18% 94%;
+  --muted-foreground: 210 10% 42%;
+  --primary: 156 48% 28%;
+  --primary-foreground: 0 0% 100%;
+  --accent: 24 82% 54%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 72% 48%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 210 18% 88%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  min-height: 100vh;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+.home-hero {
+  --hero-ink: #5b311c;
+  --hero-cream: #f9f3e9;
+  --hero-paper: #fffaf2;
+  --hero-menu-paper: #d8aa72;
+  --hero-menu-paper-deep: #c58f5c;
+  --hero-salmon: #e99380;
+  align-items: end;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--hero-paper) 78%, transparent) 0%,
+      transparent 28%,
+      color-mix(in srgb, var(--hero-cream) 30%, transparent) 58%,
+      color-mix(in srgb, var(--hero-paper) 72%, transparent) 100%
+    ),
+    url("/images/home-table-hero.png") center / cover no-repeat,
+    var(--hero-cream);
+  display: grid;
+  isolation: isolate;
+  justify-items: center;
+  min-height: 100svh;
+  overflow: hidden;
+  padding: clamp(1.25rem, 4vw, 3rem);
+  position: relative;
+}
+
+.home-paper-button {
+  --paper-button-bg:
+    linear-gradient(90deg, transparent 0 0.45rem, color-mix(in srgb, var(--hero-ink) 18%, transparent) 0.47rem 0.5rem, transparent 0.52rem 100%),
+    linear-gradient(135deg, #e6bd83 0%, var(--hero-menu-paper) 52%, var(--hero-menu-paper-deep) 100%);
+  --paper-button-border: 2px;
+  --paper-button-radius: 1.15rem 0.65rem 1rem 0.75rem / 0.82rem 1.05rem 0.75rem 1rem;
+  --paper-button-inner-border: 1.5px;
+  --paper-button-inner-radius: 1rem 0.58rem 0.9rem 0.7rem / 0.72rem 0.92rem 0.68rem 0.9rem;
+  --paper-button-inner-inset: 0.23rem;
+  --paper-button-inner-opacity: 0.55;
+  --paper-button-paper-ring: 0.22rem;
+  --paper-button-offset-x: 0.26rem;
+  --paper-button-offset-y: 0.3rem;
+  --paper-button-shadow-y: 1.15rem;
+  --paper-button-shadow-blur: 2.25rem;
+  --paper-button-shadow-alpha: 18%;
+  --paper-button-hover-paper-ring: 0.27rem;
+  --paper-button-hover-offset-x: 0.34rem;
+  --paper-button-hover-offset-y: 0.38rem;
+  --paper-button-hover-shadow-y: 1.35rem;
+  --paper-button-hover-shadow-blur: 2.6rem;
+  --paper-button-hover-shadow-alpha: 22%;
+  --paper-button-active-paper-ring: 0.22rem;
+  --paper-button-active-offset-x: 0.18rem;
+  --paper-button-active-offset-y: 0.22rem;
+  --paper-button-active-shadow-y: 0.8rem;
+  --paper-button-active-shadow-blur: 1.5rem;
+  --paper-button-active-shadow-alpha: 16%;
+  --paper-button-rest-transform: none;
+  --paper-button-hover-transform: var(--paper-button-rest-transform);
+  --paper-button-active-transform: var(--paper-button-rest-transform);
+  align-items: center;
+  background: var(--paper-button-bg);
+  border: var(--paper-button-border) solid var(--hero-ink);
+  border-radius: var(--paper-button-radius);
+  box-shadow:
+    0 0 0 var(--paper-button-paper-ring) color-mix(in srgb, var(--hero-paper) 86%, transparent),
+    var(--paper-button-offset-x) var(--paper-button-offset-y) 0 var(--hero-ink),
+    0 var(--paper-button-shadow-y) var(--paper-button-shadow-blur) color-mix(in srgb, var(--hero-ink) var(--paper-button-shadow-alpha), transparent);
+  color: var(--hero-ink);
+  display: inline-flex;
+  font-weight: 800;
+  justify-content: center;
+  line-height: 1;
+  position: relative;
+  text-decoration: none;
+  text-wrap: pretty;
+  transform: var(--paper-button-rest-transform);
+  transition:
+    box-shadow 180ms ease,
+    filter 180ms ease,
+    transform 180ms ease;
+}
+
+.home-paper-button::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  border: var(--paper-button-inner-border) solid color-mix(in srgb, var(--hero-paper) 72%, var(--hero-ink));
+  border-radius: var(--paper-button-inner-radius);
+  inset: var(--paper-button-inner-inset);
+  opacity: var(--paper-button-inner-opacity);
+}
+
+.home-paper-button:hover {
+  box-shadow:
+    0 0 0 var(--paper-button-hover-paper-ring) color-mix(in srgb, var(--hero-paper) 94%, transparent),
+    var(--paper-button-hover-offset-x) var(--paper-button-hover-offset-y) 0 var(--hero-ink),
+    0 var(--paper-button-hover-shadow-y) var(--paper-button-hover-shadow-blur) color-mix(in srgb, var(--hero-ink) var(--paper-button-hover-shadow-alpha), transparent);
+  filter: saturate(1.03);
+  transform: var(--paper-button-hover-transform);
+}
+
+.home-paper-button:active {
+  box-shadow:
+    0 0 0 var(--paper-button-active-paper-ring) color-mix(in srgb, var(--hero-paper) 90%, transparent),
+    var(--paper-button-active-offset-x) var(--paper-button-active-offset-y) 0 var(--hero-ink),
+    0 var(--paper-button-active-shadow-y) var(--paper-button-active-shadow-blur) color-mix(in srgb, var(--hero-ink) var(--paper-button-active-shadow-alpha), transparent);
+  transform: var(--paper-button-active-transform);
+}
+
+.home-paper-button:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--hero-paper) 72%, var(--hero-ink));
+  outline-offset: 4px;
+}
+
+.home-paper-button-label {
+  position: relative;
+  z-index: 1;
+}
+
+.home-hero-cta {
+  --paper-button-rest-transform: rotate(-1.5deg);
+  --paper-button-hover-transform: rotate(-1.5deg) translateY(-2px) scale(1.02);
+  --paper-button-active-transform: rotate(-1.5deg) translateY(1px) scale(0.99);
+  font-size: 1rem;
+  gap: 0.55rem;
+  height: 3.25rem;
+  margin-block-end: clamp(1.5rem, 7vh, 4.5rem);
+  min-width: 10.25rem;
+  padding: 0.42rem 1.45rem 0.42rem 0.95rem;
+}
+
+.home-hero-cta::after {
+  background: color-mix(in srgb, var(--hero-salmon) 70%, var(--hero-paper));
+  border: 1.5px solid color-mix(in srgb, var(--hero-ink) 78%, var(--hero-menu-paper));
+  border-radius: 0.22rem;
+  content: "";
+  height: 1.08rem;
+  pointer-events: none;
+  position: absolute;
+  right: 0.72rem;
+  top: -0.48rem;
+  transform: rotate(8deg);
+  width: 1.8rem;
+  z-index: 1;
+}
+
+.home-paper-button-icon {
+  --paper-button-icon-stroke: 1.45;
+  color: var(--hero-ink);
+  display: block;
+  flex: 0 0 auto;
+  height: 2.08rem;
+  overflow: visible;
+  position: relative;
+  transform: rotate(-3deg);
+  width: 2.08rem;
+  z-index: 2;
+}
+
+.home-paper-button-icon-mark {
+  transform-origin: 32px 32px;
+}
+
+.home-paper-button-icon-bowl,
+.home-paper-button-icon-bowl-foot,
+.home-paper-button-icon-bowl-lip,
+.home-paper-button-icon-bowl-petal,
+.home-paper-button-icon-chopstick,
+.home-paper-button-icon-rice,
+.home-paper-button-icon-rice-mark {
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: var(--paper-button-icon-stroke);
+  vector-effect: non-scaling-stroke;
+}
+
+.home-paper-button-icon-bowl {
+  fill: color-mix(in srgb, var(--hero-paper) 46%, var(--hero-menu-paper));
+}
+
+.home-paper-button-icon-bowl-foot {
+  fill: color-mix(in srgb, var(--hero-paper) 58%, var(--hero-menu-paper));
+}
+
+.home-paper-button-icon-rice {
+  fill: color-mix(in srgb, var(--hero-paper) 88%, white);
+}
+
+.home-paper-button-icon-bowl-petal {
+  fill: none;
+  opacity: 0.82;
+  stroke: color-mix(in srgb, var(--hero-salmon) 72%, var(--hero-ink));
+}
+
+.home-paper-button-icon-rice-mark {
+  fill: none;
+  opacity: 0.72;
+  stroke: color-mix(in srgb, var(--hero-menu-paper) 70%, var(--hero-ink));
+}
+
+.home-paper-button-icon-chopstick {
+  fill: color-mix(in srgb, var(--hero-menu-paper) 62%, var(--hero-salmon));
+}
+
+.home-hero-cta-label {
+  text-shadow:
+    0.05rem 0.05rem 0 color-mix(in srgb, var(--hero-paper) 66%, transparent),
+    -0.03rem 0.04rem 0 color-mix(in srgb, var(--hero-paper) 42%, transparent);
+}
+
+.home-language-toggle {
+  --paper-button-bg: linear-gradient(135deg, #f2d2a2 0%, #dfb77f 58%, #cfa06b 100%);
+  --paper-button-border: 1.5px;
+  --paper-button-radius: 0.88rem 0.55rem 0.78rem 0.62rem / 0.62rem 0.82rem 0.58rem 0.76rem;
+  --paper-button-inner-border: 1px;
+  --paper-button-inner-radius: 0.74rem 0.48rem 0.68rem 0.54rem / 0.52rem 0.7rem 0.5rem 0.64rem;
+  --paper-button-inner-inset: 0.18rem;
+  --paper-button-inner-opacity: 0.48;
+  --paper-button-paper-ring: 0.18rem;
+  --paper-button-offset-x: 0.18rem;
+  --paper-button-offset-y: 0.22rem;
+  --paper-button-shadow-y: 0.75rem;
+  --paper-button-shadow-blur: 1.4rem;
+  --paper-button-shadow-alpha: 14%;
+  --paper-button-hover-paper-ring: 0.2rem;
+  --paper-button-hover-offset-x: 0.24rem;
+  --paper-button-hover-offset-y: 0.28rem;
+  --paper-button-hover-shadow-y: 0.9rem;
+  --paper-button-hover-shadow-blur: 1.65rem;
+  --paper-button-hover-shadow-alpha: 17%;
+  --paper-button-active-paper-ring: 0.16rem;
+  --paper-button-active-offset-x: 0.12rem;
+  --paper-button-active-offset-y: 0.16rem;
+  --paper-button-active-shadow-y: 0.45rem;
+  --paper-button-active-shadow-blur: 1rem;
+  --paper-button-active-shadow-alpha: 12%;
+  --paper-button-rest-transform: rotate(1.2deg);
+  --paper-button-hover-transform: rotate(1.2deg) translateY(-1px);
+  --paper-button-active-transform: rotate(1.2deg) translateY(1px);
+  font-size: 0.875rem;
+  gap: 0.42rem;
+  min-height: 2.35rem;
+  padding: 0.38rem 0.78rem;
+  right: clamp(1rem, 3.2vw, 2.75rem);
+  text-wrap: nowrap;
+  top: clamp(1rem, 3.2vw, 2.5rem);
+  position: absolute;
+  z-index: 2;
+}
+
+@media (max-width: 720px) {
+  .home-hero {
+    background-position: 50% 50%;
+    padding-inline: 1rem;
+  }
+
+  .home-hero-cta {
+    margin-block-end: max(1.5rem, env(safe-area-inset-bottom));
+    max-width: calc(100vw - 2rem);
+  }
+
+  .home-language-toggle {
+    font-size: 0.8125rem;
+    right: 1rem;
+    top: max(1rem, env(safe-area-inset-top));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hero-cta,
+  .home-language-toggle {
+    transition: none;
+  }
+
+  .home-hero-cta:hover {
+    transform: rotate(-1.5deg);
+  }
+
+  .home-language-toggle:hover {
+    transform: rotate(1.2deg);
+  }
+}
