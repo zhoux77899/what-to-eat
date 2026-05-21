@@ -83,6 +83,7 @@ describe("ProtectedLink", () => {
   beforeEach(() => {
     useAuthMock.mockReset();
     startSso.mockReset();
+    window.history.replaceState(null, "", "/zh");
   });
 
   it("opens the auth modal instead of navigating when the user is signed out", () => {
@@ -117,5 +118,29 @@ describe("ProtectedLink", () => {
 
     expect(preventNavigation).toHaveBeenCalledOnce();
     expect(screen.queryByRole("dialog", { name: "登录" })).not.toBeInTheDocument();
+  });
+
+  it("falls back to the locale app path when a sign-in query contains an external return target", async () => {
+    useAuthMock.mockReturnValue({ isLoaded: true, isSignedIn: false });
+    startSso.mockResolvedValue({ error: null });
+    vi.spyOn(window, "open").mockReturnValue(null);
+    window.history.replaceState(null, "", "/zh?signIn=1&returnTo=https%3A%2F%2Fevil.test%2Ftrap");
+
+    renderWithIntl(
+      <AuthModalProvider locale="zh">
+        <div />
+      </AuthModalProvider>
+    );
+
+    fireEvent.click(await screen.findByRole("button", { name: "使用 Google 登录" }));
+
+    await waitFor(() => {
+      expect(startSso).toHaveBeenCalledWith({
+        strategy: "oauth_google",
+        redirectUrl: "/zh/app",
+        redirectCallbackUrl: "/zh/sso-callback",
+        popup: undefined
+      });
+    });
   });
 });

@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 import { AuthModal } from "@/components/auth/auth-modal";
+import { normalizeAuthReturnTo } from "@/lib/auth-return";
 
 type AuthModalContextValue = {
   requestSignIn: (returnTo?: string) => void;
@@ -20,9 +21,9 @@ export function AuthModalProvider({ locale, children }: AuthModalProviderProps) 
   const [returnTo, setReturnTo] = useState<string | undefined>();
 
   const requestSignIn = useCallback((nextReturnTo?: string) => {
-    setReturnTo(nextReturnTo);
+    setReturnTo(normalizeAuthReturnTo(locale, nextReturnTo));
     setOpen(true);
-  }, []);
+  }, [locale]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);

@@ -1,6 +1,8 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import Link from "next/link";
 
+import { ProtectedLink } from "@/components/auth/protected-link";
+
 function HomeButtonIcon() {
   return (
     <svg
@@ -81,10 +83,10 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         <HomeButtonIcon />
         <span className="home-paper-button-label">{navigationT("language")}</span>
       </Link>
-      <Link className="home-paper-button home-hero-cta" href={`/${locale}/app`}>
+      <ProtectedLink className="home-paper-button home-hero-cta" href={`/${locale}/app`}>
         <HomeButtonIcon />
         <span className="home-paper-button-label home-hero-cta-label">{t("primaryAction")}</span>
-      </Link>
+      </ProtectedLink>
     </main>
   );
 }

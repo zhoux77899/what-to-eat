@@ -1,11 +1,11 @@
 "use client";
 
-import { ClerkProvider, UserButton, useAuth } from "@clerk/nextjs";
+import { UserButton, useAuth } from "@clerk/nextjs";
 import { KeyRound, Languages, Utensils } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
-import { AuthModalProvider, useAuthModal } from "@/components/auth/auth-modal-provider";
+import { useAuthModal } from "@/components/auth/auth-modal-provider";
 import { ProtectedLink } from "@/components/auth/protected-link";
 import { Button } from "@/components/ui/button";
 
@@ -15,13 +15,7 @@ type AppShellProps = {
 };
 
 export function AppShell({ locale, children }: AppShellProps) {
-  return (
-    <ClerkProvider>
-      <AuthModalProvider locale={locale}>
-        <AppShellContent locale={locale}>{children}</AppShellContent>
-      </AuthModalProvider>
-    </ClerkProvider>
-  );
+  return <AppShellContent locale={locale}>{children}</AppShellContent>;
 }
 
 function AppShellContent({ locale, children }: AppShellProps) {
