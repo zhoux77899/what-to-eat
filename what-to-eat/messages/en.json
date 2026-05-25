@@ -13,6 +13,7 @@
     "signInWithGitHub": "Continue with GitHub",
     "loading": "Opening sign-in window...",
     "error": "Sign-in failed. Try again.",
+    "configurationError": "Clerk sign-in is not configured yet. Configure the Clerk environment variables, then restart the development server.",
     "close": "Close"
   },
   "home": {

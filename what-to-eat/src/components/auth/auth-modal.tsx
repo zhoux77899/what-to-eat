@@ -128,13 +128,10 @@ export function AuthModal({ locale, open, returnTo, onClose }: AuthModalProps) {
     setHasError(false);
 
     try {
-      const popup = window.open("", "what-to-eat-oauth", "width=520,height=720");
-
       const result = await signInSignal.signIn.sso({
         strategy,
         redirectUrl: completeUrl,
-        redirectCallbackUrl: `/${locale}/sso-callback`,
-        popup: popup ?? undefined
+        redirectCallbackUrl: `/${locale}/sso-callback`
       });
 
       if (result.error) {

@@ -3,17 +3,9 @@ import createMiddleware from "next-intl/middleware";
 import { NextResponse } from "next/server";
 
 import { routing } from "@/i18n/routing";
+import { hasUsableClerkConfig } from "@/lib/clerk-config";
 
 const intlMiddleware = createMiddleware(routing);
-
-function hasUsableClerkConfig() {
-  return Boolean(
-    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
-      process.env.CLERK_SECRET_KEY &&
-      process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY !== "pk_test_dummy" &&
-      process.env.CLERK_SECRET_KEY !== "sk_test_dummy"
-  );
-}
 
 function isProtectedPath(pathname: string) {
   return /^\/(zh|en)\/(app|settings|preferences|history)(\/|$)/.test(pathname);

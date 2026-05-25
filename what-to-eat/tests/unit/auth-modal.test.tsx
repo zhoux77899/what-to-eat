@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AuthModal } from "@/components/auth/auth-modal";
 import { AuthModalProvider } from "@/components/auth/auth-modal-provider";
+import { AuthRuntimeProvider } from "@/components/auth/auth-runtime-provider";
 import { ProtectedLink } from "@/components/auth/protected-link";
 
 const startSso = vi.fn();
@@ -29,6 +30,7 @@ const messages = {
     signInWithGitHub: "使用 GitHub 登录",
     loading: "正在打开登录窗口...",
     error: "登录失败，请重试。",
+    configurationError: "Clerk 登录尚未配置。请配置 Clerk 环境变量后重启开发服务器。",
     close: "关闭"
   }
 };
@@ -48,7 +50,8 @@ describe("AuthModal", () => {
     vi.spyOn(window, "open").mockReturnValue(null);
   });
 
-  it("starts Google OAuth in a popup and keeps the locale callback", async () => {
+  it("starts Google OAuth with same-page redirect and keeps the locale callback", async () => {
+    const openSpy = vi.spyOn(window, "open");
     renderWithIntl(<AuthModal locale="zh" onClose={vi.fn()} open returnTo="/zh/app" />);
 
     fireEvent.click(screen.getByRole("button", { name: "使用 Google 登录" }));
@@ -57,13 +60,14 @@ describe("AuthModal", () => {
       expect(startSso).toHaveBeenCalledWith({
         strategy: "oauth_google",
         redirectUrl: "/zh/app",
-        redirectCallbackUrl: "/zh/sso-callback",
-        popup: undefined
+        redirectCallbackUrl: "/zh/sso-callback"
       });
     });
+    expect(openSpy).not.toHaveBeenCalled();
   });
 
-  it("starts GitHub OAuth in a popup and keeps the locale callback", async () => {
+  it("starts GitHub OAuth with same-page redirect and keeps the locale callback", async () => {
+    const openSpy = vi.spyOn(window, "open");
     renderWithIntl(<AuthModal locale="zh" onClose={vi.fn()} open returnTo="/zh/settings/openai-key" />);
 
     fireEvent.click(screen.getByRole("button", { name: "使用 GitHub 登录" }));
@@ -72,10 +76,21 @@ describe("AuthModal", () => {
       expect(startSso).toHaveBeenCalledWith({
         strategy: "oauth_github",
         redirectUrl: "/zh/settings/openai-key",
-        redirectCallbackUrl: "/zh/sso-callback",
-        popup: undefined
+        redirectCallbackUrl: "/zh/sso-callback"
       });
     });
+    expect(openSpy).not.toHaveBeenCalled();
+  });
+
+  it("shows a localized error and re-enables provider buttons when SSO fails", async () => {
+    startSso.mockResolvedValue({ error: new Error("Provider failed") });
+    renderWithIntl(<AuthModal locale="zh" onClose={vi.fn()} open returnTo="/zh/app" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "使用 Google 登录" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("登录失败，请重试。");
+    expect(screen.getByRole("button", { name: "使用 Google 登录" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "使用 GitHub 登录" })).toBeEnabled();
   });
 });
 
@@ -138,9 +153,31 @@ describe("ProtectedLink", () => {
       expect(startSso).toHaveBeenCalledWith({
         strategy: "oauth_google",
         redirectUrl: "/zh/app",
-        redirectCallbackUrl: "/zh/sso-callback",
-        popup: undefined
+        redirectCallbackUrl: "/zh/sso-callback"
       });
     });
+  });
+
+  it("shows a configuration error without calling Clerk hooks when Clerk is disabled", () => {
+    useAuthMock.mockImplementation(() => {
+      throw new Error("useAuth should not be called when Clerk is disabled");
+    });
+
+    renderWithIntl(
+      <AuthRuntimeProvider clerkEnabled={false}>
+        <AuthModalProvider locale="zh">
+          <ProtectedLink href="/zh/app">Start</ProtectedLink>
+        </AuthModalProvider>
+      </AuthRuntimeProvider>
+    );
+
+    fireEvent.click(screen.getByRole("link", { name: "Start" }));
+
+    expect(screen.getByRole("dialog", { name: "登录" })).toBeVisible();
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Clerk 登录尚未配置。请配置 Clerk 环境变量后重启开发服务器。"
+    );
+    expect(screen.queryByRole("button", { name: "使用 Google 登录" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "使用 GitHub 登录" })).not.toBeInTheDocument();
   });
 });

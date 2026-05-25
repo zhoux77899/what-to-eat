@@ -6,7 +6,9 @@ import { notFound } from "next/navigation";
 
 import "@/app/globals.css";
 import { AuthModalProvider } from "@/components/auth/auth-modal-provider";
+import { AuthRuntimeProvider } from "@/components/auth/auth-runtime-provider";
 import { routing } from "@/i18n/routing";
+import { hasUsableClerkConfig } from "@/lib/clerk-config";
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -27,15 +29,20 @@ export default async function LocaleLayout({
 
   setRequestLocale(locale);
   const messages = await getMessages();
+  const clerkEnabled = hasUsableClerkConfig();
+
+  const app = (
+    <NextIntlClientProvider messages={messages}>
+      <AuthRuntimeProvider clerkEnabled={clerkEnabled}>
+        <AuthModalProvider locale={locale}>{children}</AuthModalProvider>
+      </AuthRuntimeProvider>
+    </NextIntlClientProvider>
+  );
 
   return (
     <html lang={locale}>
       <body>
-        <ClerkProvider>
-          <NextIntlClientProvider messages={messages}>
-            <AuthModalProvider locale={locale}>{children}</AuthModalProvider>
-          </NextIntlClientProvider>
-        </ClerkProvider>
+        {clerkEnabled ? <ClerkProvider>{app}</ClerkProvider> : app}
       </body>
     </html>
   );

@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 import { useAuthModal } from "@/components/auth/auth-modal-provider";
+import { useAuthRuntime } from "@/components/auth/auth-runtime-provider";
 import { ProtectedLink } from "@/components/auth/protected-link";
 import { Button } from "@/components/ui/button";
 
@@ -21,8 +22,7 @@ export function AppShell({ locale, children }: AppShellProps) {
 function AppShellContent({ locale, children }: AppShellProps) {
   const t = useTranslations("navigation");
   const alternateLocale = locale === "zh" ? "en" : "zh";
-  const { isLoaded, isSignedIn } = useAuth();
-  const { requestSignIn } = useAuthModal();
+  const { clerkEnabled } = useAuthRuntime();
 
   return (
     <div className="min-h-screen">
@@ -48,16 +48,36 @@ function AppShellContent({ locale, children }: AppShellProps) {
                 {t("language")}
               </Link>
             </Button>
-            {isLoaded && !isSignedIn ? (
-              <Button onClick={() => requestSignIn(`/${locale}/app`)}>{t("signIn")}</Button>
-            ) : null}
-            {isLoaded && isSignedIn ? (
-              <UserButton />
-            ) : null}
+            {clerkEnabled ? (
+              <ClerkAuthActions locale={locale} signInLabel={t("signIn")} />
+            ) : (
+              <LocalAuthActions locale={locale} signInLabel={t("signIn")} />
+            )}
           </nav>
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
     </div>
   );
+}
+
+function ClerkAuthActions({ locale, signInLabel }: { locale: string; signInLabel: string }) {
+  const { isLoaded, isSignedIn } = useAuth();
+  const { requestSignIn } = useAuthModal();
+
+  if (isLoaded && !isSignedIn) {
+    return <Button onClick={() => requestSignIn(`/${locale}/app`)}>{signInLabel}</Button>;
+  }
+
+  if (isLoaded && isSignedIn) {
+    return <UserButton />;
+  }
+
+  return null;
+}
+
+function LocalAuthActions({ locale, signInLabel }: { locale: string; signInLabel: string }) {
+  const { requestSignIn } = useAuthModal();
+
+  return <Button onClick={() => requestSignIn(`/${locale}/app`)}>{signInLabel}</Button>;
 }
