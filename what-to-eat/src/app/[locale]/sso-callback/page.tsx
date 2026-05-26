@@ -20,11 +20,18 @@ export default async function SsoCallbackPage({ params }: { params: Promise<{ lo
   }
 
   const fallbackRedirectUrl = `/${locale}/app`;
+  const t = await getTranslations("auth");
 
   return (
-    <AuthenticateWithRedirectCallback
-      signInFallbackRedirectUrl={fallbackRedirectUrl}
-      signUpFallbackRedirectUrl={fallbackRedirectUrl}
-    />
+    <main className="mx-auto grid min-h-screen max-w-xl place-items-center px-4 py-12">
+      <div className="grid gap-4 text-center">
+        <p className="text-sm text-muted-foreground">{t("callbackLoading")}</p>
+        <div id="clerk-captcha" />
+        <AuthenticateWithRedirectCallback
+          signInFallbackRedirectUrl={fallbackRedirectUrl}
+          signUpFallbackRedirectUrl={fallbackRedirectUrl}
+        />
+      </div>
+    </main>
   );
 }

@@ -14,6 +14,7 @@
     "loading": "正在打开登录窗口...",
     "error": "登录失败，请重试。",
     "configurationError": "Clerk 登录尚未配置。请配置 Clerk 环境变量后重启开发服务器。",
+    "callbackLoading": "正在完成登录...",
     "close": "关闭"
   },
   "home": {
