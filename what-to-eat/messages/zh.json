@@ -1,7 +1,11 @@
 {
   "navigation": {
     "brand": "今天吃什么",
+    "appNavigation": "应用导航",
     "recommend": "生成推荐",
+    "menu": "菜单",
+    "preferences": "饮食偏好",
+    "history": "推荐历史",
     "openAiKey": "OpenAI 密钥",
     "language": "English",
     "signIn": "登录"

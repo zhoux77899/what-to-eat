@@ -1,7 +1,11 @@
 {
   "navigation": {
     "brand": "What to eat",
+    "appNavigation": "App navigation",
     "recommend": "Recommend",
+    "menu": "Menu",
+    "preferences": "Food preferences",
+    "history": "History",
     "openAiKey": "OpenAI key",
     "language": "中文",
     "signIn": "Sign in"

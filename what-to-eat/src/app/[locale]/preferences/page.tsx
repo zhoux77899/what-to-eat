@@ -1,7 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { AppShell } from "@/components/app-shell";
-import { Card } from "@/components/ui/card";
 
 export default async function PreferencesPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -10,11 +9,14 @@ export default async function PreferencesPage({ params }: { params: Promise<{ lo
 
   return (
     <AppShell locale={locale}>
-      <section className="space-y-4">
-        <h1 className="text-3xl font-semibold">{t("title")}</h1>
-        <Card>
-          <p className="text-muted-foreground">{t("empty")}</p>
-        </Card>
+      <section className="app-page app-workbench-page">
+        <div className="app-page-heading">
+          <h1 className="app-page-title">{t("title")}</h1>
+        </div>
+
+        <section className="app-workbench-surface app-workbench-empty">
+          <p className="app-page-description">{t("empty")}</p>
+        </section>
       </section>
     </AppShell>
   );
