@@ -1,5 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AuthModal } from "@/components/auth/auth-modal";
@@ -91,6 +93,17 @@ describe("AuthModal", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("登录失败，请重试。");
     expect(screen.getByRole("button", { name: "使用 Google 登录" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "使用 GitHub 登录" })).toBeEnabled();
+  });
+
+  it("uses Radix Dialog primitives for modal focus management", () => {
+    const source = readFileSync(
+      path.join(process.cwd(), "src", "components", "auth", "auth-modal.tsx"),
+      "utf8"
+    );
+
+    expect(source).toContain('@radix-ui/react-dialog');
+    expect(source).toContain("Dialog.Root");
+    expect(source).toContain("Dialog.Content");
   });
 });
 

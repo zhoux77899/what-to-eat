@@ -1,9 +1,9 @@
 import type { NextFetchEvent, NextRequest } from "next/server";
 
-import rootProxy from "../proxy";
+import requestProxy from "@/server/request-proxy";
 
 export default function proxy(request: NextRequest, event: NextFetchEvent) {
-  return rootProxy(request, event);
+  return requestProxy(request, event);
 }
 
 export const config = {

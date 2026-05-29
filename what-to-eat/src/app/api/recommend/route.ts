@@ -35,8 +35,15 @@ export async function POST(request: NextRequest) {
     return fail("RATE_LIMITED");
   }
 
-  void mergePreferences(DEFAULT_PREFERENCES, parsed.data.temporaryOverrides);
-  void windowStart.toISOString();
+  const effectivePreferences = mergePreferences(
+    DEFAULT_PREFERENCES,
+    parsed.data.temporaryOverrides
+  );
+  const rateLimitWindowStartIso = windowStart.toISOString();
+
+  if (!effectivePreferences.effective.locale || !rateLimitWindowStartIso) {
+    return fail("VALIDATION_ERROR");
+  }
 
   return fail("MISSING_OPENAI_KEY");
 }

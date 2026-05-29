@@ -1,8 +1,9 @@
 "use client";
 
 import { useSignIn } from "@clerk/nextjs";
+import * as Dialog from "@radix-ui/react-dialog";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 type AuthModalProps = {
   locale: string;
@@ -97,27 +98,14 @@ export function AuthModal({ locale, open, returnTo, onClose }: AuthModalProps) {
   const [pendingStrategy, setPendingStrategy] = useState<OAuthStrategy | null>(null);
   const [hasError, setHasError] = useState(false);
 
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onClose();
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onClose, open]);
-
-  if (!open) {
-    return null;
-  }
-
   const completeUrl = returnTo ?? `/${locale}/app`;
   const isSignInLoaded = signInSignal.fetchStatus !== "fetching" && Boolean(signInSignal.signIn);
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      onClose();
+    }
+  };
 
   const startOAuth = async (strategy: OAuthStrategy) => {
     if (!isSignInLoaded || !signInSignal.signIn) {
@@ -144,69 +132,58 @@ export function AuthModal({ locale, open, returnTo, onClose }: AuthModalProps) {
   };
 
   return (
-    <div
-      className="auth-modal-backdrop"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) {
-          onClose();
-        }
-      }}
-    >
-      <div
-        aria-labelledby="auth-modal-title"
-        aria-modal="true"
-        className="auth-modal-card"
-        role="dialog"
-      >
-        <div className="auth-modal-pin" aria-hidden="true" />
-        <div className="auth-modal-header">
-          <div className="auth-modal-copy">
-            <h2 className="auth-modal-title" id="auth-modal-title">
-              {t("title")}
-            </h2>
-            <p className="auth-modal-description">{t("description")}</p>
-          </div>
-          <button
-            aria-label={t("close")}
-            className="auth-modal-close"
-            onClick={onClose}
-            type="button"
-          >
-            <CloseStickerIcon />
-          </button>
-        </div>
+    <Dialog.Root open={open} onOpenChange={handleOpenChange}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="auth-modal-backdrop">
+          <Dialog.Content className="auth-modal-card">
+            <div className="auth-modal-pin" aria-hidden="true" />
+            <div className="auth-modal-header">
+              <div className="auth-modal-copy">
+                <Dialog.Title className="auth-modal-title">{t("title")}</Dialog.Title>
+                <Dialog.Description className="auth-modal-description">
+                  {t("description")}
+                </Dialog.Description>
+              </div>
+              <Dialog.Close asChild>
+                <button aria-label={t("close")} className="auth-modal-close" type="button">
+                  <CloseStickerIcon />
+                </button>
+              </Dialog.Close>
+            </div>
 
-        <div className="auth-provider-list">
-          <button
-            className="auth-provider-button auth-provider-button-google"
-            disabled={!isSignInLoaded || pendingStrategy !== null}
-            onClick={() => void startOAuth("oauth_google")}
-            type="button"
-          >
-            <GoogleStickerIcon />
-            <span className="auth-provider-button-label">
-              {pendingStrategy === "oauth_google" ? t("loading") : t("signInWithGoogle")}
-            </span>
-          </button>
-          <button
-            className="auth-provider-button auth-provider-button-github"
-            disabled={!isSignInLoaded || pendingStrategy !== null}
-            onClick={() => void startOAuth("oauth_github")}
-            type="button"
-          >
-            <GitHubStickerIcon />
-            <span className="auth-provider-button-label">
-              {pendingStrategy === "oauth_github" ? t("loading") : t("signInWithGitHub")}
-            </span>
-          </button>
-        </div>
+            <div className="auth-provider-list">
+              <button
+                className="auth-provider-button auth-provider-button-google"
+                disabled={!isSignInLoaded || pendingStrategy !== null}
+                onClick={() => void startOAuth("oauth_google")}
+                type="button"
+              >
+                <GoogleStickerIcon />
+                <span className="auth-provider-button-label">
+                  {pendingStrategy === "oauth_google" ? t("loading") : t("signInWithGoogle")}
+                </span>
+              </button>
+              <button
+                className="auth-provider-button auth-provider-button-github"
+                disabled={!isSignInLoaded || pendingStrategy !== null}
+                onClick={() => void startOAuth("oauth_github")}
+                type="button"
+              >
+                <GitHubStickerIcon />
+                <span className="auth-provider-button-label">
+                  {pendingStrategy === "oauth_github" ? t("loading") : t("signInWithGitHub")}
+                </span>
+              </button>
+            </div>
 
-        {hasError ? (
-          <p className="auth-modal-error" role="alert">
-            {t("error")}
-          </p>
-        ) : null}
-      </div>
-    </div>
+            {hasError ? (
+              <p className="auth-modal-error" role="alert">
+                {t("error")}
+              </p>
+            ) : null}
+          </Dialog.Content>
+        </Dialog.Overlay>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }
