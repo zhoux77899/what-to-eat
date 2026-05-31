@@ -2,7 +2,7 @@
 
 `what-to-eat` is a Vercel-ready Next.js application for generating structured meal recommendations from a user's food preferences and recommendation history.
 
-The first version uses an OpenAI-only BYOK model: each user supplies their own OpenAI developer API key. The server is responsible for encrypting stored keys, validating requests, calling fixed OpenAI models, saving recommendation history, and returning structured JSON results.
+The deployed first version uses an OpenAI-only BYOK model: each user supplies their own OpenAI developer API key. The server is responsible for encrypting stored keys, validating requests, calling fixed OpenAI models, saving recommendation history, and returning structured JSON results. Local development may opt into a separate Local Codex Mode to validate the same application flow with locally authenticated Codex access.
 
 ## Product boundary
 
@@ -14,14 +14,16 @@ Version-one scope includes:
 - Structured meal recommendations using the fixed text model `gpt-5.5`.
 - Optional meal image generation using the fixed image model `gpt-image-2`.
 - Server-side API key encryption and lightweight recommendation rate limiting.
+- An opt-in Local Codex Mode for local end-to-end text and image validation through `@openai/codex-sdk` and the locally authenticated Codex CLI.
 
 Version one does not support:
 
-- ChatGPT Plus, ChatGPT Pro, Codex subscriptions, Claude subscriptions, or other consumer subscription quota.
+- ChatGPT Plus, ChatGPT Pro, Codex subscriptions, or other consumer subscription quota as deployed application quota.
 - Platform-owned OpenAI API keys.
 - Custom provider URLs.
 - DeepSeek, Anthropic, or arbitrary model providers.
 - Streaming model output.
+- Local Codex Mode in Vercel Preview or Production.
 
 ## Current status
 
@@ -37,6 +39,7 @@ The repository is an application skeleton under active development. The product 
 | Recommendation history | Scaffolded | Schema and page shell are present. The API currently returns an empty list. |
 | Recommendation generation | Scaffolded | Request validation, preference merging, stable error codes, and rate-limit constants are present. OpenAI calls, database-backed limits, result validation, and history writes are not connected yet. |
 | Meal images | Planned within version one | The fixed `gpt-image-2` model id is defined, but image generation is not connected yet. |
+| Local Codex Mode | Planned for local development | The local server adapter will use `@openai/codex-sdk` and the locally authenticated Codex CLI to validate structured text and meal image flows without changing the deployed BYOK boundary. |
 
 ## Stack
 
@@ -46,6 +49,7 @@ The repository is an application skeleton under active development. The product 
 - next-intl with `/zh` and `/en` locale routes
 - Tailwind CSS with local shadcn-style primitives
 - Vitest unit tests and Playwright smoke tests
+- `@openai/codex-sdk` for the planned opt-in local-development adapter
 
 ## Local development
 
@@ -60,6 +64,19 @@ corepack pnpm dev
 
 Open `http://127.0.0.1:3000/zh` for the default Chinese route or `http://127.0.0.1:3000/en` for English.
 
+### Local generation modes
+
+Use the production-equivalent path when validating OpenAI API key storage, validation, and deployed behavior. This path requires a user-owned OpenAI developer API key.
+
+Local development may instead opt into Local Codex Mode. The Next.js server adapter invokes `@openai/codex-sdk`, which starts the locally authenticated Codex CLI, to generate structured recommendation text and request meal images through the local Codex toolchain. The adapter must validate the same application schemas and return safe business errors when local capabilities are unavailable.
+
+Authenticate the local Codex CLI through an eligible ChatGPT plan before enabling the adapter. Local Codex Mode is a development convenience, not a deployable provider or a replacement for OpenAI API key validation.
+
+References:
+
+- [Using Codex with your ChatGPT plan](https://help.openai.com/en/articles/11369540-using-codex-with-your-chatgpt-plan)
+- [Codex SDK](https://github.com/openai/codex/blob/main/sdk/typescript/README.md)
+
 ## Environment variables
 
 Copy `what-to-eat/.env.example` to `what-to-eat/.env.local` and configure:
@@ -68,6 +85,12 @@ Copy `what-to-eat/.env.example` to `what-to-eat/.env.local` and configure:
 - `CLERK_SECRET_KEY`
 - `DATABASE_URL`
 - `MASTER_ENCRYPTION_KEY`
+
+Local Codex Mode adds one optional local-only environment variable:
+
+- `LOCAL_CODEX_ENABLED=true`
+
+Do not configure `LOCAL_CODEX_ENABLED` in Vercel. The adapter must also refuse activation outside a local development process.
 
 `MASTER_ENCRYPTION_KEY` must be a base64-encoded 32-byte key. Generate one in PowerShell:
 
@@ -127,7 +150,7 @@ Before deploying:
 6. Run lint, unit tests, smoke tests, and a production build locally.
 7. Complete the unconnected runtime flows listed in the status tables before treating the application as production-ready.
 
-The project does not rely on a persistent local filesystem and does not configure platform-owned OpenAI API keys.
+The deployed project does not rely on a persistent local filesystem, does not configure platform-owned OpenAI API keys, and must not enable Local Codex Mode.
 
 ## Verification
 

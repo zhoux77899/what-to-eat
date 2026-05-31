@@ -4,7 +4,7 @@
 
 - Check the current repository state before changing code or documentation, and do not overwrite user changes.
 - When a requirement has an important unresolved fork, call out the fork, provide a recommended answer, and ask only one key question at a time.
-- The project has not been scaffolded yet, so implementation advice must serve the confirmed product boundaries and deployment target first.
+- The project has been scaffolded, so implementation advice must preserve the confirmed product boundaries and deployment target while building on the existing application.
 - All project documentation, source code, code comments, identifiers, commit messages, test names, and developer-facing strings must be written in English.
 - User-facing UI copy must be implemented through i18n resources instead of hard-coded strings.
 
@@ -12,23 +12,24 @@
 
 Project name: `what-to-eat`
 
-Goal: build a full-stack web application deployed on Vercel that helps users generate food recommendations based on their preferences, recommendation history, and selected model provider.
+Goal: build a full-stack web application deployed on Vercel that helps users generate food recommendations and optional meal images with GPT models based on their preferences and recommendation history.
 
 Confirmed product boundaries:
 
 - The application requires user authentication.
 - The first version supports both Google login and GitHub login.
-- The application integrates with model provider APIs.
-- Model API keys are provided by users.
-- The platform does not provide, embed, proxy with, or pay for platform-owned model API keys.
-- The application supports a fixed set of model providers instead of arbitrary custom providers.
+- The deployed application integrates only with the OpenAI API.
+- OpenAI developer API keys are provided by users.
+- The deployed platform does not provide, embed, proxy with, or pay for platform-owned OpenAI API keys.
+- The application supports fixed GPT text and image models instead of arbitrary providers, base URLs, or model ids.
 - The database stores user configuration, model key metadata, preferences, and recommendation history.
 - Recommendation results use structured JSON as the primary data format, not plain natural language text.
 - The application stores long-term user food preferences and allows per-request temporary overrides.
-- Model calls using user-owned API keys still need lightweight rate limiting to prevent accidental loops, repeated clicks, and proxy abuse.
+- Model calls using user-owned OpenAI API keys still need lightweight rate limiting to prevent accidental loops, repeated clicks, and proxy abuse.
 - The first version does not support streaming output. The server waits for the complete structured JSON response, validates it, saves it, and then returns it.
 - The first version supports i18n. The default language is Chinese, and the first supported languages are Chinese and English.
-- The application does not support using ChatGPT Plus/Pro, Codex subscriptions, Claude Pro/Max, Claude Code, or similar product subscriptions as model API quota.
+- The deployed application does not support using ChatGPT Plus/Pro, Codex subscriptions, or similar product subscriptions as OpenAI API quota.
+- Local development may opt into Local Codex Mode to validate structured GPT text and meal image generation through locally authenticated Codex access.
 
 ## Recommended Stack
 
@@ -39,12 +40,12 @@ Preferred stack:
 - Authentication: Clerk
 - Database: Neon Postgres
 - ORM: Drizzle
-- Model calls: Next.js Route Handlers that proxy provider API calls on the server
+- Model calls: Next.js Route Handlers that call the OpenAI API on the server; local development may opt into a server-only Codex SDK adapter
 - i18n: next-intl or an equivalent Next.js i18n solution
 
 Why this stack:
 
-- The project needs authentication state, database access, server-side key decryption, model API proxying, protected routes, and i18n. Next.js fits this Vercel-hosted full-stack shape better than a Vite SPA.
+- The project needs authentication state, database access, server-side OpenAI key decryption, OpenAI API calls, protected routes, and i18n. Next.js fits this Vercel-hosted full-stack shape better than a Vite SPA.
 - Clerk is a strong fit for quickly implementing Google and GitHub OAuth login.
 - Neon Postgres fits Vercel's serverless execution model.
 - Drizzle is lightweight and keeps the database schema explicit.
@@ -67,40 +68,39 @@ Implementation requirements:
 - Business user records in the database must map to the Clerk user id.
 - Never trust a user id submitted from the client.
 
-## Model Provider Strategy
+## Model Strategy
 
-The application supports a fixed provider list and does not allow arbitrary custom base URLs.
+The deployed application supports OpenAI only and does not expose a provider picker, arbitrary base URLs, or arbitrary model ids.
 
-First supported providers:
+Fixed version-one models:
 
-- OpenAI
-- DeepSeek
-- Anthropic
+- Structured meal recommendation text: `gpt-5.5`
+- Optional meal image generation: `gpt-image-2`
 
-Design requirements:
+Production requirements:
 
-- OpenAI and DeepSeek may share an OpenAI-compatible adapter, but provider ids, base URLs, and model lists must be defined in a server-side allowlist.
-- Anthropic must use a separate adapter.
-- The client may only select providers and models that the server allows.
-- Do not let users submit arbitrary base URLs. This avoids SSRF risk, proxy abuse, and unclear provider boundaries.
+- The deployed application may call only fixed OpenAI models defined in a server-side allowlist.
+- The browser must not select arbitrary model ids or submit arbitrary base URLs.
+- Production and Vercel Preview must use user-owned OpenAI developer API keys.
+- Product copy must clearly state that deployed generation uses OpenAI developer API keys, not consumer subscription quota.
 
-Explicitly unsupported:
+Local development exception:
 
-- ChatGPT Plus/Pro subscription quota
-- Codex subscription or Codex product quota
-- Claude Pro/Max subscription quota
-- Claude Code subscription quota
-
-Product copy must clearly state that the application only supports user-owned developer API keys, not consumer subscriptions or coding tool subscriptions.
+- Local Codex Mode may be enabled only in a local development process.
+- The server-side adapter uses `@openai/codex-sdk`, which invokes the locally authenticated Codex CLI.
+- Local Codex Mode may generate structured recommendation text and meal images for end-to-end validation.
+- Local Codex Mode must validate the same application result schemas and return safe business errors when local capabilities are unavailable.
+- Local Codex Mode must refuse activation in Vercel Preview, Vercel Production, and any non-development process.
+- Direct CLI use is reserved for troubleshooting the application adapter.
 
 ## User API Key Management
 
-The project uses a BYOK model: Bring Your Own Key.
+The deployed project uses an OpenAI-only BYOK model: Bring Your Own Key.
 
 Security requirements:
 
-- User API keys may only be submitted to the server.
-- The browser must not call model providers directly.
+- User OpenAI API keys may only be submitted to the server.
+- The browser must not call OpenAI directly.
 - The database must never store plaintext API keys.
 - The server must encrypt API keys with `MASTER_ENCRYPTION_KEY` before storing them.
 - Prefer an authenticated encryption scheme such as AES-256-GCM.
@@ -109,21 +109,34 @@ Security requirements:
 - Full API keys must never be returned to the client.
 - Logs must never include API keys, request headers, full upstream error objects, or sensitive payloads.
 - Users must be able to delete, replace, and re-validate their own keys.
-- Even though model costs are paid through user-owned keys, the platform must still rate-limit recommendation calls.
+- Even though production model costs are paid through user-owned OpenAI keys, the platform must still rate-limit recommendation calls.
 
 Default data flow:
 
 ```text
 User logs in
-  -> User selects a model provider in settings
-  -> User submits their own API key
+  -> User submits their own OpenAI API key
   -> Server validates the key
   -> Server encrypts and stores the key
   -> Recommendation API decrypts the key
-  -> Server calls the selected model provider
+  -> Server calls the fixed OpenAI text model
+  -> Server optionally calls the fixed OpenAI image model
   -> Server validates and normalizes the structured JSON result
   -> Server saves the recommendation result
   -> Server returns the result to the client
+```
+
+Local development data flow:
+
+```text
+Developer enables Local Codex Mode in a local process
+  -> User submits a recommendation request through the application UI
+  -> Recommendation API selects the local server adapter
+  -> The adapter invokes @openai/codex-sdk
+  -> The SDK starts the locally authenticated Codex CLI
+  -> Codex generates structured recommendation text and an optional meal image
+  -> Server validates and normalizes the same application result schemas
+  -> Server returns or saves the result through the normal application flow
 ```
 
 ## Initial Database Model
@@ -137,13 +150,11 @@ users
   created_at
   updated_at
 
-user_model_keys
+user_openai_keys
   id
   user_id
-  provider
   encrypted_api_key
   key_hint
-  default_model
   status
   last_validated_at
   last_used_at
@@ -164,12 +175,14 @@ preferences
 recommendations
   id
   user_id
-  provider
-  model
+  text_model
+  image_model
   locale
   effective_preferences_json
   input_json
   result_json
+  image_metadata_json
+  image_requested
   error_code
   created_at
 ```
@@ -181,20 +194,19 @@ Data modeling requirements:
 - Temporary overrides affect only the current recommendation and must not be written back to long-term preferences automatically.
 - User preferences must store the default locale.
 - A single recommendation request may temporarily override the output locale.
-- Recommendation history must preserve the provider and model used at generation time.
+- Recommendation history must preserve the text and image model ids used at generation time.
 - Recommendation history must preserve the effective preference snapshot and locale used at generation time.
-- Model keys may become invalid, be replaced, or be deleted without breaking historical recommendation records.
+- OpenAI keys may become invalid, be replaced, or be deleted without breaking historical recommendation records.
 
 ## API Boundaries
 
 Recommended endpoints:
 
 ```text
-GET    /api/model-keys
-POST   /api/model-keys
-PATCH  /api/model-keys/:id
-DELETE /api/model-keys/:id
-POST   /api/model-keys/:id/validate
+GET    /api/openai-key
+POST   /api/openai-key
+DELETE /api/openai-key
+POST   /api/openai-key/validate
 POST   /api/recommend
 GET    /api/recommendations
 GET    /api/preferences
@@ -205,13 +217,14 @@ API requirements:
 
 - All APIs require authentication by default unless they are explicitly public.
 - Every user-data query must be filtered by the current authenticated user.
-- `/api/recommend` must confirm that the current user has a valid configured key before calling a model provider.
+- `/api/recommend` must confirm that the current user has a valid configured OpenAI key before calling OpenAI in the deployed application.
+- `/api/recommend` may use Local Codex Mode without an OpenAI key only when the server has confirmed it is running in an explicitly enabled local development process.
 - `/api/recommend` must merge long-term user preferences with per-request temporary overrides and save the effective preference snapshot.
 - `/api/recommend` must require structured JSON from the model and validate the result shape on the server.
 - `/api/recommend` must include the current user locale or per-request locale in the prompt and require user-visible text fields to use that language.
 - `/api/recommend` must not use streaming in the first version. It must parse the model response, validate the schema, and write recommendation history before returning.
-- Missing model key errors must return a stable business error code that lets the client route the user to model settings.
-- Upstream provider errors must be mapped to safe business errors.
+- Missing OpenAI key errors must return a stable business error code that lets the client route the user to OpenAI key settings.
+- Upstream OpenAI and Local Codex errors must be mapped to safe business errors.
 - Do not expose full upstream responses to the client.
 - If the model response cannot be parsed or does not match the schema, return a safe business error and allow the client to suggest retrying.
 
@@ -225,7 +238,7 @@ Default strategy:
 - Default to at most 5 recommendation requests per user per minute.
 - Consider a daily soft limit, such as 100 recommendation requests per user per day.
 - Return a stable business error code such as `RATE_LIMITED` when the limit is hit.
-- Rate-limited requests must not consume the user's model API key.
+- Rate-limited requests must not consume the user's OpenAI API key or invoke Local Codex Mode.
 
 Implementation guidance:
 
@@ -277,14 +290,14 @@ DATABASE_URL
 MASTER_ENCRYPTION_KEY
 ```
 
-If provider SDKs are used, do not configure platform-owned model API keys. This product uses user-owned API keys only.
+Do not configure platform-owned OpenAI API keys. The deployed product uses user-owned OpenAI API keys only. Do not configure Local Codex Mode in Vercel.
 
 ## Implementation Principles
 
 - Prioritize the smallest deployable loop: login, key configuration, recommendation generation, and history.
-- Do not add too many providers, complex plans, team workspaces, or billing systems in the first version.
-- Do not scatter provider call logic across API handlers. Use provider adapters.
-- Do not expose key decryption details, provider base URLs, or full upstream error details to the client.
+- Do not add additional production providers, complex plans, team workspaces, or billing systems in the first version.
+- Do not scatter generation logic across API handlers. Use one production OpenAI adapter and one development-only Local Codex adapter.
+- Do not expose key decryption details or full upstream error details to the client.
 - Do not implement arbitrary custom base URLs unless the security boundary is re-evaluated.
-- Every new provider must include model allowlists, validation logic, error mapping, and tests.
+- Keep Local Codex Mode opt-in, server-only, local-development-only, and fail-closed outside local development.
 - All source code and code comments must be written in English.
