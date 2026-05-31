@@ -63,6 +63,9 @@ Thumbs.db
 .tmp/
 tmp/
 
+# Local architecture notes
+docs/adr/
+
 # AI agents and assistants
 .agents/
 .codex/

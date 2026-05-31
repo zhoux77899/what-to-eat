@@ -1,0 +1,65 @@
+{
+  "navigation": {
+    "brand": "今天吃什么",
+    "appNavigation": "应用导航",
+    "recommend": "生成推荐",
+    "menu": "菜单",
+    "preferences": "饮食偏好",
+    "history": "推荐历史",
+    "openAiKey": "OpenAI 密钥",
+    "language": "English",
+    "signIn": "登录"
+  },
+  "auth": {
+    "title": "登录",
+    "description": "使用 Google 或 GitHub 登录后继续生成餐食推荐。",
+    "signInWithGoogle": "使用 Google 登录",
+    "signInWithGitHub": "使用 GitHub 登录",
+    "loading": "正在打开登录窗口...",
+    "error": "登录失败，请重试。",
+    "configurationError": "Clerk 登录尚未配置。请配置 Clerk 环境变量后重启开发服务器。",
+    "callbackLoading": "正在完成登录...",
+    "close": "关闭"
+  },
+  "home": {
+    "pageLabel": "今天吃什么首页",
+    "title": "今天吃什么",
+    "primaryAction": "开始推荐"
+  },
+  "recommend": {
+    "title": "生成餐食推荐",
+    "description": "推荐接口会先验证登录、OpenAI 密钥状态、语言、临时偏好和服务端限流，再进入真实模型调用。",
+    "generate": "生成",
+    "modelsTitle": "固定模型",
+    "textModel": "结构化推荐：{model}",
+    "imageModel": "菜品图片：{model}"
+  },
+  "openAiKey": {
+    "title": "OpenAI API 密钥",
+    "description": "只支持用户自己的 OpenAI developer API key。不会支持 ChatGPT Plus、Pro 或其他消费订阅额度。",
+    "fieldLabel": "API 密钥",
+    "placeholder": "sk-...",
+    "save": "保存密钥",
+    "validate": "重新验证",
+    "imageVerificationNote": "gpt-image-2 可能需要你的 OpenAI 组织完成验证后才能使用。"
+  },
+  "preferences": {
+    "title": "饮食偏好",
+    "empty": "偏好表单骨架已准备好，真实保存逻辑会在下一步接入数据库。"
+  },
+  "history": {
+    "title": "推荐历史",
+    "empty": "历史记录骨架已准备好，真实推荐保存后会显示在这里。"
+  },
+  "errors": {
+    "unauthenticated": "请先登录。",
+    "validationError": "提交内容无效。",
+    "missingOpenAiKey": "请先配置 OpenAI API 密钥。",
+    "invalidOpenAiKey": "OpenAI API 密钥无效。",
+    "rateLimited": "请求过于频繁，请稍后再试。",
+    "modelResponseInvalid": "模型响应格式无效，请重试。",
+    "upstreamOpenAiError": "OpenAI 请求失败，请稍后再试。",
+    "configurationError": "服务端配置不完整。",
+    "notImplemented": "该功能尚未接入真实服务。"
+  }
+}
