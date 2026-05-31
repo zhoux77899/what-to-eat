@@ -185,7 +185,7 @@ Each unchecked task is intentionally bounded so it can receive a focused impleme
 - [ ] Confirm the schema remains OpenAI-only with `user_openai_keys`.
 - [ ] Generate the first Drizzle migration.
 - [ ] Commit the generated SQL files and Drizzle metadata without renaming generated artifacts.
-- [x] Use the existing `db:migrate` script to apply migrations against `DATABASE_URL`.
+- [ ] Use the existing `db:migrate` script to apply migrations against `DATABASE_URL`.
 - [ ] Apply the migration to the development database.
 - [ ] Confirm all tables, foreign keys, and unique indexes exist in Neon.
 
