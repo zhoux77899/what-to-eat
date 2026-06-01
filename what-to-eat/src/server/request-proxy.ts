@@ -8,7 +8,7 @@ import { hasUsableClerkConfig } from "@/lib/clerk-config";
 const intlMiddleware = createMiddleware(routing);
 
 function isProtectedPath(pathname: string) {
-  return /^\/(zh|en)\/(app|settings|preferences|history)(\/|$)/.test(pathname);
+  return /^\/(zh|en)\/(app|settings|preferences|fridge|history)(\/|$)/.test(pathname);
 }
 
 function isApiPath(pathname: string) {

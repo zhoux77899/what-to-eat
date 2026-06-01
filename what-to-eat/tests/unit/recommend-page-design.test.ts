@@ -50,6 +50,7 @@ describe("signed-in page surface design", () => {
 
   it("keeps the recommendation page minimal while preserving an accessible title and generate action", () => {
     const pageSource = readProjectFile("src/app/[locale]/app/page.tsx");
+    const workbenchSource = readProjectFile("src/components/recommend-workbench.tsx");
     const hasHiddenHeading =
       pageSource.includes('className="sr-only"') &&
       pageSource.includes('id="recommend-page-title"') &&
@@ -63,8 +64,8 @@ describe("signed-in page surface design", () => {
     expect(pageSource).not.toContain("MEAL_IMAGE_MODEL");
     expect(pageSource).not.toContain("TEXT_RECOMMENDATION_MODEL");
     expect(hasHiddenHeading || hasAriaLabel).toBe(true);
-    expect(pageSource).toContain("app-table-button");
-    expect(pageSource).toContain('t("generate")');
+    expect(workbenchSource).toContain("app-table-button");
+    expect(workbenchSource).toContain('t("generate")');
   });
 
   it("defines shared full-width workbench surfaces for menu pages without changing the paper card component", () => {

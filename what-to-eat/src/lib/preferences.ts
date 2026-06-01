@@ -1,38 +1,31 @@
 import { DEFAULT_LOCALE, type Locale } from "@/lib/locale";
 
-export type BudgetLevel = "low" | "medium" | "high";
-
 export type FoodPreferences = {
   locale: Locale;
-  dietaryRestrictions: string[];
-  dislikedFoods: string[];
-  budgetLevel: BudgetLevel;
-  locationHint: string | null;
+  preferenceText: string;
 };
 
-export type PreferenceOverrides = Partial<FoodPreferences>;
+export type RecommendationPreferenceContext = {
+  locale: Locale;
+  preferenceText: string;
+  temporaryRequirement: string | null;
+};
 
 export const DEFAULT_PREFERENCES: FoodPreferences = {
   locale: DEFAULT_LOCALE,
-  dietaryRestrictions: [],
-  dislikedFoods: [],
-  budgetLevel: "medium",
-  locationHint: null
+  preferenceText: ""
 };
 
-export function mergePreferences(
+export function resolveRecommendationContext(
   longTerm: FoodPreferences,
-  temporaryOverrides: PreferenceOverrides
-) {
+  request: {
+    locale?: Locale;
+    temporaryRequirement?: string | null;
+  }
+): RecommendationPreferenceContext {
   return {
-    longTerm,
-    effective: {
-      locale: temporaryOverrides.locale ?? longTerm.locale,
-      dietaryRestrictions:
-        temporaryOverrides.dietaryRestrictions ?? longTerm.dietaryRestrictions,
-      dislikedFoods: temporaryOverrides.dislikedFoods ?? longTerm.dislikedFoods,
-      budgetLevel: temporaryOverrides.budgetLevel ?? longTerm.budgetLevel,
-      locationHint: temporaryOverrides.locationHint ?? longTerm.locationHint
-    } satisfies FoodPreferences
+    locale: request.locale ?? longTerm.locale,
+    preferenceText: longTerm.preferenceText,
+    temporaryRequirement: request.temporaryRequirement ?? null
   };
 }

@@ -6,6 +6,7 @@ import {
   History,
   KeyRound,
   Languages,
+  Refrigerator,
   SlidersHorizontal,
   Sparkles,
   Utensils
@@ -65,6 +66,16 @@ function AppShellContent({ locale, children }: AppShellProps) {
                 <ChevronDown className="app-nav-icon app-menu-chevron" aria-hidden="true" />
               </summary>
               <div className="app-menu-panel">
+                <ProtectedLink
+                  className={cn(
+                    "app-menu-link",
+                    isCurrentPath(`/${locale}/fridge`) && "app-menu-link-active"
+                  )}
+                  href={`/${locale}/fridge`}
+                >
+                  <Refrigerator className="app-menu-link-icon" aria-hidden="true" />
+                  <span>{t("fridge")}</span>
+                </ProtectedLink>
                 <ProtectedLink
                   className={cn(
                     "app-menu-link",

@@ -5,6 +5,7 @@ import {
   ERROR_MESSAGE_KEYS,
   getHttpStatusForError
 } from "@/lib/errors";
+import { BusinessError } from "@/server/business-error";
 
 export function ok<T>(data: T, init?: ResponseInit) {
   return NextResponse.json({ data }, init);
@@ -20,4 +21,8 @@ export function fail(code: BusinessErrorCode, status = getHttpStatusForError(cod
     },
     { status }
   );
+}
+
+export function failFromError(error: unknown, fallback: BusinessErrorCode = "CONFIGURATION_ERROR") {
+  return fail(error instanceof BusinessError ? error.code : fallback);
 }

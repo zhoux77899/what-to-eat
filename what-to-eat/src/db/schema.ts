@@ -1,8 +1,9 @@
 import {
-  boolean,
-  date,
+  check,
+  index,
   integer,
   jsonb,
+  numeric,
   pgEnum,
   pgTable,
   text,
@@ -10,14 +11,39 @@ import {
   uniqueIndex,
   uuid
 } from "drizzle-orm/pg-core";
-
-import type { FoodPreferences } from "@/lib/preferences";
+import { sql } from "drizzle-orm";
 
 export const openAiKeyStatus = pgEnum("openai_key_status", [
   "validation_required",
   "valid",
   "invalid"
 ]);
+
+export const generatedImageKind = pgEnum("generated_image_kind", ["ingredient", "dish"]);
+
+export const generatedImageStatus = pgEnum("generated_image_status", [
+  "pending",
+  "succeeded",
+  "failed"
+]);
+
+export const generationMode = pgEnum("generation_mode", [
+  "production_openai",
+  "local_codex"
+]);
+
+export const generationActionType = pgEnum("generation_action_type", [
+  "recommendation",
+  "ingredient_image",
+  "dish_image_retry"
+]);
+
+export const rateLimitBucketType = pgEnum("rate_limit_bucket_type", ["minute", "day"]);
+
+export type OpenAiKeyStatus = (typeof openAiKeyStatus.enumValues)[number];
+export type GeneratedImageKind = (typeof generatedImageKind.enumValues)[number];
+export type GenerationMode = (typeof generationMode.enumValues)[number];
+export type GenerationActionType = (typeof generationActionType.enumValues)[number];
 
 export const users = pgTable(
   "users",
@@ -60,10 +86,7 @@ export const preferences = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     locale: text("locale").default("zh").notNull(),
-    dietaryRestrictions: jsonb("dietary_restrictions").$type<string[]>().default([]).notNull(),
-    dislikedFoods: jsonb("disliked_foods").$type<string[]>().default([]).notNull(),
-    budgetLevel: text("budget_level").default("medium").notNull(),
-    locationHint: text("location_hint"),
+    preferenceText: text("preference_text").default("").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull()
   },
@@ -72,40 +95,114 @@ export const preferences = pgTable(
   })
 );
 
-export const recommendations = pgTable("recommendations", {
+export const generatedImages = pgTable("generated_images", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  textModel: text("text_model").notNull(),
-  imageModel: text("image_model"),
-  locale: text("locale").notNull(),
-  effectivePreferencesJson: jsonb("effective_preferences_json").$type<FoodPreferences>().notNull(),
-  inputJson: jsonb("input_json").$type<Record<string, unknown>>().notNull(),
-  resultJson: jsonb("result_json").$type<Record<string, unknown>>(),
-  imageMetadataJson: jsonb("image_metadata_json").$type<Record<string, unknown>>(),
-  imageRequested: boolean("image_requested").default(false).notNull(),
+  kind: generatedImageKind("kind").notNull(),
+  status: generatedImageStatus("status").default("pending").notNull(),
+  model: text("model").notNull(),
+  generationMode: generationMode("generation_mode").notNull(),
+  blobPathname: text("blob_pathname"),
+  publicUrl: text("public_url"),
   errorCode: text("error_code"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull()
 });
 
-export const recommendationRateLimits = pgTable(
-  "recommendation_rate_limits",
+export const fridgeItems = pgTable(
+  "fridge_items",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    clerkUserId: text("clerk_user_id").notNull(),
-    windowStart: timestamp("window_start", { withTimezone: true }).notNull(),
-    windowSeconds: integer("window_seconds").notNull(),
-    requestCount: integer("request_count").default(0).notNull(),
-    dailyDate: date("daily_date").notNull(),
-    dailyCount: integer("daily_count").default(0).notNull(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    normalizedName: text("normalized_name").notNull(),
+    quantity: numeric("quantity", { precision: 12, scale: 3, mode: "number" }).notNull(),
+    unit: text("unit").notNull(),
+    normalizedUnit: text("normalized_unit").notNull(),
+    imageId: uuid("image_id").references(() => generatedImages.id, { onDelete: "set null" }),
+    version: integer("version").default(1).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull()
   },
   (table) => ({
-    rateLimitWindowIdx: uniqueIndex("recommendation_rate_limits_window_idx").on(
+    positiveQuantity: check("fridge_items_positive_quantity", sql`${table.quantity} > 0`),
+    userIngredientUnitIdx: uniqueIndex("fridge_items_user_ingredient_unit_idx").on(
+      table.userId,
+      table.normalizedName,
+      table.normalizedUnit
+    )
+  })
+);
+
+export const recommendations = pgTable(
+  "recommendations",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    locale: text("locale").notNull(),
+    textModel: text("text_model").notNull(),
+    generationMode: generationMode("generation_mode").notNull(),
+    candidateCount: integer("candidate_count").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
+  },
+  (table) => ({
+    candidateCountRange: check(
+      "recommendations_candidate_count_range",
+      sql`${table.candidateCount} between 1 and 5`
+    ),
+    userCreatedAtIdx: index("recommendations_user_created_at_idx").on(
+      table.userId,
+      table.createdAt
+    )
+  })
+);
+
+export const recommendedDishes = pgTable(
+  "recommended_dishes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    recommendationId: uuid("recommendation_id")
+      .notNull()
+      .references(() => recommendations.id, { onDelete: "cascade" }),
+    position: integer("position").notNull(),
+    name: text("name").notNull(),
+    summary: text("summary").notNull(),
+    instructionsJson: jsonb("instructions_json").$type<string[]>().notNull(),
+    estimatedMinutes: integer("estimated_minutes").notNull(),
+    imageId: uuid("image_id").references(() => generatedImages.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
+  },
+  (table) => ({
+    recommendationPositionIdx: uniqueIndex("recommended_dishes_recommendation_position_idx").on(
+      table.recommendationId,
+      table.position
+    )
+  })
+);
+
+export const generationRateLimitBuckets = pgTable(
+  "generation_rate_limit_buckets",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    clerkUserId: text("clerk_user_id").notNull(),
+    actionType: generationActionType("action_type").notNull(),
+    bucketType: rateLimitBucketType("bucket_type").notNull(),
+    bucketStart: timestamp("bucket_start", { withTimezone: true }).notNull(),
+    requestCount: integer("request_count").default(0).notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull()
+  },
+  (table) => ({
+    generationBucketIdx: uniqueIndex("generation_rate_limit_buckets_scope_idx").on(
       table.clerkUserId,
-      table.windowStart,
-      table.dailyDate
+      table.actionType,
+      table.bucketType,
+      table.bucketStart
     )
   })
 );

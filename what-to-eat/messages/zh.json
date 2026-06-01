@@ -4,6 +4,7 @@
     "appNavigation": "应用导航",
     "recommend": "生成推荐",
     "menu": "菜单",
+    "fridge": "冰箱",
     "preferences": "饮食偏好",
     "history": "推荐历史",
     "openAiKey": "OpenAI 密钥",
@@ -28,8 +29,23 @@
   },
   "recommend": {
     "title": "生成餐食推荐",
-    "description": "推荐接口会先验证登录、OpenAI 密钥状态、语言、临时偏好和服务端限流，再进入真实模型调用。",
+    "description": "根据冰箱中的既有食材生成一至五道候选菜。临时要求和食材消耗建议不会写入历史。",
+    "formTitle": "这顿想吃什么",
+    "candidateCount": "候选菜数量",
+    "temporaryRequirement": "本次临时要求",
+    "temporaryRequirementPlaceholder": "例如：今晚想清淡一点，最好 20 分钟内完成",
+    "temporaryNote": "临时要求只影响本次生成。选择一道菜后，可编辑并确认它的食材消耗。",
     "generate": "生成",
+    "estimatedMinutes": "预计 {minutes} 分钟",
+    "consumptionTitle": "建议消耗",
+    "noConsumption": "这道菜没有可确认的冰箱消耗建议。",
+    "confirmConsumption": "确认消耗",
+    "consumptionConfirmed": "已确认消耗",
+    "imageStatus": {
+      "pending": "图片生成中",
+      "failed": "图片生成失败，文字推荐仍然可用",
+      "succeeded": "图片已生成"
+    },
     "modelsTitle": "固定模型",
     "textModel": "结构化推荐：{model}",
     "imageModel": "菜品图片：{model}"
@@ -41,15 +57,54 @@
     "placeholder": "sk-...",
     "save": "保存密钥",
     "validate": "重新验证",
+    "delete": "删除密钥",
+    "currentStatus": "当前状态：{status}；密钥提示：{hint}",
+    "noHint": "尚未配置",
+    "status": {
+      "not_configured": "尚未配置",
+      "validation_required": "等待验证",
+      "valid": "有效",
+      "invalid": "无效"
+    },
     "imageVerificationNote": "gpt-image-2 可能需要你的 OpenAI 组织完成验证后才能使用。"
   },
   "preferences": {
     "title": "饮食偏好",
-    "empty": "偏好表单骨架已准备好，真实保存逻辑会在下一步接入数据库。"
+    "description": "用自然语言记录长期偏好。它会参与后续推荐，但不会作为快照重复保存到推荐历史。",
+    "fieldLabel": "长期偏好",
+    "placeholder": "例如：不吃香菜，偏好清淡家常菜，工作日尽量控制在 30 分钟内。",
+    "save": "保存偏好",
+    "saved": "偏好已保存。"
   },
   "history": {
     "title": "推荐历史",
-    "empty": "历史记录骨架已准备好，真实推荐保存后会显示在这里。"
+    "empty": "尚无推荐历史。生成餐食推荐后，菜品文字和图片状态会显示在这里。",
+    "generatedAt": "生成时间：{date}",
+    "estimatedMinutes": "预计 {minutes} 分钟",
+    "retryImage": "重试图片"
+  },
+  "fridge": {
+    "title": "我的冰箱",
+    "description": "以自然语言食材和自由文本单位管理库存。相同名称和相同单位会自动合并数量。",
+    "addTitle": "添加食材",
+    "editTitle": "编辑食材",
+    "name": "食材名称",
+    "quantity": "数量",
+    "unit": "单位",
+    "add": "加入冰箱",
+    "saveChanges": "保存修改",
+    "cancel": "取消",
+    "edit": "编辑",
+    "delete": "删除",
+    "retryImage": "重试图片",
+    "mergeNote": "例如：番茄 2 个、空心菜 1 把。修改数量或单位不会重新生成图片；修改名称会重新生成。",
+    "empty": "冰箱还是空的。先加入几样现有食材，再生成推荐。",
+    "imageStatus": {
+      "notRequested": "尚未生成图片",
+      "pending": "图片生成中",
+      "succeeded": "图片已生成",
+      "failed": "图片生成失败，可重试"
+    }
   },
   "errors": {
     "unauthenticated": "请先登录。",
@@ -57,8 +112,13 @@
     "missingOpenAiKey": "请先配置 OpenAI API 密钥。",
     "invalidOpenAiKey": "OpenAI API 密钥无效。",
     "rateLimited": "请求过于频繁，请稍后再试。",
+    "fridgeEmpty": "冰箱中还没有食材，请先添加食材。",
+    "fridgeItemNotFound": "找不到该食材。",
+    "fridgeConflict": "冰箱库存已发生变化，请刷新后重新确认消耗。",
+    "dishNotFound": "找不到该历史菜品。",
     "modelResponseInvalid": "模型响应格式无效，请重试。",
     "upstreamOpenAiError": "OpenAI 请求失败，请稍后再试。",
+    "localCodexUnavailable": "本地 Codex 当前无法完成该生成任务。",
     "configurationError": "服务端配置不完整。",
     "notImplemented": "该功能尚未接入真实服务。"
   }

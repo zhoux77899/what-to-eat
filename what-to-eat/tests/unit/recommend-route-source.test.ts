@@ -3,16 +3,17 @@ import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-describe("recommend route skeleton", () => {
-  it("names placeholder calculations instead of discarding them with void", () => {
+describe("recommend route", () => {
+  it("delegates generation without persisting transient recommendation inputs", () => {
     const routeSource = readFileSync(
       path.join(process.cwd(), "src", "app", "api", "recommend", "route.ts"),
       "utf8"
     );
 
-    expect(routeSource).not.toContain("void mergePreferences");
-    expect(routeSource).not.toContain("void windowStart.toISOString()");
-    expect(routeSource).toContain("const effectivePreferences = mergePreferences");
-    expect(routeSource).toContain("const rateLimitWindowStartIso = windowStart.toISOString()");
+    expect(routeSource).toContain("createRecommendation");
+    expect(routeSource).not.toContain("effectivePreferencesJson");
+    expect(routeSource).not.toContain("inputJson");
+    expect(routeSource).not.toContain("resultJson");
+    expect(routeSource).not.toContain("imageMetadataJson");
   });
 });

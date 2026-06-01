@@ -1,27 +1,30 @@
 import type { NextRequest } from "next/server";
 
-import { DEFAULT_PREFERENCES } from "@/lib/preferences";
-import { fail, ok } from "@/server/api-response";
+import { fail, failFromError, ok } from "@/server/api-response";
 import { getCurrentClerkUserId } from "@/server/auth";
+import { ensureUser, getPreferences, savePreferences } from "@/server/data";
 import { parseJsonBody } from "@/server/request";
 import { preferencesSchema } from "@/server/validation";
 
 export async function GET() {
-  const userId = await getCurrentClerkUserId();
+  const clerkUserId = await getCurrentClerkUserId();
 
-  if (!userId) {
+  if (!clerkUserId) {
     return fail("UNAUTHENTICATED");
   }
 
-  return ok({
-    preferences: DEFAULT_PREFERENCES
-  });
+  try {
+    const user = await ensureUser(clerkUserId);
+    return ok({ preferences: await getPreferences(user.id) });
+  } catch (error) {
+    return failFromError(error);
+  }
 }
 
 export async function PUT(request: NextRequest) {
-  const userId = await getCurrentClerkUserId();
+  const clerkUserId = await getCurrentClerkUserId();
 
-  if (!userId) {
+  if (!clerkUserId) {
     return fail("UNAUTHENTICATED");
   }
 
@@ -31,7 +34,10 @@ export async function PUT(request: NextRequest) {
     return fail("VALIDATION_ERROR");
   }
 
-  return ok({
-    preferences: parsed.data
-  });
+  try {
+    const user = await ensureUser(clerkUserId);
+    return ok({ preferences: await savePreferences(user.id, parsed.data) });
+  } catch (error) {
+    return failFromError(error);
+  }
 }

@@ -4,6 +4,7 @@
     "appNavigation": "App navigation",
     "recommend": "Recommend",
     "menu": "Menu",
+    "fridge": "Fridge",
     "preferences": "Food preferences",
     "history": "History",
     "openAiKey": "OpenAI key",
@@ -28,8 +29,23 @@
   },
   "recommend": {
     "title": "Generate a meal recommendation",
-    "description": "The recommendation endpoint validates auth, OpenAI key state, locale, temporary preferences, and server-side rate limits before real model calls are added.",
+    "description": "Generate one to five dish candidates from the ingredients already in your fridge. Temporary requirements and consumption suggestions are not saved to history.",
+    "formTitle": "What sounds good",
+    "candidateCount": "Number of candidates",
+    "temporaryRequirement": "Temporary requirement",
+    "temporaryRequirementPlaceholder": "For example: keep dinner light and finish within 20 minutes",
+    "temporaryNote": "The temporary requirement affects this generation only. After choosing a dish, edit and confirm its ingredient consumption.",
     "generate": "Generate",
+    "estimatedMinutes": "About {minutes} minutes",
+    "consumptionTitle": "Suggested consumption",
+    "noConsumption": "This dish has no fridge consumption suggestions to confirm.",
+    "confirmConsumption": "Confirm consumption",
+    "consumptionConfirmed": "Consumption confirmed",
+    "imageStatus": {
+      "pending": "Generating image",
+      "failed": "Image generation failed. The text recommendation is still available.",
+      "succeeded": "Image generated"
+    },
     "modelsTitle": "Fixed models",
     "textModel": "Structured recommendation: {model}",
     "imageModel": "Meal image: {model}"
@@ -41,15 +57,54 @@
     "placeholder": "sk-...",
     "save": "Save key",
     "validate": "Re-validate",
+    "delete": "Delete key",
+    "currentStatus": "Current status: {status}; key hint: {hint}",
+    "noHint": "not configured",
+    "status": {
+      "not_configured": "not configured",
+      "validation_required": "validation required",
+      "valid": "valid",
+      "invalid": "invalid"
+    },
     "imageVerificationNote": "gpt-image-2 may require your OpenAI organization to complete verification before image generation is available."
   },
   "preferences": {
     "title": "Food preferences",
-    "empty": "The preferences shell is ready. Real persistence will be connected in the next database task."
+    "description": "Describe long-term food preferences in natural language. They guide future recommendations without being copied into history snapshots.",
+    "fieldLabel": "Long-term preference",
+    "placeholder": "For example: avoid cilantro, prefer light home-style meals, and keep weekday cooking under 30 minutes.",
+    "save": "Save preferences",
+    "saved": "Preferences saved."
   },
   "history": {
     "title": "Recommendation history",
-    "empty": "The history shell is ready. Saved recommendations will appear here after real generation is connected."
+    "empty": "No recommendation history yet. Generated dish text and image status will appear here.",
+    "generatedAt": "Generated at: {date}",
+    "estimatedMinutes": "About {minutes} minutes",
+    "retryImage": "Retry image"
+  },
+  "fridge": {
+    "title": "My fridge",
+    "description": "Manage ingredient inventory with natural-language names and free-text units. Matching names and units automatically merge quantities.",
+    "addTitle": "Add ingredient",
+    "editTitle": "Edit ingredient",
+    "name": "Ingredient name",
+    "quantity": "Quantity",
+    "unit": "Unit",
+    "add": "Add to fridge",
+    "saveChanges": "Save changes",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "retryImage": "Retry image",
+    "mergeNote": "For example: 2 tomatoes or 1 bunch of water spinach. Quantity or unit changes keep the image; name changes regenerate it.",
+    "empty": "Your fridge is empty. Add a few ingredients before generating recommendations.",
+    "imageStatus": {
+      "notRequested": "No image requested",
+      "pending": "Generating image",
+      "succeeded": "Image generated",
+      "failed": "Image generation failed. Retry is available."
+    }
   },
   "errors": {
     "unauthenticated": "Please sign in first.",
@@ -57,8 +112,13 @@
     "missingOpenAiKey": "Configure an OpenAI API key first.",
     "invalidOpenAiKey": "The OpenAI API key is invalid.",
     "rateLimited": "Too many requests. Try again later.",
+    "fridgeEmpty": "Your fridge is empty. Add ingredients first.",
+    "fridgeItemNotFound": "The ingredient could not be found.",
+    "fridgeConflict": "Your fridge inventory changed. Refresh and confirm consumption again.",
+    "dishNotFound": "The historical dish could not be found.",
     "modelResponseInvalid": "The model response format is invalid. Try again.",
     "upstreamOpenAiError": "The OpenAI request failed. Try again later.",
+    "localCodexUnavailable": "Local Codex cannot complete this generation task right now.",
     "configurationError": "The server is missing required configuration.",
     "notImplemented": "This feature is not connected to the real service yet."
   }
