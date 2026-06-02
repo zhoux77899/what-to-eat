@@ -70,8 +70,8 @@ This branch implements the MVP application surface, API boundary, Drizzle schema
 
 - [x] Generate and review the first Drizzle SQL migration.
 - [x] Commit `what-to-eat/drizzle/0000_smart_madame_masque.sql` and Drizzle metadata.
-- [ ] Apply it to an isolated Neon development branch through `DATABASE_URL`.
-- [ ] Confirm tables, foreign keys, checks, and indexes in Neon.
+- [x] Apply it to an isolated Neon development branch through `DATABASE_URL`.
+- [x] Confirm tables, foreign keys, checks, and indexes in Neon.
 
 ### Task 8: Add Database-Backed Integration Tests
 
