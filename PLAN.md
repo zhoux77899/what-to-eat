@@ -6,6 +6,10 @@
 
 **Tech Stack:** Next.js 16, TypeScript, Clerk, Neon Postgres, Drizzle ORM, OpenAI JavaScript SDK, Vercel Blob, next-intl, Zod, Vitest, Playwright
 
+## Current Implementation Snapshot
+
+This branch implements the MVP application surface, API boundary, Drizzle schema, initial migration, generation adapters, image storage flow, localized workbench UI, and source-level unit coverage. The remaining work is release readiness: applying the generated migration to an isolated Neon branch, adding database-backed integration tests, running authenticated browser flows, and preparing a Vercel Preview with real Clerk/OpenAI/Blob configuration.
+
 ## Completed MVP Implementation
 
 ### Task 1: Replace the Draft Schema
@@ -65,10 +69,13 @@
 ### Task 7: Generate And Apply The Initial Migration
 
 - [x] Generate and review the first Drizzle SQL migration.
+- [x] Commit `what-to-eat/drizzle/0000_smart_madame_masque.sql` and Drizzle metadata.
 - [ ] Apply it to an isolated Neon development branch through `DATABASE_URL`.
 - [ ] Confirm tables, foreign keys, checks, and indexes in Neon.
 
 ### Task 8: Add Database-Backed Integration Tests
+
+Existing source-level tests check that the data layer uses upserts, batched history writes, and row locking. The release still needs real Postgres behavior coverage.
 
 - [ ] Cover concurrent fridge merges against Postgres.
 - [ ] Cover atomic consumption rollback for stale versions and insufficient quantities.
@@ -76,6 +83,8 @@
 - [ ] Cover lightweight history writes and absence of transient fields.
 
 ### Task 9: Add Authenticated Browser E2E
+
+Existing Playwright smoke tests cover public Chinese and English pages plus authentication gates. Authenticated business workflows remain pending.
 
 - [ ] Cover key save, key validation, fridge CRUD, recommendation generation, consumption confirmation, and history.
 - [ ] Cover failed image state and retry.
@@ -90,12 +99,20 @@
 
 ## Verification
 
+Local branch verification:
+
 ```bash
 cd what-to-eat
 corepack pnpm test
 corepack pnpm lint
 corepack pnpm build
 corepack pnpm test:e2e
+```
+
+Environment-backed release verification:
+
+```bash
+cd what-to-eat
 corepack pnpm db:generate
 corepack pnpm db:migrate
 ```

@@ -2,7 +2,7 @@
 
 `what-to-eat` is a Vercel-ready Next.js application that recommends dishes from a user's refrigerator inventory.
 
-The deployed MVP is OpenAI-only BYOK: each user supplies an OpenAI developer API key. The server encrypts keys, generates structured dish candidates with fixed model `gpt-5.5`, attempts ingredient and dish images with fixed model `gpt-image-2`, uploads successful images to public Vercel Blob storage, and stores lightweight recommendation history.
+The MVP is OpenAI-only BYOK: each user supplies an OpenAI developer API key. The server encrypts keys, generates structured dish candidates with fixed model `gpt-5.5`, attempts ingredient and dish images with fixed model `gpt-image-2`, uploads successful images to public Vercel Blob storage, and stores lightweight recommendation history.
 
 ## Product Boundary
 
@@ -32,8 +32,9 @@ Version one does not persist temporary requirements, consumption suggestions, fr
 | Recommendation generation | Implemented | Structured non-streaming text generation, candidate validation, history persistence, image attempts, and ephemeral consumption suggestions are wired. |
 | Recommendation history | Implemented | History lists saved dishes and image status; failed dish images can be retried. |
 | Local Codex Mode | Partially implemented | Structured text uses the local SDK. Image attempts fail safely because the SDK does not expose generated image bytes. |
-| Database migration | Generated locally | Review and apply the initial Drizzle migration after configuring a Neon development-branch `DATABASE_URL`. |
-| Authenticated browser E2E | Pending | The local verification suite covers unit, lint, build, and anonymous smoke behavior. |
+| Database migration | Generated locally | The initial Drizzle migration is committed under `what-to-eat/drizzle/`; apply it after configuring a Neon development-branch `DATABASE_URL`. |
+| Source-level tests | Implemented | Unit tests cover schema shape, domain validation, source-level data-layer guards, generation mode gating, localized UI structure, and route source constraints. |
+| Authenticated browser E2E | Pending | Current Playwright coverage exercises public locale pages and authentication gates only. Signed-in business workflows still need real Clerk-backed E2E coverage. |
 
 ## Stack
 
@@ -86,15 +87,16 @@ Do not configure `LOCAL_CODEX_ENABLED` in Vercel Preview or Production. Local Co
 
 ## Database Migrations
 
-Point `DATABASE_URL` at an isolated Neon development branch, then run:
+This branch includes the initial migration at `what-to-eat/drizzle/0000_smart_madame_masque.sql`.
+
+Point `DATABASE_URL` at an isolated Neon development branch, then apply the committed migration:
 
 ```bash
 cd what-to-eat
-corepack pnpm db:generate
 corepack pnpm db:migrate
 ```
 
-Review generated SQL before applying it to a shared database.
+Run `corepack pnpm db:generate` only after changing `src/db/schema.ts`, then review the generated SQL before applying it to a shared database.
 
 ## API Routes
 
@@ -113,6 +115,8 @@ Review generated SQL before applying it to a shared database.
 
 ## Verification
 
+Local checks:
+
 ```bash
 cd what-to-eat
 corepack pnpm test
@@ -120,6 +124,8 @@ corepack pnpm lint
 corepack pnpm build
 corepack pnpm test:e2e
 ```
+
+Release checks also require a real Neon development branch, Clerk application, OpenAI developer key, and Vercel Blob token so the database migration and authenticated business workflows can be verified end to end.
 
 ## License
 
