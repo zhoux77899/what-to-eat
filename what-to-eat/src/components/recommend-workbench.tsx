@@ -211,12 +211,15 @@ export function RecommendWorkbench() {
               </div>
               <div className="app-action-row">
                 <Button
+                  className="home-paper-button app-paper-button-compact app-paper-button-primary"
                   disabled={busy || confirmed || dish.consumptions.length === 0}
                   onClick={() => confirm(dish)}
                   type="button"
                 >
-                  <Check className="h-4 w-4" aria-hidden="true" />
-                  {confirmed ? t("consumptionConfirmed") : t("confirmConsumption")}
+                  <Check className="app-button-icon" aria-hidden="true" />
+                  <span className="home-paper-button-label">
+                    {confirmed ? t("consumptionConfirmed") : t("confirmConsumption")}
+                  </span>
                 </Button>
               </div>
             </div>

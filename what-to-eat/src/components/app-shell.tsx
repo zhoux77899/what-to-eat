@@ -60,22 +60,23 @@ function AppShellContent({ locale, children }: AppShellProps) {
               <span className="home-paper-button-label">{t("recommend")}</span>
             </ProtectedLink>
 
+            <ProtectedLink
+              className={cn(
+                "home-paper-button app-nav-primary",
+                isCurrentPath(`/${locale}/fridge`) && "app-nav-primary-active"
+              )}
+              href={`/${locale}/fridge`}
+            >
+              <Refrigerator className="app-nav-icon" aria-hidden="true" />
+              <span className="home-paper-button-label">{t("fridge")}</span>
+            </ProtectedLink>
+
             <details className="app-shell-menu">
               <summary className="home-paper-button app-menu-trigger">
                 <span className="home-paper-button-label">{t("menu")}</span>
                 <ChevronDown className="app-nav-icon app-menu-chevron" aria-hidden="true" />
               </summary>
               <div className="app-menu-panel">
-                <ProtectedLink
-                  className={cn(
-                    "app-menu-link",
-                    isCurrentPath(`/${locale}/fridge`) && "app-menu-link-active"
-                  )}
-                  href={`/${locale}/fridge`}
-                >
-                  <Refrigerator className="app-menu-link-icon" aria-hidden="true" />
-                  <span>{t("fridge")}</span>
-                </ProtectedLink>
                 <ProtectedLink
                   className={cn(
                     "app-menu-link",

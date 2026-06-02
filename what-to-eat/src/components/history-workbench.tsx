@@ -99,9 +99,15 @@ export function HistoryWorkbench() {
                     </p>
                   </div>
                   {dish.imageStatus === "failed" ? (
-                    <Button disabled={busy} onClick={() => retryImage(dish.id)} type="button">
-                      <RefreshCw className="h-4 w-4" aria-hidden="true" />
-                      {t("retryImage")}
+                    <Button
+                      className="home-paper-button app-paper-button-compact app-paper-button-secondary"
+                      disabled={busy}
+                      onClick={() => retryImage(dish.id)}
+                      type="button"
+                      variant="secondary"
+                    >
+                      <RefreshCw className="app-button-icon" aria-hidden="true" />
+                      <span className="home-paper-button-label">{t("retryImage")}</span>
                     </Button>
                   ) : null}
                 </div>

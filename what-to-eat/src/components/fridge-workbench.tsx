@@ -8,6 +8,7 @@ import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getErrorTranslationKey, requestJson } from "@/lib/api-client";
+import { cn } from "@/lib/utils";
 
 type FridgeItem = {
   id: string;
@@ -105,9 +106,81 @@ export function FridgeWorkbench() {
   }
 
   return (
-    <div className="app-workspace-grid">
-      <section className="app-paper-card app-form-card">
-        <span className="app-paper-card-pin" aria-hidden="true" />
+    <div
+      className={cn("app-workspace-grid app-fridge-workspace", editingId && "app-fridge-workspace-editing")}
+    >
+      <section className="app-paper-card app-fridge-inventory-panel">
+        {items.length === 0 ? (
+          <p className="app-muted-text">{t("empty")}</p>
+        ) : (
+          <div className="app-fridge-item-list">
+            {items.map((item) => (
+              <article className="app-fridge-item-row" key={item.id}>
+                <div className="relative aspect-square overflow-hidden rounded-xl border border-current/20 bg-white/50">
+                  {item.imageUrl ? (
+                    <Image
+                      alt={item.name}
+                      className="h-full w-full object-cover"
+                      height={224}
+                      src={item.imageUrl}
+                      unoptimized
+                      width={224}
+                    />
+                  ) : (
+                    <ImageOff className="absolute left-1/2 top-1/2 h-8 w-8 -translate-x-1/2 -translate-y-1/2 opacity-50" />
+                  )}
+                </div>
+                <div className="grid gap-2">
+                  <div>
+                    <h2 className="app-card-title">{item.name}</h2>
+                    <p className="app-muted-text">
+                      {item.quantity} {item.unit}
+                    </p>
+                    <p className="app-muted-text">
+                      {t(`imageStatus.${item.imageStatus ?? "notRequested"}`)}
+                    </p>
+                  </div>
+                  <div className="app-action-row app-action-row-compact">
+                    <Button
+                      className="home-paper-button app-paper-button-compact app-paper-button-secondary"
+                      onClick={() => startEditing(item)}
+                      type="button"
+                      variant="secondary"
+                    >
+                      <Pencil className="app-button-icon" aria-hidden="true" />
+                      <span className="home-paper-button-label">{t("edit")}</span>
+                    </Button>
+                    {item.imageStatus === "failed" ? (
+                      <Button
+                        className="home-paper-button app-paper-button-compact app-paper-button-secondary"
+                        disabled={busy}
+                        onClick={() => retryImage(item.id)}
+                        type="button"
+                        variant="secondary"
+                      >
+                        <RefreshCw className="app-button-icon" aria-hidden="true" />
+                        <span className="home-paper-button-label">{t("retryImage")}</span>
+                      </Button>
+                    ) : null}
+                    <Button
+                      className="home-paper-button app-paper-button-compact app-paper-button-danger"
+                      disabled={busy}
+                      onClick={() => remove(item.id)}
+                      type="button"
+                      variant="ghost"
+                    >
+                      <Trash2 className="app-button-icon" aria-hidden="true" />
+                      <span className="home-paper-button-label">{t("delete")}</span>
+                    </Button>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="app-fridge-form-panel">
         <h2 className="app-card-title">{editingId ? t("editTitle") : t("addTitle")}</h2>
         <form className="grid gap-4" onSubmit={submit}>
           <label className="app-form-field">
@@ -120,30 +193,28 @@ export function FridgeWorkbench() {
               value={form.name}
             />
           </label>
-          <div className="grid grid-cols-2 gap-3">
-            <label className="app-form-field">
-              {t("quantity")}
-              <Input
-                className="app-paper-input"
-                min="0.001"
-                onChange={(event) => setForm({ ...form, quantity: event.target.value })}
-                required
-                step="0.001"
-                type="number"
-                value={form.quantity}
-              />
-            </label>
-            <label className="app-form-field">
-              {t("unit")}
-              <Input
-                className="app-paper-input"
-                maxLength={24}
-                onChange={(event) => setForm({ ...form, unit: event.target.value })}
-                required
-                value={form.unit}
-              />
-            </label>
-          </div>
+          <label className="app-form-field">
+            {t("quantity")}
+            <Input
+              className="app-paper-input"
+              min="0.001"
+              onChange={(event) => setForm({ ...form, quantity: event.target.value })}
+              required
+              step="0.001"
+              type="number"
+              value={form.quantity}
+            />
+          </label>
+          <label className="app-form-field">
+            {t("unit")}
+            <Input
+              className="app-paper-input"
+              maxLength={24}
+              onChange={(event) => setForm({ ...form, unit: event.target.value })}
+              required
+              value={form.unit}
+            />
+          </label>
           <div className="app-action-row">
             <Button className="home-paper-button app-paper-button-primary" disabled={busy}>
               <Plus className="app-button-icon" aria-hidden="true" />
@@ -169,60 +240,6 @@ export function FridgeWorkbench() {
         </form>
         <p className="app-muted-text">{t("mergeNote")}</p>
         {errorKey ? <p className="auth-modal-error">{tErrors(errorKey)}</p> : null}
-      </section>
-
-      <section className="grid gap-4">
-        {items.length === 0 ? (
-          <div className="app-paper-card app-empty-card">
-            <p className="app-muted-text">{t("empty")}</p>
-          </div>
-        ) : (
-          items.map((item) => (
-            <article className="app-paper-card grid gap-4 sm:grid-cols-[7rem_1fr]" key={item.id}>
-              <div className="relative aspect-square overflow-hidden rounded-xl border border-current/20 bg-white/50">
-                {item.imageUrl ? (
-                  <Image
-                    alt={item.name}
-                    className="h-full w-full object-cover"
-                    height={224}
-                    src={item.imageUrl}
-                    unoptimized
-                    width={224}
-                  />
-                ) : (
-                  <ImageOff className="absolute left-1/2 top-1/2 h-8 w-8 -translate-x-1/2 -translate-y-1/2 opacity-50" />
-                )}
-              </div>
-              <div className="grid gap-2">
-                <div>
-                  <h2 className="app-card-title">{item.name}</h2>
-                  <p className="app-muted-text">
-                    {item.quantity} {item.unit}
-                  </p>
-                  <p className="app-muted-text">
-                    {t(`imageStatus.${item.imageStatus ?? "notRequested"}`)}
-                  </p>
-                </div>
-                <div className="app-action-row">
-                  <Button onClick={() => startEditing(item)} type="button" variant="secondary">
-                    <Pencil className="h-4 w-4" aria-hidden="true" />
-                    {t("edit")}
-                  </Button>
-                  {item.imageStatus === "failed" ? (
-                    <Button disabled={busy} onClick={() => retryImage(item.id)} type="button">
-                      <RefreshCw className="h-4 w-4" aria-hidden="true" />
-                      {t("retryImage")}
-                    </Button>
-                  ) : null}
-                  <Button disabled={busy} onClick={() => remove(item.id)} type="button" variant="ghost">
-                    <Trash2 className="h-4 w-4" aria-hidden="true" />
-                    {t("delete")}
-                  </Button>
-                </div>
-              </div>
-            </article>
-          ))
-        )}
       </section>
     </div>
   );

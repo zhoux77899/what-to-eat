@@ -90,12 +90,22 @@ export function OpenAiKeyWorkbench() {
           <ShieldCheck className="app-button-icon" aria-hidden="true" />
           <span className="home-paper-button-label">{t("save")}</span>
         </Button>
-        <Button onClick={validate} type="button" variant="secondary">
-          {t("validate")}
+        <Button
+          className="home-paper-button app-paper-button-compact app-paper-button-secondary"
+          onClick={validate}
+          type="button"
+          variant="secondary"
+        >
+          <span className="home-paper-button-label">{t("validate")}</span>
         </Button>
-        <Button onClick={remove} type="button" variant="ghost">
-          <Trash2 className="h-4 w-4" aria-hidden="true" />
-          {t("delete")}
+        <Button
+          className="home-paper-button app-paper-button-compact app-paper-button-danger"
+          onClick={remove}
+          type="button"
+          variant="ghost"
+        >
+          <Trash2 className="app-button-icon" aria-hidden="true" />
+          <span className="home-paper-button-label">{t("delete")}</span>
         </Button>
       </div>
       <p className="app-muted-text">{t("imageVerificationNote")}</p>
