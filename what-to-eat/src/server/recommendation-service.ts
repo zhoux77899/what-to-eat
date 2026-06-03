@@ -64,9 +64,15 @@ export async function createRecommendation(
     generationMode: mode,
     dishes: result.dishes
   });
+  const persistedDishes = [...saved.dishes].sort((left, right) => left.position - right.position);
   const dishes = await Promise.all(
     result.dishes.map(async (dish, index) => {
-      const persistedDish = saved.dishes[index];
+      const persistedDish = persistedDishes[index];
+
+      if (!persistedDish) {
+        throw new BusinessError("MODEL_RESPONSE_INVALID");
+      }
+
       const image = await generateStoredImage({
         userId: user.id,
         kind: "dish",

@@ -2,7 +2,7 @@ import "dotenv/config";
 
 import { randomUUID } from "node:crypto";
 
-import { inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { createDb } from "@/db";
@@ -155,6 +155,39 @@ describe("database-backed refrigerator behavior", () => {
         code: "RATE_LIMITED"
       }
     });
+  });
+
+  it("does not spend daily capacity on requests blocked by the minute bucket", async () => {
+    const clerkUserId = nextClerkUserId("bucket-minute-before-day");
+    const attempts = RECOMMENDATION_WINDOW_LIMIT + 3;
+
+    const results = await Promise.allSettled(
+      Array.from({ length: attempts }, () =>
+        reserveGenerationCapacity(clerkUserId, "recommendation")
+      )
+    );
+    const fulfilled = results.filter((result) => result.status === "fulfilled");
+    const rejected = results.filter((result) => result.status === "rejected");
+
+    expect(fulfilled).toHaveLength(RECOMMENDATION_WINDOW_LIMIT);
+    expect(rejected).toHaveLength(attempts - RECOMMENDATION_WINDOW_LIMIT);
+
+    const buckets = await db
+      .select({
+        bucketType: generationRateLimitBuckets.bucketType,
+        requestCount: generationRateLimitBuckets.requestCount
+      })
+      .from(generationRateLimitBuckets)
+      .where(
+        and(
+          eq(generationRateLimitBuckets.clerkUserId, clerkUserId),
+          eq(generationRateLimitBuckets.actionType, "recommendation")
+        )
+      );
+
+    const dayBucket = buckets.find((bucket) => bucket.bucketType === "day");
+
+    expect(dayBucket?.requestCount).toBe(RECOMMENDATION_WINDOW_LIMIT);
   });
 
   it("writes lightweight recommendation history without transient request fields", async () => {

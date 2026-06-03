@@ -95,6 +95,37 @@ describe("fridge item inventory rules", () => {
     ]);
   });
 
+  it("rounds planned consumption to the database quantity scale before delete checks", () => {
+    const result = planFridgeConsumption(
+      [
+        {
+          id: "fridge-1",
+          name: "Milk",
+          normalizedName: "milk",
+          quantity: 0.3,
+          unit: "liters",
+          normalizedUnit: "liters",
+          version: 4
+        }
+      ],
+      [
+        {
+          fridgeItemId: "fridge-1",
+          expectedVersion: 4,
+          consumedQuantity: 0.1 + 0.2,
+          unit: "liters"
+        }
+      ]
+    );
+
+    expect(result).toEqual([
+      {
+        fridgeItemId: "fridge-1",
+        action: "delete"
+      }
+    ]);
+  });
+
   it("rejects the whole dish when an inventory version is stale", () => {
     expect(() =>
       planFridgeConsumption(

@@ -37,8 +37,14 @@ export class FridgeConsumptionConflictError extends Error {
   }
 }
 
+const FRIDGE_QUANTITY_SCALE = 3;
+
 function normalizeIdentityPart(value: string) {
   return value.normalize("NFKC").trim().replace(/\s+/g, " ").toLocaleLowerCase("en-US");
+}
+
+function roundFridgeQuantity(value: number) {
+  return Number(value.toFixed(FRIDGE_QUANTITY_SCALE));
 }
 
 export function normalizeFridgeItemIdentity(name: string, unit: string) {
@@ -84,18 +90,20 @@ export function planFridgeConsumption(
 
     const item = itemsById.get(consumption.fridgeItemId);
     const normalizedUnit = normalizeIdentityPart(consumption.unit);
+    const itemQuantity = item ? roundFridgeQuantity(item.quantity) : 0;
+    const consumedQuantity = roundFridgeQuantity(consumption.consumedQuantity);
 
     if (
       !item ||
       item.version !== consumption.expectedVersion ||
       item.normalizedUnit !== normalizedUnit ||
-      consumption.consumedQuantity <= 0 ||
-      consumption.consumedQuantity > item.quantity
+      consumedQuantity <= 0 ||
+      consumedQuantity > itemQuantity
     ) {
       throw new FridgeConsumptionConflictError();
     }
 
-    const nextQuantity = item.quantity - consumption.consumedQuantity;
+    const nextQuantity = roundFridgeQuantity(itemQuantity - consumedQuantity);
 
     return nextQuantity === 0
       ? {

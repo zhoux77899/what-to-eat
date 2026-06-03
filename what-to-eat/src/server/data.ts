@@ -582,9 +582,14 @@ export async function reserveGenerationCapacity(
   };
 
   const minuteCount = await increment("minute", minuteStart);
+
+  if (minuteCount > RECOMMENDATION_WINDOW_LIMIT) {
+    throw new BusinessError("RATE_LIMITED");
+  }
+
   const dailyCount = await increment("day", dayStart);
 
-  if (minuteCount > RECOMMENDATION_WINDOW_LIMIT || dailyCount > RECOMMENDATION_DAILY_SOFT_LIMIT) {
+  if (dailyCount > RECOMMENDATION_DAILY_SOFT_LIMIT) {
     throw new BusinessError("RATE_LIMITED");
   }
 }
