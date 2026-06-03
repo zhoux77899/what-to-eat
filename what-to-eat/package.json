@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint .",
     "test": "vitest run",
+    "test:db": "vitest run --config vitest.integration.config.ts",
     "test:watch": "vitest",
     "test:e2e": "node scripts/run-e2e.mjs",
     "db:generate": "drizzle-kit generate",

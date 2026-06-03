@@ -77,10 +77,10 @@ This branch implements the MVP application surface, API boundary, Drizzle schema
 
 Existing source-level tests check that the data layer uses upserts, batched history writes, and row locking. The release still needs real Postgres behavior coverage.
 
-- [ ] Cover concurrent fridge merges against Postgres.
-- [ ] Cover atomic consumption rollback for stale versions and insufficient quantities.
-- [ ] Cover generation bucket contention.
-- [ ] Cover lightweight history writes and absence of transient fields.
+- [x] Cover concurrent fridge merges against Postgres.
+- [x] Cover atomic consumption rollback for stale versions and insufficient quantities.
+- [x] Cover generation bucket contention.
+- [x] Cover lightweight history writes and absence of transient fields.
 
 ### Task 9: Add Authenticated Browser E2E
 
@@ -113,6 +113,7 @@ Environment-backed release verification:
 
 ```bash
 cd what-to-eat
+corepack pnpm test:db
 corepack pnpm db:generate
 corepack pnpm db:migrate
 ```
