@@ -6,6 +6,7 @@ import {
   History,
   KeyRound,
   Languages,
+  Refrigerator,
   SlidersHorizontal,
   Sparkles,
   Utensils
@@ -57,6 +58,17 @@ function AppShellContent({ locale, children }: AppShellProps) {
             >
               <Sparkles className="app-nav-icon" aria-hidden="true" />
               <span className="home-paper-button-label">{t("recommend")}</span>
+            </ProtectedLink>
+
+            <ProtectedLink
+              className={cn(
+                "home-paper-button app-nav-primary",
+                isCurrentPath(`/${locale}/fridge`) && "app-nav-primary-active"
+              )}
+              href={`/${locale}/fridge`}
+            >
+              <Refrigerator className="app-nav-icon" aria-hidden="true" />
+              <span className="home-paper-button-label">{t("fridge")}</span>
             </ProtectedLink>
 
             <details className="app-shell-menu">

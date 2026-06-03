@@ -1,29 +1,37 @@
 import type { NextRequest } from "next/server";
 
 import { createKeyHint } from "@/lib/key-redaction";
-import { fail, ok } from "@/server/api-response";
+import { fail, failFromError, ok } from "@/server/api-response";
 import { getCurrentClerkUserId } from "@/server/auth";
 import { encryptSecret } from "@/server/crypto";
+import { deleteOpenAiKey, ensureUser, getOpenAiKey, saveOpenAiKey } from "@/server/data";
 import { parseJsonBody } from "@/server/request";
 import { openAiKeySchema } from "@/server/validation";
 
 export async function GET() {
-  const userId = await getCurrentClerkUserId();
+  const clerkUserId = await getCurrentClerkUserId();
 
-  if (!userId) {
+  if (!clerkUserId) {
     return fail("UNAUTHENTICATED");
   }
 
-  return ok({
-    key: null,
-    status: "not_configured"
-  });
+  try {
+    const user = await ensureUser(clerkUserId);
+    const key = await getOpenAiKey(user.id);
+
+    return ok({
+      key: key ? { hint: key.keyHint, status: key.status } : null,
+      status: key?.status ?? "not_configured"
+    });
+  } catch (error) {
+    return failFromError(error);
+  }
 }
 
 export async function POST(request: NextRequest) {
-  const userId = await getCurrentClerkUserId();
+  const clerkUserId = await getCurrentClerkUserId();
 
-  if (!userId) {
+  if (!clerkUserId) {
     return fail("UNAUTHENTICATED");
   }
 
@@ -34,30 +42,35 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const encryptedApiKey = encryptSecret(parsed.data.apiKey);
+    const user = await ensureUser(clerkUserId);
+    const key = await saveOpenAiKey(user.id, {
+      encryptedApiKey: encryptSecret(parsed.data.apiKey),
+      keyHint: createKeyHint(parsed.data.apiKey)
+    });
 
     return ok({
       key: {
-        hint: createKeyHint(parsed.data.apiKey),
-        status: "validation_required"
-      },
-      storagePreview: {
-        encryptedLength: encryptedApiKey.length
+        hint: key.keyHint,
+        status: key.status
       }
     });
-  } catch {
-    return fail("CONFIGURATION_ERROR");
+  } catch (error) {
+    return failFromError(error);
   }
 }
 
 export async function DELETE() {
-  const userId = await getCurrentClerkUserId();
+  const clerkUserId = await getCurrentClerkUserId();
 
-  if (!userId) {
+  if (!clerkUserId) {
     return fail("UNAUTHENTICATED");
   }
 
-  return ok({
-    deleted: true
-  });
+  try {
+    const user = await ensureUser(clerkUserId);
+    await deleteOpenAiKey(user.id);
+    return ok({ deleted: true });
+  } catch (error) {
+    return failFromError(error);
+  }
 }

@@ -1,14 +1,18 @@
-import { fail, ok } from "@/server/api-response";
+import { fail, failFromError, ok } from "@/server/api-response";
 import { getCurrentClerkUserId } from "@/server/auth";
+import { ensureUser, listRecommendations } from "@/server/data";
 
 export async function GET() {
-  const userId = await getCurrentClerkUserId();
+  const clerkUserId = await getCurrentClerkUserId();
 
-  if (!userId) {
+  if (!clerkUserId) {
     return fail("UNAUTHENTICATED");
   }
 
-  return ok({
-    recommendations: []
-  });
+  try {
+    const user = await ensureUser(clerkUserId);
+    return ok({ recommendations: await listRecommendations(user.id) });
+  } catch (error) {
+    return failFromError(error);
+  }
 }

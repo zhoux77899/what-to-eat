@@ -1,32 +1,34 @@
 import { describe, expect, it } from "vitest";
 
-import { mergePreferences } from "@/lib/preferences";
+import { DEFAULT_PREFERENCES, resolveRecommendationContext } from "@/lib/preferences";
 
-describe("preference merging", () => {
-  it("keeps long-term preferences separate while applying temporary overrides to the effective snapshot", () => {
+describe("recommendation preference context", () => {
+  it("keeps the long-term natural-language preference separate from the temporary requirement", () => {
     const longTerm = {
       locale: "zh",
-      dietaryRestrictions: ["vegetarian"],
-      dislikedFoods: ["cilantro"],
-      budgetLevel: "medium",
-      locationHint: "Shanghai"
+      preferenceText: "Prefer quick vegetarian meals. Avoid cilantro."
     } as const;
 
-    const temporary = {
+    const result = resolveRecommendationContext(longTerm, {
       locale: "en",
-      dislikedFoods: ["cilantro", "peanut"],
-      budgetLevel: "low"
-    } as const;
-
-    const result = mergePreferences(longTerm, temporary);
-
-    expect(result.effective).toEqual({
-      locale: "en",
-      dietaryRestrictions: ["vegetarian"],
-      dislikedFoods: ["cilantro", "peanut"],
-      budgetLevel: "low",
-      locationHint: "Shanghai"
+      temporaryRequirement: "Use less oil today."
     });
-    expect(result.longTerm).toEqual(longTerm);
+
+    expect(result).toEqual({
+      locale: "en",
+      preferenceText: "Prefer quick vegetarian meals. Avoid cilantro.",
+      temporaryRequirement: "Use less oil today."
+    });
+    expect(longTerm).toEqual({
+      locale: "zh",
+      preferenceText: "Prefer quick vegetarian meals. Avoid cilantro."
+    });
+  });
+
+  it("provides an empty natural-language preference by default", () => {
+    expect(DEFAULT_PREFERENCES).toEqual({
+      locale: "zh",
+      preferenceText: ""
+    });
   });
 });

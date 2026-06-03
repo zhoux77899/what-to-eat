@@ -23,6 +23,7 @@ function readCssRule(source: string, selector: string) {
 describe("signed-in page surface design", () => {
   const signedInPages = [
     "src/app/[locale]/app/page.tsx",
+    "src/app/[locale]/fridge/page.tsx",
     "src/app/[locale]/preferences/page.tsx",
     "src/app/[locale]/history/page.tsx",
     "src/app/[locale]/settings/openai-key/page.tsx"
@@ -46,10 +47,13 @@ describe("signed-in page surface design", () => {
     expect(pageSource).toContain("app-table-plate");
     expect(tableCanvasRule).not.toContain("box-shadow:");
     expect(tableCanvasRule).not.toMatch(/\n\s*border:/);
+    expect(globalCss).not.toMatch(/\.app-table-canvas(?:-minimal)?::before/);
+    expect(globalCss).not.toMatch(/\.app-table-canvas(?:-minimal)?::after/);
   });
 
   it("keeps the recommendation page minimal while preserving an accessible title and generate action", () => {
     const pageSource = readProjectFile("src/app/[locale]/app/page.tsx");
+    const workbenchSource = readProjectFile("src/components/recommend-workbench.tsx");
     const hasHiddenHeading =
       pageSource.includes('className="sr-only"') &&
       pageSource.includes('id="recommend-page-title"') &&
@@ -63,8 +67,8 @@ describe("signed-in page surface design", () => {
     expect(pageSource).not.toContain("MEAL_IMAGE_MODEL");
     expect(pageSource).not.toContain("TEXT_RECOMMENDATION_MODEL");
     expect(hasHiddenHeading || hasAriaLabel).toBe(true);
-    expect(pageSource).toContain("app-table-button");
-    expect(pageSource).toContain('t("generate")');
+    expect(workbenchSource).toContain("app-table-button");
+    expect(workbenchSource).toContain('t("generate")');
   });
 
   it("defines shared full-width workbench surfaces for menu pages without changing the paper card component", () => {
@@ -81,6 +85,81 @@ describe("signed-in page surface design", () => {
     expect(workbenchPageRule).not.toContain("max-width");
     expect(workbenchFormRule).toContain("width: 100%");
     expect(workbenchFormRule).not.toContain("max-width");
+  });
+
+  it("keeps fridge beside recommendation as a primary navigation destination", () => {
+    const appShellSource = readProjectFile("src/components/app-shell.tsx");
+    const menuPanelIndex = appShellSource.indexOf('<div className="app-menu-panel">');
+    const fridgeLinkIndex = appShellSource.indexOf('href={`/${locale}/fridge`}');
+    const primaryNavigation = appShellSource.slice(0, menuPanelIndex);
+
+    expect(fridgeLinkIndex).toBeGreaterThan(-1);
+    expect(fridgeLinkIndex).toBeLessThan(menuPanelIndex);
+    expect(primaryNavigation).toContain(
+      'isCurrentPath(`/${locale}/fridge`) && "app-nav-primary-active"'
+    );
+  });
+
+  it("keeps menu-page workbench surfaces open instead of drawing a framed background band", () => {
+    const globalCss = readProjectFile("src/app/globals.css");
+    const workbenchSurfaceRule = readCssRule(globalCss, ".app-workbench-surface");
+
+    expect(workbenchSurfaceRule).not.toContain("border-block");
+    expect(globalCss).not.toContain(".app-workbench-surface::before");
+  });
+
+  it("uses one fridge inventory panel before an open sticky form panel", () => {
+    const fridgeSource = readProjectFile("src/components/fridge-workbench.tsx");
+    const globalCss = readProjectFile("src/app/globals.css");
+    const inventoryPanelIndex = fridgeSource.indexOf("app-fridge-inventory-panel");
+    const formPanelIndex = fridgeSource.indexOf("app-fridge-form-panel");
+    const fridgeWorkspaceRule = readCssRule(globalCss, ".app-fridge-workspace");
+    const formPanelRule = readCssRule(globalCss, ".app-fridge-form-panel");
+    const mobileEditingFormRule = readCssRule(
+      globalCss,
+      ".app-fridge-workspace-editing .app-fridge-form-panel"
+    );
+
+    expect(inventoryPanelIndex).toBeGreaterThan(-1);
+    expect(formPanelIndex).toBeGreaterThan(inventoryPanelIndex);
+    expect(fridgeSource).toContain("app-fridge-item-row");
+    expect(fridgeSource).not.toContain('className="app-paper-card app-form-card"');
+    expect(fridgeWorkspaceRule).toContain("gap: clamp(2rem, 3vw, 2.5rem)");
+    expect(fridgeWorkspaceRule).toContain(
+      "grid-template-columns: minmax(0, 1fr) minmax(15rem, 18rem)"
+    );
+    expect(fridgeSource).not.toContain("grid-cols-2");
+    expect(formPanelRule).toContain("position: sticky");
+    expect(mobileEditingFormRule).toContain("order: -1");
+  });
+
+  it("uses compact paper buttons for workbench row actions", () => {
+    const fridgeSource = readProjectFile("src/components/fridge-workbench.tsx");
+    const openAiKeySource = readProjectFile("src/components/openai-key-workbench.tsx");
+    const historySource = readProjectFile("src/components/history-workbench.tsx");
+    const recommendSource = readProjectFile("src/components/recommend-workbench.tsx");
+    const globalCss = readProjectFile("src/app/globals.css");
+
+    expect(globalCss).toContain(".app-paper-button-compact");
+    expect(globalCss).toContain(".app-paper-button-danger");
+    expect(fridgeSource).toContain(
+      "home-paper-button app-paper-button-compact app-paper-button-secondary"
+    );
+    expect(fridgeSource).toContain(
+      "home-paper-button app-paper-button-compact app-paper-button-danger"
+    );
+    expect(openAiKeySource).toContain(
+      "home-paper-button app-paper-button-compact app-paper-button-secondary"
+    );
+    expect(openAiKeySource).toContain(
+      "home-paper-button app-paper-button-compact app-paper-button-danger"
+    );
+    expect(historySource).toContain(
+      "home-paper-button app-paper-button-compact app-paper-button-secondary"
+    );
+    expect(recommendSource).toContain(
+      "home-paper-button app-paper-button-compact app-paper-button-primary"
+    );
   });
 
   it("avoids viewport-height minimums on the minimal recommendation surface", () => {
