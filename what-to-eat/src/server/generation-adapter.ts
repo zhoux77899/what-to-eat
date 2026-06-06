@@ -1,3 +1,7 @@
+import { mkdir, readFile, rm, stat } from "node:fs/promises";
+import path from "node:path";
+import { randomUUID } from "node:crypto";
+
 import { Codex } from "@openai/codex-sdk";
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
@@ -9,7 +13,15 @@ import {
   type RecommendationResult
 } from "@/lib/recommendations";
 import { BusinessError } from "@/server/business-error";
+import { removeChromaKeyBackground } from "@/server/image-processing";
+import {
+  createLocalCodexRunId,
+  logLocalCodexProgress,
+  runLocalCodexTurnWithProgress
+} from "@/server/local-codex-progress";
 import { MEAL_IMAGE_MODEL, TEXT_RECOMMENDATION_MODEL } from "@/server/openai/models";
+
+const localCodexImageRoot = path.join(process.cwd(), ".tmp", "local-codex-images");
 
 export async function validateOpenAiKey(apiKey: string) {
   try {
@@ -57,6 +69,9 @@ export async function generateRecommendationText(input: {
 }
 
 async function generateRecommendationWithLocalCodex(prompt: string) {
+  const runId = createLocalCodexRunId();
+  const startedAtMs = Date.now();
+
   try {
     const codex = new Codex();
     const thread = codex.startThread({
@@ -66,12 +81,29 @@ async function generateRecommendationWithLocalCodex(prompt: string) {
       webSearchMode: "disabled",
       workingDirectory: process.cwd()
     });
-    const turn = await thread.run(prompt, {
-      outputSchema: recommendationResultJsonSchema
+    const turn = await runLocalCodexTurnWithProgress({
+      thread,
+      prompt,
+      task: "recommendation_text",
+      runId,
+      startedAtMs,
+      turnOptions: {
+        outputSchema: recommendationResultJsonSchema
+      }
     });
     const parsed = recommendationResultSchema.safeParse(JSON.parse(turn.finalResponse));
 
     if (!parsed.success) {
+      logLocalCodexProgress({
+        task: "recommendation_text",
+        runId,
+        event: "failed",
+        level: "warn",
+        startedAtMs,
+        metadata: {
+          reason: "invalid_structured_response"
+        }
+      });
       throw new BusinessError("MODEL_RESPONSE_INVALID");
     }
 
@@ -81,6 +113,16 @@ async function generateRecommendationWithLocalCodex(prompt: string) {
       throw error;
     }
 
+    logLocalCodexProgress({
+      task: "recommendation_text",
+      runId,
+      event: "failed",
+      level: "warn",
+      startedAtMs,
+      metadata: {
+        reason: "codex_unavailable"
+      }
+    });
     throw new BusinessError("LOCAL_CODEX_UNAVAILABLE");
   }
 }
@@ -91,7 +133,7 @@ export async function generateImageBytes(input: {
   prompt: string;
 }) {
   if (input.mode === "local_codex") {
-    throw new BusinessError("LOCAL_CODEX_UNAVAILABLE");
+    return generateLocalCodexImageBytes(input.prompt);
   }
 
   if (!input.apiKey) {
@@ -102,7 +144,7 @@ export async function generateImageBytes(input: {
     const response = await new OpenAI({ apiKey: input.apiKey }).images.generate({
       model: MEAL_IMAGE_MODEL,
       prompt: input.prompt,
-      size: "1024x1024"
+      size: "512x512"
     });
     const base64Image = response.data?.[0]?.b64_json;
 
@@ -110,12 +152,120 @@ export async function generateImageBytes(input: {
       throw new BusinessError("UPSTREAM_OPENAI_ERROR");
     }
 
-    return Buffer.from(base64Image, "base64");
+    return removeChromaKeyBackground(Buffer.from(base64Image, "base64"));
   } catch (error) {
     if (error instanceof BusinessError) {
       throw error;
     }
 
     throw new BusinessError("UPSTREAM_OPENAI_ERROR");
+  }
+}
+
+async function generateLocalCodexImageBytes(prompt: string) {
+  const runId = createLocalCodexRunId();
+  const startedAtMs = Date.now();
+  const outputDirectory = path.join(localCodexImageRoot, randomUUID());
+  const outputPath = path.join(outputDirectory, "output.png");
+
+  try {
+    await mkdir(outputDirectory, { recursive: true });
+    assertPathInside(localCodexImageRoot, outputPath);
+    logLocalCodexProgress({
+      task: "image_generation",
+      runId,
+      event: "output.prepared",
+      startedAtMs,
+      metadata: {
+        outputFile: path.basename(outputPath),
+        outputDirectory: path.basename(outputDirectory)
+      }
+    });
+
+    const codex = new Codex();
+    const thread = codex.startThread({
+      approvalPolicy: "never",
+      sandboxMode: "workspace-write",
+      skipGitRepoCheck: true,
+      webSearchMode: "disabled",
+      workingDirectory: outputDirectory
+    });
+
+    await runLocalCodexTurnWithProgress({
+      thread,
+      task: "image_generation",
+      runId,
+      startedAtMs,
+      prompt: [
+        "Generate one PNG image for this application request.",
+        "Do not edit source files, package files, configuration, docs, or tests.",
+        "Write only the final PNG image to the exact output path below.",
+        `Output file: ${outputPath}`,
+        "",
+        "Visual prompt:",
+        prompt
+      ].join("\n")
+    });
+
+    const outputStat = await stat(outputPath).catch(() => null);
+
+    if (!outputStat?.isFile()) {
+      logLocalCodexProgress({
+        task: "image_generation",
+        runId,
+        event: "output.missing",
+        level: "warn",
+        startedAtMs
+      });
+      throw new Error("Local Codex did not create an output file.");
+    }
+
+    logLocalCodexProgress({
+      task: "image_generation",
+      runId,
+      event: "output.found",
+      startedAtMs,
+      metadata: {
+        byteLength: outputStat.size
+      }
+    });
+    const bytes = await readFile(outputPath);
+    const processed = removeChromaKeyBackground(bytes);
+    logLocalCodexProgress({
+      task: "image_generation",
+      runId,
+      event: "output.processed",
+      startedAtMs,
+      metadata: {
+        byteLength: processed.byteLength
+      }
+    });
+    return processed;
+  } catch (error) {
+    if (error instanceof BusinessError) {
+      throw error;
+    }
+
+    logLocalCodexProgress({
+      task: "image_generation",
+      runId,
+      event: "failed",
+      level: "warn",
+      startedAtMs,
+      metadata: {
+        reason: "codex_unavailable"
+      }
+    });
+    throw new BusinessError("LOCAL_CODEX_UNAVAILABLE");
+  } finally {
+    await rm(outputDirectory, { force: true, recursive: true });
+  }
+}
+
+function assertPathInside(root: string, target: string) {
+  const relative = path.relative(path.resolve(root), path.resolve(target));
+
+  if (relative.startsWith("..") || path.isAbsolute(relative)) {
+    throw new Error("Local Codex output path escaped the image directory.");
   }
 }

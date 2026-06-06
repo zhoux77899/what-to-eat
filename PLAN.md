@@ -62,7 +62,7 @@ This branch implements the MVP application surface, API boundary, Drizzle schema
 - [x] Add database-backed generation action buckets.
 - [x] Enable Local Codex Mode only for explicit non-Vercel development processes.
 - [x] Generate local structured recommendation text through `@openai/codex-sdk`.
-- [x] Fail local image attempts safely until a supported generated-image byte path exists.
+- [x] Attempt local ingredient and dish images through a constrained Codex PNG file-output bridge and fail safely when local image capability is unavailable.
 
 ## Remaining Release Work
 

@@ -16,16 +16,9 @@ import { generateRecommendationText } from "@/server/generation-adapter";
 import { getGenerationApiKey } from "@/server/generation-key";
 import { getGenerationMode } from "@/server/generation-mode";
 import { generateStoredImage } from "@/server/images";
+import { buildDishImagePrompt } from "@/server/image-prompts";
 import { MEAL_IMAGE_MODEL, TEXT_RECOMMENDATION_MODEL } from "@/server/openai/models";
 import type { recommendRequestSchema } from "@/server/validation";
-
-function dishImagePrompt(name: string, summary: string) {
-  return [
-    `Create an appetizing square meal image for "${name}".`,
-    summary,
-    "Show one finished dish without text, labels, people, or branded packaging."
-  ].join(" ");
-}
 
 export async function createRecommendation(
   clerkUserId: string,
@@ -78,7 +71,7 @@ export async function createRecommendation(
         kind: "dish",
         mode,
         apiKey,
-        prompt: dishImagePrompt(dish.name, dish.summary),
+        prompt: buildDishImagePrompt(dish.name, dish.summary),
         attach: (imageId) => attachDishImage(persistedDish.id, imageId)
       });
 
@@ -110,7 +103,7 @@ export async function retryDishImage(clerkUserId: string, dishId: string) {
     kind: "dish",
     mode,
     apiKey,
-    prompt: dishImagePrompt(dish.name, dish.summary),
+    prompt: buildDishImagePrompt(dish.name, dish.summary),
     attach: (imageId) => attachDishImage(dish.id, imageId)
   });
 }

@@ -17,7 +17,7 @@ Version one includes:
 - Editable consumption suggestions with atomic per-dish fridge decrements.
 - Ingredient and dish images stored as public Vercel Blob references.
 - Lightweight history containing recommendation headers, dish rows, and image references only.
-- Local Codex Mode for opt-in local structured-text validation through `@openai/codex-sdk`.
+- Local Codex Mode for opt-in local structured-text validation and image attempts through `@openai/codex-sdk`.
 
 Version one does not persist temporary requirements, consumption suggestions, fridge snapshots, or preference snapshots. It also does not support platform-owned OpenAI keys, consumer-subscription quota in deployed environments, arbitrary providers, custom model ids, streaming output, teams, or billing.
 
@@ -31,7 +31,7 @@ Version one does not persist temporary requirements, consumption suggestions, fr
 | OpenAI key management | Implemented | AES-256-GCM persistence, hints, delete, replace, and upstream validation are wired. |
 | Recommendation generation | Implemented | Structured non-streaming text generation, candidate validation, history persistence, image attempts, and ephemeral consumption suggestions are wired. |
 | Recommendation history | Implemented | History lists saved dishes and image status; failed dish images can be retried. |
-| Local Codex Mode | Partially implemented | Structured text uses the local SDK. Image attempts fail safely because the SDK does not expose generated image bytes. |
+| Local Codex Mode | Implemented for local development | Structured text uses the local SDK. Image attempts use a constrained temporary PNG file-output bridge and fail safely when local image capability is unavailable. |
 | Database migration | Generated locally | The initial Drizzle migration is committed under `what-to-eat/drizzle/`; apply it after configuring a Neon development-branch `DATABASE_URL`. |
 | Source-level tests | Implemented | Unit tests cover schema shape, domain validation, source-level data-layer guards, generation mode gating, localized UI structure, and route source constraints. |
 | Authenticated browser E2E | Pending | Current Playwright coverage exercises public locale pages and authentication gates only. Signed-in business workflows still need real Clerk-backed E2E coverage. |
@@ -46,7 +46,7 @@ Version one does not persist temporary requirements, consumption suggestions, fr
 - next-intl
 - Tailwind CSS
 - Vitest and Playwright
-- `@openai/codex-sdk` for local-only structured text validation
+- `@openai/codex-sdk` for local-only structured text validation and image attempts
 
 ## Local Development
 
@@ -84,6 +84,8 @@ LOCAL_CODEX_ENABLED=true
 ```
 
 Do not configure `LOCAL_CODEX_ENABLED` in Vercel Preview or Production. Local Codex Mode is a development convenience, not a deployed provider or a replacement for OpenAI API keys.
+
+When Local Codex Mode attempts ingredient or dish images, Codex is asked to write one PNG under `.tmp/local-codex-images/`. The application reads that temporary file, removes the `#ff00ff` chroma-key background, uploads successful images to Vercel Blob, and records safe image failure states when local image capability is unavailable.
 
 ## Database Migrations
 

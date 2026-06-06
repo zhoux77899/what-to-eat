@@ -36,8 +36,8 @@ A user-owned image-generation record for an ingredient or dish. It stores the fi
 The deployed generation mode that uses a user's OpenAI developer API key for fixed OpenAI text and image requests.
 
 **Local Codex Mode**:
-A local-development-only generation mode that uses locally authenticated Codex access for structured text validation.
-Ingredient and dish image attempts currently fail safely with a localized capability error because the Codex SDK does not expose generated image bytes.
+A local-development-only generation mode that uses locally authenticated Codex access for structured text validation and local image attempts.
+Image attempts use a constrained temporary PNG file-output bridge, then the application removes the chroma-key background before Blob upload.
 _Avoid_: Production fallback, deployed Codex provider
 
 ## Relationships
@@ -52,7 +52,7 @@ _Avoid_: Production fallback, deployed Codex provider
 - A **Consumption Suggestion** is returned to the browser only. Confirming one dish applies all edited decrements atomically using fridge-item versions.
 - **Temporary Requirements**, **Consumption Suggestions**, fridge snapshots, and preference snapshots are intentionally absent from history.
 - **Production OpenAI Mode** uses an **OpenAI API Key**.
-- **Local Codex Mode** is available only during local development and never supplies deployed application quota.
+- **Local Codex Mode** is available only during local development and never supplies deployed application quota. Local image failures preserve text recommendations and become ordinary retryable image failures.
 
 ## Example Dialogue
 
@@ -63,4 +63,4 @@ _Avoid_: Production fallback, deployed Codex provider
 
 - "preferences" previously meant structured restrictions, dislikes, budget, and location fields. Resolved: the MVP stores one long-term natural-language `preference_text`.
 - "recommendation history" previously implied request, preference, result, and image metadata snapshots. Resolved: the MVP stores recommendation headers plus normalized dish rows and image references only.
-- "Local Codex image validation" previously implied generated image bytes were available from `@openai/codex-sdk`. Resolved: structured text works locally; image attempts remain fail-safe until a supported local image-byte path exists.
+- "Local Codex image validation" previously implied generated image bytes were available directly from `@openai/codex-sdk`. Resolved: structured text works locally; image attempts use a temporary PNG file-output bridge and remain fail-safe when local image capability is unavailable.

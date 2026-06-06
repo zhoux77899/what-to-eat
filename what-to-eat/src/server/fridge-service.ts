@@ -15,15 +15,8 @@ import {
 } from "@/server/data";
 import { getGenerationApiKey } from "@/server/generation-key";
 import { generateStoredImage } from "@/server/images";
+import { buildIngredientImagePrompt } from "@/server/image-prompts";
 import type { fridgeConsumptionRequestSchema } from "@/server/validation";
-
-function ingredientImagePrompt(name: string) {
-  return [
-    `Create a simple appetizing ingredient reference image of ${name}.`,
-    "Show the ingredient type only, without quantity labels, text, packaging, or a prepared dish.",
-    "Use a clean neutral background and a square composition."
-  ].join(" ");
-}
 
 async function tryGenerateIngredientImage(input: {
   clerkUserId: string;
@@ -46,7 +39,7 @@ async function tryGenerateIngredientImage(input: {
     kind: "ingredient",
     mode,
     apiKey,
-    prompt: ingredientImagePrompt(input.name),
+    prompt: buildIngredientImagePrompt(input.name),
     attach: (imageId) => attachFridgeItemImage(input.userId, input.fridgeItemId, imageId)
   });
 }

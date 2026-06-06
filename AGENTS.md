@@ -20,7 +20,7 @@
 - Support Chinese and English locale routes. Chinese is the default.
 - Store generated ingredient and dish images in public Vercel Blob storage. Store only Blob references and safe statuses in Postgres.
 - Keep Local Codex Mode opt-in, server-only, local-development-only, and fail-closed outside local development.
-- Use Local Codex Mode for structured recommendation text validation only until the SDK exposes a supported generated-image byte path. Local image attempts must fail safely without deleting text recommendations.
+- Use Local Codex Mode for structured recommendation text validation and local image attempts through a constrained Codex file-output bridge. Local image failures must preserve text recommendations and remain safely retryable.
 
 ## Refrigerator Recommendation MVP
 
