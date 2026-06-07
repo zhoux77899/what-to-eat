@@ -5,6 +5,7 @@ import { CHROMA_KEY_COLOR } from "@/server/image-prompts";
 const pngSignature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 const targetSize = 512;
 const chromaKey = parseHexColor(CHROMA_KEY_COLOR);
+const exactChromaKeyTolerance = 2;
 
 export type RgbaImage = {
   width: number;
@@ -15,17 +16,12 @@ export type RgbaImage = {
 export function removeChromaKeyBackground(input: Buffer | Uint8Array) {
   const decoded = decodeRgbaPng(input);
   const resized = resizeNearest(decoded, targetSize, targetSize);
+  const backgroundPixels = findEdgeConnectedChromaKeyPixels(resized);
 
   for (let index = 0; index < resized.data.length; index += 4) {
-    const red = resized.data[index]!;
-    const green = resized.data[index + 1]!;
-    const blue = resized.data[index + 2]!;
+    const pixelIndex = index / 4;
 
-    if (
-      Math.abs(red - chromaKey.red) <= 2 &&
-      Math.abs(green - chromaKey.green) <= 2 &&
-      Math.abs(blue - chromaKey.blue) <= 2
-    ) {
+    if (backgroundPixels[pixelIndex] || isExactChromaKeyPixel(resized.data, index)) {
       resized.data[index + 3] = 0;
     }
   }
@@ -173,6 +169,92 @@ function resizeNearest(image: RgbaImage, width: number, height: number): RgbaIma
   }
 
   return { width, height, data };
+}
+
+function findEdgeConnectedChromaKeyPixels(image: RgbaImage) {
+  const { data, height, width } = image;
+  const backgroundPixels = new Uint8Array(width * height);
+  const stack: number[] = [];
+
+  const pushIfChromaKey = (x: number, y: number) => {
+    const pixelIndex = y * width + x;
+
+    if (backgroundPixels[pixelIndex]) {
+      return;
+    }
+
+    if (!isChromaKeyBackgroundCandidate(data, pixelIndex * 4)) {
+      return;
+    }
+
+    backgroundPixels[pixelIndex] = 1;
+    stack.push(pixelIndex);
+  };
+
+  for (let x = 0; x < width; x += 1) {
+    pushIfChromaKey(x, 0);
+    pushIfChromaKey(x, height - 1);
+  }
+
+  for (let y = 1; y < height - 1; y += 1) {
+    pushIfChromaKey(0, y);
+    pushIfChromaKey(width - 1, y);
+  }
+
+  while (stack.length > 0) {
+    const pixelIndex = stack.pop()!;
+    const x = pixelIndex % width;
+    const y = Math.floor(pixelIndex / width);
+
+    if (x > 0) {
+      pushIfChromaKey(x - 1, y);
+    }
+
+    if (x < width - 1) {
+      pushIfChromaKey(x + 1, y);
+    }
+
+    if (y > 0) {
+      pushIfChromaKey(x, y - 1);
+    }
+
+    if (y < height - 1) {
+      pushIfChromaKey(x, y + 1);
+    }
+  }
+
+  return backgroundPixels;
+}
+
+function isExactChromaKeyPixel(data: Uint8Array, index: number) {
+  return (
+    Math.abs(data[index]! - chromaKey.red) <= exactChromaKeyTolerance &&
+    Math.abs(data[index + 1]! - chromaKey.green) <= exactChromaKeyTolerance &&
+    Math.abs(data[index + 2]! - chromaKey.blue) <= exactChromaKeyTolerance
+  );
+}
+
+function isChromaKeyBackgroundCandidate(data: Uint8Array, index: number) {
+  const red = data[index]!;
+  const green = data[index + 1]!;
+  const blue = data[index + 2]!;
+
+  if (isExactChromaKeyPixel(data, index)) {
+    return true;
+  }
+
+  const redDistance = Math.abs(red - chromaKey.red);
+  const greenDistance = Math.abs(green - chromaKey.green);
+  const blueDistance = Math.abs(blue - chromaKey.blue);
+
+  return (
+    red >= 220 &&
+    green <= 80 &&
+    blue >= 220 &&
+    Math.abs(red - blue) <= 36 &&
+    Math.max(redDistance, greenDistance, blueDistance) <= 48 &&
+    redDistance + greenDistance + blueDistance <= 110
+  );
 }
 
 function predictFilterByte(filter: number, left: number, up: number, upLeft: number) {

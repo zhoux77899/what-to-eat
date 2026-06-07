@@ -12,6 +12,7 @@ Use flat-to-soft watercolor/gouache colors with gentle cel-shaded areas. Keep co
 
 Background:
 Perfectly flat solid ${CHROMA_KEY_COLOR} chroma-key background for later background removal. The background must be one uniform color with no texture, no gradient, no shadow, no floor plane, and no lighting variation.
+Use the literal pure RGB color #FF00FF only for the background, not pink, purple, fuchsia, gradients, or any approximate shade.
 `.trim();
 
 const sharedConstraints = `
