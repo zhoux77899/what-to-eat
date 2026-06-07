@@ -3,6 +3,8 @@ import { getCurrentClerkUserId } from "@/server/auth";
 import { retryFridgeItemImage } from "@/server/fridge-service";
 import { recordIdSchema } from "@/server/validation";
 
+export const maxDuration = 180;
+
 type RouteContext = { params: Promise<{ itemId: string }> };
 
 export async function POST(_request: Request, context: RouteContext) {

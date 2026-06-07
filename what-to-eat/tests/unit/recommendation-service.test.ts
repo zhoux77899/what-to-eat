@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   attachDishImage: vi.fn(),
+  createPendingStoredImage: vi.fn(),
   ensureUser: vi.fn(),
   generateRecommendationText: vi.fn(),
   generateStoredImage: vi.fn(),
@@ -10,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   getPreferences: vi.fn(),
   listFridgeItems: vi.fn(),
   reserveGenerationCapacity: vi.fn(),
+  scheduleStoredImageCompletion: vi.fn(),
   saveRecommendation: vi.fn()
 }));
 
@@ -35,6 +37,8 @@ vi.mock("@/server/generation-mode", () => ({
 }));
 
 vi.mock("@/server/images", () => ({
+  createPendingStoredImage: mocks.createPendingStoredImage,
+  scheduleStoredImageCompletion: mocks.scheduleStoredImageCompletion,
   generateStoredImage: mocks.generateStoredImage
 }));
 
@@ -58,14 +62,21 @@ describe("recommendation service", () => {
         version: 1
       }
     ]);
-    mocks.generateStoredImage.mockImplementation(async (input) => {
-      const imageId = input.prompt.includes("First dish") ? "image-first" : "image-second";
+    mocks.createPendingStoredImage.mockImplementation(async (input) => {
+      const imageId =
+        mocks.createPendingStoredImage.mock.calls.length === 1 ? "image-first" : "image-second";
       await input.attach(imageId);
-      return { id: imageId, status: "succeeded" };
+      return {
+        id: imageId,
+        status: "pending",
+        publicUrl: null,
+        deadlineAt: "2026-06-06T00:02:00.000Z"
+      };
     });
+    mocks.generateStoredImage.mockResolvedValue({ id: "legacy-image", status: "succeeded" });
   });
 
-  it("matches generated dishes to persisted dish positions instead of returned row order", async () => {
+  it("matches generated dishes to persisted positions while scheduling non-blocking image tasks", async () => {
     mocks.generateRecommendationText.mockResolvedValue({
       dishes: [
         {
@@ -116,5 +127,12 @@ describe("recommendation service", () => {
       "persisted-first",
       "persisted-second"
     ]);
+    expect(result.dishes.map((dish) => dish.image.status)).toEqual(["pending", "pending"]);
+    expect(result.dishes.map((dish) => dish.image.deadlineAt)).toEqual([
+      "2026-06-06T00:02:00.000Z",
+      "2026-06-06T00:02:00.000Z"
+    ]);
+    expect(mocks.scheduleStoredImageCompletion).toHaveBeenCalledTimes(2);
+    expect(mocks.generateStoredImage).not.toHaveBeenCalled();
   });
 });

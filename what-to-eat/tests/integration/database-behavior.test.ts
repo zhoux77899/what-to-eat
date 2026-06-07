@@ -6,17 +6,24 @@ import { and, eq, inArray } from "drizzle-orm";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { createDb } from "@/db";
-import { generationRateLimitBuckets, users } from "@/db/schema";
+import { generatedImages, generationRateLimitBuckets, users } from "@/db/schema";
 import {
   addFridgeItem,
   applyFridgeConsumption,
+  createGeneratedImage,
   ensureUser,
   listFridgeItems,
   listRecommendations,
+  reconcileTimedOutGeneratedImages,
   reserveGenerationCapacity,
   saveRecommendation
 } from "@/server/data";
 import { RECOMMENDATION_WINDOW_LIMIT } from "@/lib/rate-limit";
+import {
+  IMAGE_GENERATION_STALE_GRACE_MS,
+  IMAGE_GENERATION_TIMED_OUT,
+  IMAGE_GENERATION_TIMEOUT_MS
+} from "@/server/image-lifecycle";
 
 const integrationDatabaseUrl = process.env.INTEGRATION_DATABASE_URL;
 
@@ -242,5 +249,35 @@ describe("database-backed refrigerator behavior", () => {
     expect(recommendation).not.toHaveProperty("preferenceSnapshot");
     expect(recommendation).not.toHaveProperty("fridgeSnapshot");
     expect(dish).not.toHaveProperty("consumptions");
+  });
+
+  it("reconciles stale pending generated images as timed out", async () => {
+    const user = await createTestUser("image-stale");
+    const now = new Date("2026-06-06T02:00:00.000Z");
+    const image = await createGeneratedImage(user.id, "dish", "production_openai");
+
+    await db
+      .update(generatedImages)
+      .set({
+        createdAt: new Date(
+          now.getTime() - IMAGE_GENERATION_TIMEOUT_MS - IMAGE_GENERATION_STALE_GRACE_MS - 1_000
+        )
+      })
+      .where(eq(generatedImages.id, image.id));
+
+    await reconcileTimedOutGeneratedImages(user.id, now);
+
+    const [updatedImage] = await db
+      .select({
+        status: generatedImages.status,
+        errorCode: generatedImages.errorCode
+      })
+      .from(generatedImages)
+      .where(eq(generatedImages.id, image.id));
+
+    expect(updatedImage).toEqual({
+      status: "failed",
+      errorCode: IMAGE_GENERATION_TIMED_OUT
+    });
   });
 });

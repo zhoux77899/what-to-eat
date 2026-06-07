@@ -6,6 +6,8 @@ import { editFridgeItem, removeFridgeItem } from "@/server/fridge-service";
 import { parseJsonBody } from "@/server/request";
 import { fridgeItemUpdateSchema, recordIdSchema } from "@/server/validation";
 
+export const maxDuration = 180;
+
 type RouteContext = { params: Promise<{ itemId: string }> };
 
 export async function PATCH(request: NextRequest, context: RouteContext) {

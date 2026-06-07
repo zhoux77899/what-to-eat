@@ -6,6 +6,10 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import {
+  getImageStatusPollDelay,
+  resolveClientImageStatus
+} from "@/lib/client-image-status";
 import { getErrorTranslationKey, requestJson } from "@/lib/api-client";
 
 type HistoryDish = {
@@ -16,6 +20,7 @@ type HistoryDish = {
   estimatedMinutes: number;
   imageStatus: "pending" | "succeeded" | "failed" | null;
   imageUrl: string | null;
+  imageDeadlineAt: string | null;
 };
 
 type Recommendation = {
@@ -24,6 +29,27 @@ type Recommendation = {
   createdAt: string;
   dishes: HistoryDish[];
 };
+
+function normalizeRecommendations(recommendations: Recommendation[]) {
+  return recommendations.map((recommendation) => ({
+    ...recommendation,
+    dishes: recommendation.dishes.map((dish) => ({
+      ...dish,
+      imageStatus: resolveClientImageStatus(dish.imageStatus, dish.imageDeadlineAt)
+    }))
+  }));
+}
+
+function getHistoryImagePollDelay(recommendations: Recommendation[]) {
+  return getImageStatusPollDelay(
+    recommendations.flatMap((recommendation) =>
+      recommendation.dishes.map((dish) => ({
+        status: dish.imageStatus,
+        deadlineAt: dish.imageDeadlineAt
+      }))
+    )
+  );
+}
 
 export function HistoryWorkbench() {
   const t = useTranslations("history");
@@ -35,9 +61,10 @@ export function HistoryWorkbench() {
   const load = useCallback(async () => {
     try {
       const data = await requestJson<{ recommendations: Recommendation[] }>("/api/recommendations");
-      setRecommendations(data.recommendations);
+      setRecommendations(normalizeRecommendations(data.recommendations));
       setErrorKey(null);
     } catch (error) {
+      setRecommendations((current) => normalizeRecommendations(current));
       setErrorKey(getErrorTranslationKey(error));
     }
   }, []);
@@ -45,6 +72,20 @@ export function HistoryWorkbench() {
   useEffect(() => {
     queueMicrotask(() => void load());
   }, [load]);
+
+  useEffect(() => {
+    const pollDelay = getHistoryImagePollDelay(recommendations);
+
+    if (pollDelay === null) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      void load();
+    }, pollDelay);
+
+    return () => window.clearTimeout(timeout);
+  }, [recommendations, load]);
 
   async function retryImage(dishId: string) {
     setBusy(true);

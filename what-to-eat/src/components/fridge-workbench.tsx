@@ -7,6 +7,10 @@ import { type FormEvent, useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  getImageStatusPollDelay,
+  resolveClientImageStatus
+} from "@/lib/client-image-status";
 import { getErrorTranslationKey, requestJson } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 
@@ -19,9 +23,26 @@ type FridgeItem = {
   imageStatus: "pending" | "succeeded" | "failed" | null;
   imageUrl: string | null;
   imageErrorCode: string | null;
+  imageDeadlineAt: string | null;
 };
 
 const EMPTY_FORM = { name: "", quantity: "1", unit: "" };
+
+function normalizeFridgeItems(items: FridgeItem[]) {
+  return items.map((item) => ({
+    ...item,
+    imageStatus: resolveClientImageStatus(item.imageStatus, item.imageDeadlineAt)
+  }));
+}
+
+function getFridgeImagePollDelay(items: FridgeItem[]) {
+  return getImageStatusPollDelay(
+    items.map((item) => ({
+      status: item.imageStatus,
+      deadlineAt: item.imageDeadlineAt
+    }))
+  );
+}
 
 export function FridgeWorkbench() {
   const t = useTranslations("fridge");
@@ -35,9 +56,10 @@ export function FridgeWorkbench() {
   const loadItems = useCallback(async () => {
     try {
       const data = await requestJson<{ items: FridgeItem[] }>("/api/fridge-items");
-      setItems(data.items);
+      setItems(normalizeFridgeItems(data.items));
       setErrorKey(null);
     } catch (error) {
+      setItems((current) => normalizeFridgeItems(current));
       setErrorKey(getErrorTranslationKey(error));
     }
   }, []);
@@ -45,6 +67,20 @@ export function FridgeWorkbench() {
   useEffect(() => {
     queueMicrotask(() => void loadItems());
   }, [loadItems]);
+
+  useEffect(() => {
+    const pollDelay = getFridgeImagePollDelay(items);
+
+    if (pollDelay === null) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      void loadItems();
+    }, pollDelay);
+
+    return () => window.clearTimeout(timeout);
+  }, [items, loadItems]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

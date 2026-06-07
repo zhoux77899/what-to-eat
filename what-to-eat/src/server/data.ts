@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { and, desc, eq, ne, sql } from "drizzle-orm";
+import { and, desc, eq, lt, ne, sql } from "drizzle-orm";
 
 import {
   fridgeItems,
@@ -32,6 +32,11 @@ import {
   RECOMMENDATION_WINDOW_SECONDS
 } from "@/lib/rate-limit";
 import { BusinessError } from "@/server/business-error";
+import {
+  getImageDeadlineAt,
+  getTimedOutImageCutoff,
+  IMAGE_GENERATION_TIMED_OUT
+} from "@/server/image-lifecycle";
 
 export async function ensureUser(clerkUserId: string) {
   const db = createDb();
@@ -142,8 +147,10 @@ export async function touchOpenAiKeyLastUsed(userId: string) {
 }
 
 export async function listFridgeItems(userId: string) {
+  await reconcileTimedOutGeneratedImages(userId);
+
   const db = createDb();
-  return db
+  const rows = await db
     .select({
       id: fridgeItems.id,
       name: fridgeItems.name,
@@ -154,12 +161,21 @@ export async function listFridgeItems(userId: string) {
       imageStatus: generatedImages.status,
       imageUrl: generatedImages.publicUrl,
       imageErrorCode: generatedImages.errorCode,
+      imageCreatedAt: generatedImages.createdAt,
       updatedAt: fridgeItems.updatedAt
     })
     .from(fridgeItems)
     .leftJoin(generatedImages, eq(fridgeItems.imageId, generatedImages.id))
     .where(eq(fridgeItems.userId, userId))
     .orderBy(desc(fridgeItems.updatedAt));
+
+  return rows.map(({ imageCreatedAt, ...row }) => ({
+    ...row,
+    imageDeadlineAt: getImageDeadlineAt({
+      status: row.imageStatus,
+      createdAt: imageCreatedAt
+    })
+  }));
 }
 
 export async function addFridgeItem(userId: string, input: FridgeItemInput) {
@@ -312,6 +328,25 @@ export async function createGeneratedImage(
   return image;
 }
 
+export async function reconcileTimedOutGeneratedImages(userId: string, now = new Date()) {
+  const db = createDb();
+
+  await db
+    .update(generatedImages)
+    .set({
+      status: "failed",
+      errorCode: IMAGE_GENERATION_TIMED_OUT,
+      updatedAt: now
+    })
+    .where(
+      and(
+        eq(generatedImages.userId, userId),
+        eq(generatedImages.status, "pending"),
+        lt(generatedImages.createdAt, getTimedOutImageCutoff(now))
+      )
+    );
+}
+
 export async function markGeneratedImageSucceeded(
   imageId: string,
   value: { blobPathname: string; publicUrl: string }
@@ -325,10 +360,10 @@ export async function markGeneratedImageSucceeded(
       errorCode: null,
       updatedAt: new Date()
     })
-    .where(eq(generatedImages.id, imageId))
+    .where(and(eq(generatedImages.id, imageId), eq(generatedImages.status, "pending")))
     .returning();
 
-  return image;
+  return image ?? null;
 }
 
 export async function markGeneratedImageFailed(imageId: string, errorCode: string) {
@@ -340,10 +375,10 @@ export async function markGeneratedImageFailed(imageId: string, errorCode: strin
       errorCode,
       updatedAt: new Date()
     })
-    .where(eq(generatedImages.id, imageId))
+    .where(and(eq(generatedImages.id, imageId), eq(generatedImages.status, "pending")))
     .returning();
 
-  return image;
+  return image ?? null;
 }
 
 export async function attachFridgeItemImage(userId: string, fridgeItemId: string, imageId: string) {
@@ -357,9 +392,46 @@ export async function attachFridgeItemImage(userId: string, fridgeItemId: string
     .where(and(eq(fridgeItems.id, fridgeItemId), eq(fridgeItems.userId, userId)));
 }
 
+export async function isFridgeItemImageCurrent(
+  userId: string,
+  fridgeItemId: string,
+  imageId: string
+) {
+  const db = createDb();
+  const [item] = await db
+    .select({ id: fridgeItems.id })
+    .from(fridgeItems)
+    .where(
+      and(
+        eq(fridgeItems.id, fridgeItemId),
+        eq(fridgeItems.userId, userId),
+        eq(fridgeItems.imageId, imageId)
+      )
+    );
+
+  return Boolean(item);
+}
+
 export async function attachDishImage(dishId: string, imageId: string) {
   const db = createDb();
   await db.update(recommendedDishes).set({ imageId }).where(eq(recommendedDishes.id, dishId));
+}
+
+export async function isDishImageCurrent(userId: string, dishId: string, imageId: string) {
+  const db = createDb();
+  const [dish] = await db
+    .select({ id: recommendedDishes.id })
+    .from(recommendedDishes)
+    .innerJoin(recommendations, eq(recommendedDishes.recommendationId, recommendations.id))
+    .where(
+      and(
+        eq(recommendedDishes.id, dishId),
+        eq(recommendations.userId, userId),
+        eq(recommendedDishes.imageId, imageId)
+      )
+    );
+
+  return Boolean(dish);
 }
 
 export async function getDish(userId: string, dishId: string) {
@@ -422,6 +494,8 @@ export async function saveRecommendation(
 }
 
 export async function listRecommendations(userId: string) {
+  await reconcileTimedOutGeneratedImages(userId);
+
   const db = createDb();
   const recommendationRows = await db
     .select()
@@ -440,7 +514,8 @@ export async function listRecommendations(userId: string) {
       imageId: recommendedDishes.imageId,
       imageStatus: generatedImages.status,
       imageUrl: generatedImages.publicUrl,
-      imageErrorCode: generatedImages.errorCode
+      imageErrorCode: generatedImages.errorCode,
+      imageCreatedAt: generatedImages.createdAt
     })
     .from(recommendedDishes)
     .leftJoin(generatedImages, eq(recommendedDishes.imageId, generatedImages.id))
@@ -457,6 +532,13 @@ export async function listRecommendations(userId: string) {
     dishes: dishRows
       .filter((dish) => dish.recommendationId === recommendation.id)
       .sort((left, right) => left.position - right.position)
+      .map(({ imageCreatedAt, ...dish }) => ({
+        ...dish,
+        imageDeadlineAt: getImageDeadlineAt({
+          status: dish.imageStatus,
+          createdAt: imageCreatedAt
+        })
+      }))
   }));
 }
 

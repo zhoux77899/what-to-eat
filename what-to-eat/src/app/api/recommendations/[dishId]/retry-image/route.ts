@@ -3,6 +3,8 @@ import { getCurrentClerkUserId } from "@/server/auth";
 import { retryDishImage } from "@/server/recommendation-service";
 import { recordIdSchema } from "@/server/validation";
 
+export const maxDuration = 180;
+
 type RouteContext = { params: Promise<{ dishId: string }> };
 
 export async function POST(_request: Request, context: RouteContext) {

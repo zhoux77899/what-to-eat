@@ -8,6 +8,7 @@ import {
   ensureUser,
   getDish,
   getPreferences,
+  isDishImageCurrent,
   listFridgeItems,
   reserveGenerationCapacity,
   saveRecommendation
@@ -15,7 +16,7 @@ import {
 import { generateRecommendationText } from "@/server/generation-adapter";
 import { getGenerationApiKey } from "@/server/generation-key";
 import { getGenerationMode } from "@/server/generation-mode";
-import { generateStoredImage } from "@/server/images";
+import { createPendingStoredImage, scheduleStoredImageCompletion } from "@/server/images";
 import { buildDishImagePrompt } from "@/server/image-prompts";
 import { MEAL_IMAGE_MODEL, TEXT_RECOMMENDATION_MODEL } from "@/server/openai/models";
 import type { recommendRequestSchema } from "@/server/validation";
@@ -66,13 +67,22 @@ export async function createRecommendation(
         throw new BusinessError("MODEL_RESPONSE_INVALID");
       }
 
-      const image = await generateStoredImage({
+      const image = await createPendingStoredImage({
+        userId: user.id,
+        kind: "dish",
+        mode,
+        attach: (imageId) => attachDishImage(persistedDish.id, imageId)
+      });
+      const prompt = buildDishImagePrompt(dish.name, dish.summary);
+
+      scheduleStoredImageCompletion({
+        imageId: image.id,
         userId: user.id,
         kind: "dish",
         mode,
         apiKey,
-        prompt: buildDishImagePrompt(dish.name, dish.summary),
-        attach: (imageId) => attachDishImage(persistedDish.id, imageId)
+        prompt,
+        isCurrent: () => isDishImageCurrent(user.id, persistedDish.id, image.id)
       });
 
       return {
@@ -98,12 +108,21 @@ export async function retryDishImage(clerkUserId: string, dishId: string) {
   const apiKey = await getGenerationApiKey(user.id, mode);
   const dish = await getDish(user.id, dishId);
 
-  return generateStoredImage({
+  const image = await createPendingStoredImage({
+    userId: user.id,
+    kind: "dish",
+    mode,
+    attach: (imageId) => attachDishImage(dish.id, imageId)
+  });
+  scheduleStoredImageCompletion({
+    imageId: image.id,
     userId: user.id,
     kind: "dish",
     mode,
     apiKey,
     prompt: buildDishImagePrompt(dish.name, dish.summary),
-    attach: (imageId) => attachDishImage(dish.id, imageId)
+    isCurrent: () => isDishImageCurrent(user.id, dish.id, image.id)
   });
+
+  return image;
 }

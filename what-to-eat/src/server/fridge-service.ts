@@ -9,16 +9,17 @@ import {
   deleteFridgeItem,
   ensureUser,
   getFridgeItem,
+  isFridgeItemImageCurrent,
   listFridgeItems,
   reserveGenerationCapacity,
   updateFridgeItem
 } from "@/server/data";
 import { getGenerationApiKey } from "@/server/generation-key";
-import { generateStoredImage } from "@/server/images";
+import { createPendingStoredImage, scheduleStoredImageCompletion } from "@/server/images";
 import { buildIngredientImagePrompt } from "@/server/image-prompts";
 import type { fridgeConsumptionRequestSchema } from "@/server/validation";
 
-async function tryGenerateIngredientImage(input: {
+async function tryScheduleIngredientImage(input: {
   clerkUserId: string;
   userId: string;
   fridgeItemId: string;
@@ -26,22 +27,24 @@ async function tryGenerateIngredientImage(input: {
 }) {
   const mode = getGenerationMode();
   await reserveGenerationCapacity(input.clerkUserId, "ingredient_image");
-  let apiKey: string | undefined;
-
-  try {
-    apiKey = await getGenerationApiKey(input.userId, mode);
-  } catch {
-    apiKey = undefined;
-  }
-
-  return generateStoredImage({
+  const image = await createPendingStoredImage({
     userId: input.userId,
     kind: "ingredient",
     mode,
-    apiKey,
-    prompt: buildIngredientImagePrompt(input.name),
     attach: (imageId) => attachFridgeItemImage(input.userId, input.fridgeItemId, imageId)
   });
+
+  scheduleStoredImageCompletion({
+    imageId: image.id,
+    userId: input.userId,
+    kind: "ingredient",
+    mode,
+    prompt: buildIngredientImagePrompt(input.name),
+    isCurrent: () => isFridgeItemImageCurrent(input.userId, input.fridgeItemId, image.id),
+    apiKey: await getGenerationApiKey(input.userId, mode).catch(() => undefined)
+  });
+
+  return image;
 }
 
 export async function getFridge(clerkUserId: string) {
@@ -54,7 +57,7 @@ export async function createFridgeItem(clerkUserId: string, input: FridgeItemInp
   const result = await addFridgeItem(user.id, input);
 
   if (result.shouldGenerateImage) {
-    await tryGenerateIngredientImage({
+    await tryScheduleIngredientImage({
       clerkUserId,
       userId: user.id,
       fridgeItemId: result.item.id,
@@ -74,7 +77,7 @@ export async function editFridgeItem(
   const result = await updateFridgeItem(user.id, fridgeItemId, input);
 
   if (result.shouldGenerateImage) {
-    await tryGenerateIngredientImage({
+    await tryScheduleIngredientImage({
       clerkUserId,
       userId: user.id,
       fridgeItemId: result.item.id,
@@ -94,7 +97,7 @@ export async function retryFridgeItemImage(clerkUserId: string, fridgeItemId: st
   const user = await ensureUser(clerkUserId);
   const item = await getFridgeItem(user.id, fridgeItemId);
 
-  return tryGenerateIngredientImage({
+  return tryScheduleIngredientImage({
     clerkUserId,
     userId: user.id,
     fridgeItemId: item.id,
