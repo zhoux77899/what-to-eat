@@ -3,7 +3,6 @@ import { EventEmitter } from "node:events";
 import path from "node:path";
 import { PassThrough } from "node:stream";
 
-import type { ThreadEvent } from "@openai/codex-sdk";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { BusinessError } from "@/server/business-error";
@@ -46,6 +45,7 @@ vi.mock("openai", () => ({
 import { generateImageBytes } from "@/server/generation-adapter";
 
 const localImageRoot = path.join(process.cwd(), ".tmp", "local-codex-images");
+const localCodexHome = path.join(process.cwd(), ".tmp", "local-codex-home");
 const ANSI = {
   blue: "\x1b[34m",
   gray: "\x1b[90m",
@@ -89,21 +89,92 @@ function createMockChildProcess() {
   return child;
 }
 
-function createEventStream(events: ThreadEvent[]) {
-  return (async function* streamEvents() {
-    for (const event of events) {
-      yield event;
-    }
-  })();
-}
+function mockLocalCodexCliOutput() {
+  mocks.spawn.mockImplementation(() => {
+    const child = createMockChildProcess();
+    let prompt = "";
 
-function mockCodexEvents(events: ThreadEvent[]) {
-  mocks.codexRunStreamed.mockResolvedValue({
-    events: createEventStream(events)
+    child.stdin.on("data", (chunk) => {
+      prompt += String(chunk);
+    });
+    child.stdin.on("end", async () => {
+      const outputPath = prompt.match(/Output file: (.+output\.png)/)?.[1];
+
+      if (!outputPath) {
+        child.emit("exit", 1, null);
+        return;
+      }
+
+      await mkdir(path.dirname(outputPath), { recursive: true });
+      await writeFile(outputPath, await createSampleChromaPng());
+      child.emit("exit", 0, null);
+    });
+    return child;
   });
 }
 
-function mockCodexImageOutput() {
+function mockLocalCodexCliWithoutOutput() {
+  mocks.spawn.mockImplementation(() => {
+    const child = createMockChildProcess();
+
+    child.stdin.on("data", () => undefined);
+    child.stdin.on("end", () => {
+      child.emit("exit", 0, null);
+    });
+    return child;
+  });
+}
+
+function mockLocalCodexCliFailure() {
+  mocks.spawn.mockImplementation(() => {
+    const child = createMockChildProcess();
+    let prompt = "";
+
+    child.stdin.on("data", (chunk) => {
+      prompt += String(chunk);
+    });
+    child.stdin.on("end", () => {
+      child.stderr.write(`Codex unavailable for ${prompt} with raw output data`);
+      child.stderr.end();
+      child.emit("exit", 1, null);
+    });
+    return child;
+  });
+}
+
+function mockLocalCodexGeneratedImageOutput() {
+  mocks.spawn.mockImplementation(() => {
+    const child = createMockChildProcess();
+
+    child.stdin.on("data", () => undefined);
+    child.stdin.on("end", async () => {
+      child.stdout.write(`${JSON.stringify({ type: "thread.started", thread_id: "thread-1" })}\n`);
+      const generatedImagePath = path.join(localCodexHome, "generated_images", "thread-1", "generated.png");
+
+      await mkdir(path.dirname(generatedImagePath), { recursive: true });
+      await writeFile(generatedImagePath, await createSampleChromaPng());
+    });
+    return child;
+  });
+}
+
+function getSpawnCall() {
+  const call = mocks.spawn.mock.calls[0];
+
+  if (!call) {
+    throw new Error("Expected Local Codex CLI spawn call.");
+  }
+
+  return call as [string, string[], { cwd?: string; env?: NodeJS.ProcessEnv; signal?: AbortSignal; stdio?: string[] }];
+}
+
+function expectArgPair(args: string[], key: string, value: string) {
+  const keyIndex = args.findIndex((arg, index) => arg === key && args[index + 1] === value);
+
+  expect(keyIndex).toBeGreaterThanOrEqual(0);
+}
+
+function mockUnusedSdkImageOutput() {
   mocks.codexRunStreamed.mockImplementation(async (prompt: string) => {
     const outputPath = prompt.match(/Output file: (.+output\.png)/)?.[1];
 
@@ -115,19 +186,7 @@ function mockCodexImageOutput() {
     await writeFile(outputPath, await createSampleChromaPng());
 
     return {
-      events: createEventStream([
-        { type: "thread.started", thread_id: "thread-1" },
-        { type: "turn.started" },
-        {
-          type: "turn.completed",
-          usage: {
-            input_tokens: 10,
-            cached_input_tokens: 0,
-            output_tokens: 20,
-            reasoning_output_tokens: 5
-          }
-        }
-      ])
+      events: (async function* streamEvents() {})()
     };
   });
 }
@@ -148,9 +207,11 @@ describe("image generation adapter", () => {
     vi.stubEnv("NODE_ENV", "development");
     vi.stubEnv("LOCAL_CODEX_ENABLED", "true");
     vi.stubEnv("VERCEL_ENV", "");
+    vi.stubEnv("CODEX_HOME", localCodexHome);
     vi.spyOn(console, "info").mockImplementation(() => undefined);
     vi.spyOn(console, "warn").mockImplementation(() => undefined);
     await rm(localImageRoot, { force: true, recursive: true });
+    await rm(localCodexHome, { force: true, recursive: true });
   });
 
   afterEach(() => {
@@ -212,10 +273,11 @@ describe("image generation adapter", () => {
     );
   });
 
-  it("runs local Codex image generation through an abortable SDK thread", async () => {
+  it("runs local Codex image generation through an abortable CLI process", async () => {
     const controller = new AbortController();
 
-    mockCodexImageOutput();
+    mockLocalCodexCliOutput();
+    mockUnusedSdkImageOutput();
 
     const bytes = await generateImageBytes({
       mode: "local_codex",
@@ -228,27 +290,44 @@ describe("image generation adapter", () => {
 
     expect(decoded.width).toBe(512);
     expect(decoded.height).toBe(512);
-    expect(mocks.codexStartThread).toHaveBeenCalledWith(
+    expect(mocks.codexStartThread).not.toHaveBeenCalled();
+    expect(mocks.codexRunStreamed).not.toHaveBeenCalled();
+    const [command, args, options] = getSpawnCall();
+    expect(command).toBe(process.execPath);
+    expect(args).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining(`${path.sep}@openai${path.sep}codex${path.sep}bin${path.sep}codex.js`),
+        "exec",
+        "--json",
+        "--ephemeral",
+        "--disable",
+        "plugins",
+        "--skip-git-repo-check",
+        "--sandbox",
+        "workspace-write",
+        "--config",
+        "approval_policy=\"never\"",
+        "--config",
+        "web_search=\"disabled\"",
+        "--config",
+        "model_reasoning_effort=\"low\"",
+        "--cd",
+        expect.stringContaining(`${path.sep}.tmp${path.sep}local-codex-images${path.sep}`),
+        "-"
+      ])
+    );
+    expectArgPair(args, "--disable", "plugins");
+    expectArgPair(args, "--config", "model_reasoning_effort=\"low\"");
+    expect(options).toEqual(
       expect.objectContaining({
-        approvalPolicy: "never",
-        sandboxMode: "workspace-write",
-        skipGitRepoCheck: true,
-        webSearchMode: "disabled",
-        workingDirectory: expect.stringContaining(`${path.sep}.tmp${path.sep}local-codex-images${path.sep}`)
+        stdio: ["pipe", "pipe", "pipe"]
       })
     );
-    expect(mocks.codexRunStreamed).toHaveBeenCalledWith(
-      expect.stringContaining("Generate one PNG image for this application request."),
-      expect.objectContaining({
-        signal: controller.signal
-      })
-    );
-    expect(String(mocks.codexRunStreamed.mock.calls[0]?.[0])).toContain("Output file:");
-    expect(mocks.spawn).not.toHaveBeenCalled();
+    expect(options.signal).toBeUndefined();
   });
 
   it("reads the local Codex output file and removes the chroma-key background", async () => {
-    mockCodexImageOutput();
+    mockLocalCodexCliOutput();
 
     const bytes = await generateImageBytes({
       mode: "local_codex",
@@ -259,9 +338,9 @@ describe("image generation adapter", () => {
     expect(decoded.width).toBe(512);
     expect(decoded.height).toBe(512);
     expect(decoded.data[3]).toBe(0);
-    expect(mocks.spawn).not.toHaveBeenCalled();
-    expect(mocks.codexStartThread).toHaveBeenCalled();
-    expect(mocks.codexRunStreamed).toHaveBeenCalled();
+    expect(mocks.spawn).toHaveBeenCalled();
+    expect(mocks.codexStartThread).not.toHaveBeenCalled();
+    expect(mocks.codexRunStreamed).not.toHaveBeenCalled();
     const infoLogs = vi.mocked(console.info).mock.calls.map(([line]) => String(line));
     expect(infoLogs).toEqual(
       expect.arrayContaining([
@@ -277,18 +356,46 @@ describe("image generation adapter", () => {
     expect(JSON.stringify(infoLogs)).not.toContain("[local-codex]");
   });
 
+  it("copies a built-in imagegen result from the Codex generated image directory", async () => {
+    mockLocalCodexGeneratedImageOutput();
+
+    const bytes = await generateImageBytes({
+      mode: "local_codex",
+      prompt: "comic prompt"
+    });
+    const decoded = decodeRgbaPng(bytes);
+
+    expect(decoded.width).toBe(512);
+    expect(decoded.height).toBe(512);
+    expect(decoded.data[3]).toBe(0);
+    expect(mocks.spawn).toHaveBeenCalled();
+    expect(mocks.spawn.mock.results[0]?.value.kill).toHaveBeenCalledWith("SIGTERM");
+  });
+
+  it("fails safely when local Codex image generation is aborted", async () => {
+    const controller = new AbortController();
+    let child: ReturnType<typeof createMockChildProcess> | null = null;
+
+    mocks.spawn.mockImplementation(() => {
+      child = createMockChildProcess();
+      return child;
+    });
+
+    const pending = generateImageBytes({
+      mode: "local_codex",
+      prompt: "comic prompt",
+      signal: controller.signal
+    });
+
+    await vi.waitFor(() => expect(mocks.spawn).toHaveBeenCalled());
+    controller.abort();
+
+    await expect(pending).rejects.toMatchObject(new BusinessError("LOCAL_CODEX_UNAVAILABLE"));
+    expect(child?.kill).toHaveBeenCalledWith("SIGTERM");
+  });
+
   it("fails safely when local Codex does not create an output image", async () => {
-    mockCodexEvents([
-      {
-        type: "turn.completed",
-        usage: {
-          input_tokens: 10,
-          cached_input_tokens: 0,
-          output_tokens: 20,
-          reasoning_output_tokens: 5
-        }
-      }
-    ]);
+    mockLocalCodexCliWithoutOutput();
 
     await expect(
       generateImageBytes({
@@ -308,15 +415,8 @@ describe("image generation adapter", () => {
     expect(JSON.stringify(warnLogs)).not.toContain("[local-codex]");
   });
 
-  it("logs a safe SDK failure detail when local Codex image generation fails", async () => {
-    mockCodexEvents([
-      {
-        type: "turn.failed",
-        error: {
-          message: "Codex unavailable for image generation"
-        }
-      }
-    ]);
+  it("logs a safe CLI failure detail when local Codex image generation fails", async () => {
+    mockLocalCodexCliFailure();
 
     await expect(
       generateImageBytes({
@@ -334,7 +434,8 @@ describe("image generation adapter", () => {
       ])
     );
     expect(warnLogs.some((line) => line.includes("reason: codex_unavailable"))).toBe(true);
-    expect(warnLogs.some((line) => line.includes("detail: Codex unavailable for image generation"))).toBe(true);
+    expect(warnLogs.some((line) => line.includes("Codex unavailable"))).toBe(true);
     expect(JSON.stringify(warnLogs)).not.toContain("comic prompt");
+    expect(JSON.stringify(warnLogs)).not.toContain("raw output data");
   });
 });
