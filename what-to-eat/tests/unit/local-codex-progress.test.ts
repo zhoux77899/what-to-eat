@@ -97,13 +97,13 @@ describe("local Codex progress helper", () => {
     expect(thread.runStreamed).toHaveBeenCalledWith("do not log this prompt", undefined);
     expect(logger.info.mock.calls.every((call) => call.length === 1)).toBe(true);
     expect(logger.info).toHaveBeenCalledWith(
-      `LOCAL-CODEX recommendation_text start ${ANSI.cyan}START${ANSI.reset} in 25ms ${ANSI.gray}(runId: run-1)${ANSI.reset}`
+      ` LOCAL-CODEX recommendation_text start ${ANSI.cyan}START${ANSI.reset} in 25ms ${ANSI.gray}(runId: run-1)${ANSI.reset}`
     );
     expect(logger.info).toHaveBeenCalledWith(
-      `LOCAL-CODEX recommendation_text item.updated ${ANSI.blue}RUNNING${ANSI.reset} in 100ms ${ANSI.gray}(runId: run-1, itemType: command_execution, status: in_progress)${ANSI.reset}`
+      ` LOCAL-CODEX recommendation_text item.updated ${ANSI.blue}RUNNING${ANSI.reset} in 100ms ${ANSI.gray}(runId: run-1, itemType: command_execution, status: in_progress)${ANSI.reset}`
     );
     expect(logger.info).toHaveBeenCalledWith(
-      `LOCAL-CODEX recommendation_text turn.completed ${ANSI.green}DONE${ANSI.reset} in 150ms ${ANSI.gray}(runId: run-1, inputTokens: 11, cachedInputTokens: 2, outputTokens: 3, reasoningOutputTokens: 4)${ANSI.reset}`
+      ` LOCAL-CODEX recommendation_text turn.completed ${ANSI.green}DONE${ANSI.reset} in 150ms ${ANSI.gray}(runId: run-1, inputTokens: 11, cachedInputTokens: 2, outputTokens: 3, reasoningOutputTokens: 4)${ANSI.reset}`
     );
     const loggedPayload = JSON.stringify(logger.info.mock.calls);
     expect(loggedPayload).not.toContain("[local-codex]");
@@ -142,7 +142,7 @@ describe("local Codex progress helper", () => {
     ).rejects.toThrow("Codex failed while processing the local request");
 
     expect(logger.warn).toHaveBeenCalledWith(
-      `LOCAL-CODEX recommendation_text turn.failed ${ANSI.red}FAILED${ANSI.reset} in 60ms ${ANSI.gray}(runId: run-2, message: Codex failed while processing the local request)${ANSI.reset}`
+      ` LOCAL-CODEX recommendation_text turn.failed ${ANSI.red}FAILED${ANSI.reset} in 60ms ${ANSI.gray}(runId: run-2, message: Codex failed while processing the local request)${ANSI.reset}`
     );
   });
 
@@ -228,7 +228,7 @@ describe("local Codex progress helper", () => {
     });
 
     expect(logger.info).toHaveBeenCalledWith(
-      `LOCAL-CODEX image_generation output.prepared ${ANSI.blue}RUNNING${ANSI.reset} in 75ms ${ANSI.gray}(runId: run-4, outputFile: output.png)${ANSI.reset}`
+      ` LOCAL-CODEX image_generation output.prepared ${ANSI.blue}RUNNING${ANSI.reset} in 75ms ${ANSI.gray}(runId: run-4, outputFile: output.png)${ANSI.reset}`
     );
 
     logLocalCodexProgress({
@@ -243,7 +243,7 @@ describe("local Codex progress helper", () => {
     });
 
     expect(logger.warn).toHaveBeenCalledWith(
-      `LOCAL-CODEX image_generation output.missing ${ANSI.yellow}WARN${ANSI.reset} in 100ms ${ANSI.gray}(runId: run-4)${ANSI.reset}`
+      ` LOCAL-CODEX image_generation output.missing ${ANSI.yellow}WARN${ANSI.reset} in 100ms ${ANSI.gray}(runId: run-4)${ANSI.reset}`
     );
   });
 });

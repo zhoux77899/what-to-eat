@@ -116,7 +116,7 @@ describe("recommendation generation adapter", () => {
     expect(infoLogs).toEqual(
       expect.arrayContaining([
         expect.stringContaining(
-          `LOCAL-CODEX recommendation_text start ${ANSI.cyan}START${ANSI.reset} in `
+          ` LOCAL-CODEX recommendation_text start ${ANSI.cyan}START${ANSI.reset} in `
         )
       ])
     );

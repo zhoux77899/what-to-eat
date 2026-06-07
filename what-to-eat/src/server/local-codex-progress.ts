@@ -21,7 +21,7 @@ type LocalCodexProgressLogger = Pick<typeof console, "info" | "warn">;
 type SafeMetadataValue = string | number | boolean | null | undefined;
 type LocalCodexProgressStatus = "START" | "RUNNING" | "DONE" | "WARN" | "FAILED";
 
-const LOG_PREFIX = "LOCAL-CODEX";
+const LOG_PREFIX = " LOCAL-CODEX";
 const MAX_MESSAGE_LENGTH = 240;
 const ANSI = {
   blue: "\x1b[34m",

@@ -1,8 +1,6 @@
 import { mkdir, readFile, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
-import { spawn } from "node:child_process";
-import { createRequire } from "node:module";
 
 import { Codex } from "@openai/codex-sdk";
 import OpenAI from "openai";
@@ -24,7 +22,7 @@ import {
 import { MEAL_IMAGE_MODEL, TEXT_RECOMMENDATION_MODEL } from "@/server/openai/models";
 
 const localCodexImageRoot = path.join(process.cwd(), ".tmp", "local-codex-images");
-const require = createRequire(import.meta.url);
+const MAX_LOCAL_CODEX_DETAIL_LENGTH = 240;
 
 export async function validateOpenAiKey(apiKey: string) {
   try {
@@ -191,11 +189,27 @@ async function generateLocalCodexImageBytes(prompt: string, signal?: AbortSignal
       }
     });
 
-    await runLocalCodexImageCommand({
-      outputDirectory,
-      outputPath,
-      prompt,
-      signal
+    const codex = new Codex();
+    const thread = codex.startThread({
+      approvalPolicy: "never",
+      sandboxMode: "workspace-write",
+      skipGitRepoCheck: true,
+      webSearchMode: "disabled",
+      workingDirectory: outputDirectory
+    });
+
+    await runLocalCodexTurnWithProgress({
+      thread,
+      prompt: getLocalCodexImagePrompt({
+        outputPath,
+        prompt
+      }),
+      task: "image_generation",
+      runId,
+      startedAtMs,
+      turnOptions: {
+        signal
+      }
     });
 
     const outputStat = await stat(outputPath).catch(() => null);
@@ -244,7 +258,8 @@ async function generateLocalCodexImageBytes(prompt: string, signal?: AbortSignal
       level: "warn",
       startedAtMs,
       metadata: {
-        reason: "codex_unavailable"
+        reason: "codex_unavailable",
+        detail: getSafeLocalCodexErrorDetail(error)
       }
     });
     throw new BusinessError("LOCAL_CODEX_UNAVAILABLE");
@@ -253,79 +268,19 @@ async function generateLocalCodexImageBytes(prompt: string, signal?: AbortSignal
   }
 }
 
-async function runLocalCodexImageCommand(input: {
-  outputDirectory: string;
+function getLocalCodexImagePrompt(input: {
   outputPath: string;
   prompt: string;
-  signal?: AbortSignal;
 }) {
-  const codexCliPath = path.join(
-    path.dirname(require.resolve("@openai/codex/package.json")),
-    "bin",
-    "codex.js"
-  );
-  const child = spawn(
-    process.execPath,
-    [
-      codexCliPath,
-      "exec",
-      "--json",
-      "--ephemeral",
-      "--skip-git-repo-check",
-      "--sandbox",
-      "workspace-write",
-      "--ask-for-approval",
-      "never",
-      "--cd",
-      input.outputDirectory,
-      "-"
-    ],
-    {
-      env: process.env,
-      signal: input.signal,
-      stdio: ["pipe", "pipe", "pipe"]
-    }
-  );
-  let stderr = "";
-
-  child.stderr.on("data", (chunk) => {
-    stderr += String(chunk);
-  });
-  child.stdout.resume();
-  child.stdin.end(
-    [
-      "Generate one PNG image for this application request.",
-      "Do not edit source files, package files, configuration, docs, or tests.",
-      "Write only the final PNG image to the exact output path below.",
-      `Output file: ${input.outputPath}`,
-      "",
-      "Visual prompt:",
-      input.prompt
-    ].join("\n")
-  );
-
-  await new Promise<void>((resolve, reject) => {
-    const abort = () => {
-      child.kill("SIGTERM");
-      reject(new Error("Local Codex image generation aborted."));
-    };
-
-    input.signal?.addEventListener("abort", abort, { once: true });
-    child.on("error", (error) => {
-      input.signal?.removeEventListener("abort", abort);
-      reject(error);
-    });
-    child.on("exit", (code) => {
-      input.signal?.removeEventListener("abort", abort);
-
-      if (code === 0) {
-        resolve();
-        return;
-      }
-
-      reject(new Error(sanitizeCliError(stderr)));
-    });
-  });
+  return [
+    "Generate one PNG image for this application request.",
+    "Do not edit source files, package files, configuration, docs, or tests.",
+    "Write only the final PNG image to the exact output path below.",
+    `Output file: ${input.outputPath}`,
+    "",
+    "Visual prompt:",
+    input.prompt
+  ].join("\n");
 }
 
 function assertPathInside(root: string, target: string) {
@@ -336,7 +291,17 @@ function assertPathInside(root: string, target: string) {
   }
 }
 
-function sanitizeCliError(value: string) {
+function getSafeLocalCodexErrorDetail(error: unknown) {
+  if (error instanceof Error) {
+    return sanitizeLocalCodexErrorDetail(error.message);
+  }
+
+  return "Local Codex image generation failed.";
+}
+
+function sanitizeLocalCodexErrorDetail(value: string) {
   const singleLine = value.replace(/\s+/g, " ").trim();
-  return singleLine ? singleLine.slice(0, 240) : "Local Codex image generation failed.";
+  return singleLine
+    ? singleLine.slice(0, MAX_LOCAL_CODEX_DETAIL_LENGTH)
+    : "Local Codex image generation failed.";
 }
