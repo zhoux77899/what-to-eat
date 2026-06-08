@@ -88,6 +88,12 @@ Do not configure `LOCAL_CODEX_ENABLED` in Vercel Preview or Production. Local Co
 
 When Local Codex Mode attempts ingredient or dish images, the app runs `codex exec` locally with plugins disabled and low reasoning effort for the background image task. Codex triggers local imagegen, which writes under `$CODEX_HOME/generated_images/<threadId>/`; the app parses the CLI thread id, copies the generated PNG into `.tmp/local-codex-images/`, removes the `#ff00ff` chroma-key background, uploads successful images to Vercel Blob, and records safe image failure states when local image capability is unavailable.
 
+## Vercel Deployment Notes
+
+Image-capable API routes use the Node.js runtime with `maxDuration = 300`. The stored-image lifecycle aborts image generation after `270_000` ms, leaving roughly 30 seconds for cleanup before the Vercel function window closes.
+
+This deployment profile assumes Vercel Fluid Compute is enabled. Fluid Compute is enabled by default for new Vercel projects and supports a 300-second Node.js function duration on Hobby, Pro, and Enterprise plans. If Fluid Compute is disabled, Hobby projects only support up to 60 seconds and must either re-enable Fluid Compute or reduce the image timeout and route `maxDuration` before deployment.
+
 ## Database Migrations
 
 This branch includes the initial migration at `what-to-eat/drizzle/0000_smart_madame_masque.sql`.

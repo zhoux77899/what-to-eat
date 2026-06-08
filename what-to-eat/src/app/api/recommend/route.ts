@@ -6,7 +6,8 @@ import { createRecommendation } from "@/server/recommendation-service";
 import { parseJsonBody } from "@/server/request";
 import { recommendRequestSchema } from "@/server/validation";
 
-export const maxDuration = 180;
+export const runtime = "nodejs";
+export const maxDuration = 300;
 
 export async function POST(request: NextRequest) {
   const clerkUserId = await getCurrentClerkUserId();

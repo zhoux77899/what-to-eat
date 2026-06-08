@@ -70,7 +70,7 @@ describe("recommendation service", () => {
         id: imageId,
         status: "pending",
         publicUrl: null,
-        deadlineAt: "2026-06-06T00:02:00.000Z"
+        deadlineAt: "2026-06-06T00:04:30.000Z"
       };
     });
     mocks.generateStoredImage.mockResolvedValue({ id: "legacy-image", status: "succeeded" });
@@ -129,8 +129,8 @@ describe("recommendation service", () => {
     ]);
     expect(result.dishes.map((dish) => dish.image.status)).toEqual(["pending", "pending"]);
     expect(result.dishes.map((dish) => dish.image.deadlineAt)).toEqual([
-      "2026-06-06T00:02:00.000Z",
-      "2026-06-06T00:02:00.000Z"
+      "2026-06-06T00:04:30.000Z",
+      "2026-06-06T00:04:30.000Z"
     ]);
     expect(mocks.scheduleStoredImageCompletion).toHaveBeenCalledTimes(2);
     expect(mocks.generateStoredImage).not.toHaveBeenCalled();

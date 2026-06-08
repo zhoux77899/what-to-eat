@@ -6,7 +6,8 @@ import { editFridgeItem, removeFridgeItem } from "@/server/fridge-service";
 import { parseJsonBody } from "@/server/request";
 import { fridgeItemUpdateSchema, recordIdSchema } from "@/server/validation";
 
-export const maxDuration = 180;
+export const runtime = "nodejs";
+export const maxDuration = 300;
 
 type RouteContext = { params: Promise<{ itemId: string }> };
 

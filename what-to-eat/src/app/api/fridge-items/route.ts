@@ -6,7 +6,8 @@ import { createFridgeItem, getFridge } from "@/server/fridge-service";
 import { parseJsonBody } from "@/server/request";
 import { fridgeItemSchema } from "@/server/validation";
 
-export const maxDuration = 180;
+export const runtime = "nodejs";
+export const maxDuration = 300;
 
 export async function GET() {
   const clerkUserId = await getCurrentClerkUserId();

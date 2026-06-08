@@ -3,7 +3,8 @@ import { getCurrentClerkUserId } from "@/server/auth";
 import { retryDishImage } from "@/server/recommendation-service";
 import { recordIdSchema } from "@/server/validation";
 
-export const maxDuration = 180;
+export const runtime = "nodejs";
+export const maxDuration = 300;
 
 type RouteContext = { params: Promise<{ dishId: string }> };
 

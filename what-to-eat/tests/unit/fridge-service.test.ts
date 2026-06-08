@@ -59,7 +59,7 @@ describe("fridge service image scheduling", () => {
         id: "image-pending-1",
         status: "pending",
         publicUrl: null,
-        deadlineAt: "2026-06-06T00:02:00.000Z"
+        deadlineAt: "2026-06-06T00:04:30.000Z"
       };
     });
     mocks.generateStoredImage.mockResolvedValue({ id: "legacy-image", status: "succeeded" });
