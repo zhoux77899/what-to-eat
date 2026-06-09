@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   createGeneratedImage: vi.fn(),
+  del: vi.fn(),
   generateImageBytes: vi.fn(),
   markGeneratedImageFailed: vi.fn(),
   markGeneratedImageSucceeded: vi.fn(),
@@ -9,6 +10,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@vercel/blob", () => ({
+  del: mocks.del,
   put: mocks.put
 }));
 
@@ -25,6 +27,7 @@ vi.mock("@/server/generation-adapter", () => ({
 import {
   completeStoredImage,
   createPendingStoredImage,
+  deleteStoredImageBlobs,
   IMAGE_GENERATION_TIMEOUT_MS
 } from "@/server/images";
 
@@ -53,6 +56,7 @@ describe("stored image task lifecycle", () => {
       pathname: "generated/dish/image-1.png",
       url: "https://blob.test/image.png"
     });
+    mocks.del.mockResolvedValue(undefined);
   });
 
   it("creates a pending image with a server deadline before attaching it", async () => {
@@ -158,5 +162,23 @@ describe("stored image task lifecycle", () => {
       "image-1",
       "IMAGE_GENERATION_TIMED_OUT"
     );
+  });
+
+  it("deletes stored image blobs best-effort and ignores database-only image rows", async () => {
+    await deleteStoredImageBlobs(["generated/dish/image-1.png", null, ""]);
+
+    expect(mocks.del).toHaveBeenCalledWith(["generated/dish/image-1.png"]);
+  });
+
+  it("keeps history deletion successful when blob cleanup fails", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    mocks.del.mockRejectedValue(new Error("Blob service unavailable"));
+
+    await expect(deleteStoredImageBlobs(["generated/dish/image-1.png"])).resolves.toBeUndefined();
+
+    expect(warn).toHaveBeenCalledWith(
+      "Stored image blob cleanup failed: Blob service unavailable"
+    );
+    warn.mockRestore();
   });
 });

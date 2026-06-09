@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -52,6 +53,7 @@ export function FridgeWorkbench() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [errorKey, setErrorKey] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<FridgeItem | null>(null);
 
   const loadItems = useCallback(async () => {
     try {
@@ -128,6 +130,16 @@ export function FridgeWorkbench() {
     }
   }
 
+  async function confirmDeleteItem() {
+    if (!pendingDelete) {
+      return;
+    }
+
+    const itemId = pendingDelete.id;
+    setPendingDelete(null);
+    await remove(itemId);
+  }
+
   async function retryImage(itemId: string) {
     setBusy(true);
 
@@ -201,7 +213,7 @@ export function FridgeWorkbench() {
                     <Button
                       className="home-paper-button app-paper-button-compact app-paper-button-danger"
                       disabled={busy}
-                      onClick={() => remove(item.id)}
+                      onClick={() => setPendingDelete(item)}
                       type="button"
                       variant="ghost"
                     >
@@ -277,6 +289,20 @@ export function FridgeWorkbench() {
         <p className="app-muted-text">{t("mergeNote")}</p>
         {errorKey ? <p className="auth-modal-error">{tErrors(errorKey)}</p> : null}
       </section>
+      <ConfirmDeleteDialog
+        cancelLabel={t("deleteCancel")}
+        confirmLabel={t("deleteConfirm")}
+        description={t("deleteDescription", { name: pendingDelete?.name ?? "" })}
+        disabled={busy}
+        onConfirm={() => void confirmDeleteItem()}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPendingDelete(null);
+          }
+        }}
+        open={pendingDelete !== null}
+        title={t("deleteTitle")}
+      />
     </div>
   );
 }

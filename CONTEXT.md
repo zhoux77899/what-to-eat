@@ -21,10 +21,10 @@ The user's saved natural-language food preference text and default locale.
 Per-request natural-language guidance that affects exactly one recommendation generation and is never persisted.
 
 **Meal Recommendation**:
-A lightweight history record for one generation event. It stores locale, fixed text model id, generation mode, candidate count, and generated dishes.
+A lightweight history record for one generation event. It stores locale, fixed text model id, generation mode, candidate count, and generated dishes. It can be deleted by the owning user.
 
 **Recommended Dish**:
-A persisted dish candidate with a name, summary, instructions, estimated minutes, and an optional dish-image reference.
+A persisted dish candidate with a name, summary, instructions, estimated minutes, and an optional dish-image reference. It can be deleted from history by the owning user.
 
 **Consumption Suggestion**:
 An ephemeral, editable proposal for decrementing fridge items after the user selects a dish. It includes the fridge item id, current version, unit, and consumed quantity. It is never written to recommendation history.
@@ -49,6 +49,8 @@ _Avoid_: Production fallback, deployed Codex provider
 - A **Meal Recommendation** owns one to five **Recommended Dishes**.
 - Each **Recommended Dish** may reference one **Generated Image**.
 - Every generated dish immediately attempts dish-image generation. Image failure preserves the text dish and can be retried from history.
+- Deleting a **Meal Recommendation** deletes its **Recommended Dishes** and their current dish **Generated Images**.
+- Deleting a **Recommended Dish** deletes its current dish **Generated Image**. If it was the last dish in the **Meal Recommendation**, the parent history record is deleted too.
 - A **Consumption Suggestion** is returned to the browser only. Confirming one dish applies all edited decrements atomically using fridge-item versions.
 - **Temporary Requirements**, **Consumption Suggestions**, fridge snapshots, and preference snapshots are intentionally absent from history.
 - **Production OpenAI Mode** uses an **OpenAI API Key**.

@@ -5,6 +5,8 @@ import { buildRecommendationPrompt, enrichConsumptionSuggestions } from "@/lib/r
 import { BusinessError } from "@/server/business-error";
 import {
   attachDishImage,
+  deleteRecommendation,
+  deleteRecommendedDish,
   ensureUser,
   getDish,
   getPreferences,
@@ -16,7 +18,11 @@ import {
 import { generateRecommendationText } from "@/server/generation-adapter";
 import { getGenerationApiKey } from "@/server/generation-key";
 import { getGenerationMode } from "@/server/generation-mode";
-import { createPendingStoredImage, scheduleStoredImageCompletion } from "@/server/images";
+import {
+  createPendingStoredImage,
+  deleteStoredImageBlobs,
+  scheduleStoredImageCompletion
+} from "@/server/images";
 import { buildDishImagePrompt } from "@/server/image-prompts";
 import { MEAL_IMAGE_MODEL, TEXT_RECOMMENDATION_MODEL } from "@/server/openai/models";
 import type { recommendRequestSchema } from "@/server/validation";
@@ -125,4 +131,16 @@ export async function retryDishImage(clerkUserId: string, dishId: string) {
   });
 
   return image;
+}
+
+export async function removeRecommendation(clerkUserId: string, recommendationId: string) {
+  const user = await ensureUser(clerkUserId);
+  const deleted = await deleteRecommendation(user.id, recommendationId);
+  await deleteStoredImageBlobs(deleted.blobPathnames);
+}
+
+export async function removeRecommendedDish(clerkUserId: string, dishId: string) {
+  const user = await ensureUser(clerkUserId);
+  const deleted = await deleteRecommendedDish(user.id, dishId);
+  await deleteStoredImageBlobs(deleted.blobPathnames);
 }

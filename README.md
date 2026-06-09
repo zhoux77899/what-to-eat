@@ -30,7 +30,7 @@ Version one does not persist temporary requirements, consumption suggestions, fr
 | Refrigerator inventory | Implemented | CRUD, normalized merge behavior, image state, retry action, and atomic consumption confirmation are wired to Postgres services. |
 | OpenAI key management | Implemented | AES-256-GCM persistence, hints, delete, replace, and upstream validation are wired. |
 | Recommendation generation | Implemented | Structured non-streaming text generation, candidate validation, history persistence, image attempts, and ephemeral consumption suggestions are wired. |
-| Recommendation history | Implemented | History lists saved dishes and image status; failed dish images can be retried. |
+| Recommendation history | Implemented | History lists saved dishes and image status; failed dish images can be retried, individual dishes can be deleted with their current images, and whole records can be deleted. |
 | Local Codex Mode | Implemented for local development | Structured text uses the local SDK. Image attempts use a constrained `codex exec` bridge that triggers local imagegen, copies the generated PNG into the app temp directory, and fails safely when local image capability is unavailable. |
 | Database migration | Generated locally | The initial Drizzle migration is committed under `what-to-eat/drizzle/`; apply it after configuring a Neon development-branch `DATABASE_URL`. |
 | Source-level tests | Implemented | Unit tests cover schema shape, domain validation, source-level data-layer guards, generation mode gating, localized UI structure, and route source constraints. |
@@ -120,6 +120,8 @@ Run `corepack pnpm db:generate` only after changing `src/db/schema.ts`, then rev
 | `/api/fridge-items/apply-consumption` | `POST` | Atomically confirm one dish's edited fridge decrements. |
 | `/api/recommend` | `POST` | Generate one to five dishes and return ephemeral consumption suggestions. |
 | `/api/recommendations` | `GET` | List lightweight dish history. |
+| `/api/recommendations/:recommendationId` | `DELETE` | Delete one recommendation history record and its current dish images. |
+| `/api/recommendations/dishes/:dishId` | `DELETE` | Delete one historical dish and its current dish image. |
 | `/api/recommendations/:dishId/retry-image` | `POST` | Retry one historical dish image. |
 
 ## Verification

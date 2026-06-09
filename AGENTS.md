@@ -34,6 +34,7 @@
 - Return editable fridge consumption suggestions to the browser. Do not persist them.
 - Apply confirmed consumption for one selected dish atomically. Validate user ownership, fridge-item version, unit, and remaining quantity. Delete exhausted items and roll back every decrement on any conflict.
 - Keep history intentionally lightweight: recommendation headers, dish rows, and image references only. Do not save fridge snapshots, preference snapshots, temporary requirements, or consumption suggestions.
+- Support deleting whole recommendation history records and individual historical dishes. Historical dish deletion removes the dish's current dish image record and best-effort deletes its uploaded Blob.
 
 ## Database Model
 
@@ -69,6 +70,8 @@ POST   /api/fridge-items/:itemId/retry-image
 POST   /api/fridge-items/apply-consumption
 POST   /api/recommend
 GET    /api/recommendations
+DELETE /api/recommendations/:recommendationId
+DELETE /api/recommendations/dishes/:dishId
 POST   /api/recommendations/:dishId/retry-image
 ```
 

@@ -19,4 +19,10 @@ describe("business errors", () => {
     expect(getHttpStatusForError("RATE_LIMITED")).toBe(429);
     expect(getHttpStatusForError("UPSTREAM_OPENAI_ERROR")).toBe(502);
   });
+
+  it("uses a stable not-found error for missing recommendation history", () => {
+    expect(BUSINESS_ERROR_CODES).toContain("RECOMMENDATION_NOT_FOUND");
+    expect(ERROR_MESSAGE_KEYS.RECOMMENDATION_NOT_FOUND).toBe("errors.recommendationNotFound");
+    expect(getHttpStatusForError("RECOMMENDATION_NOT_FOUND")).toBe(404);
+  });
 });

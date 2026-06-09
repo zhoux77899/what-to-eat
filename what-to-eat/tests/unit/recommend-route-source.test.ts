@@ -24,7 +24,9 @@ describe("image-capable API routes", () => {
     path.join("src", "app", "api", "fridge-items", "route.ts"),
     path.join("src", "app", "api", "fridge-items", "[itemId]", "route.ts"),
     path.join("src", "app", "api", "fridge-items", "[itemId]", "retry-image", "route.ts"),
-    path.join("src", "app", "api", "recommendations", "[dishId]", "retry-image", "route.ts")
+    path.join("src", "app", "api", "recommendations", "[id]", "retry-image", "route.ts"),
+    path.join("src", "app", "api", "recommendations", "[id]", "route.ts"),
+    path.join("src", "app", "api", "recommendations", "dishes", "[dishId]", "route.ts")
   ];
 
   it("uses Node.js runtime and a Vercel function window that exceeds image deadlines", () => {

@@ -1,4 +1,4 @@
-import { put } from "@vercel/blob";
+import { del, put } from "@vercel/blob";
 
 import type { GeneratedImageKind, GenerationMode } from "@/db/schema";
 import { BusinessError } from "@/server/business-error";
@@ -131,6 +131,21 @@ export async function generateStoredImage(input: {
     prompt: input.prompt,
     isCurrent: async () => true
   });
+}
+
+export async function deleteStoredImageBlobs(blobPathnames: Array<string | null | undefined>) {
+  const pathnames = blobPathnames.filter((pathname): pathname is string => Boolean(pathname));
+
+  if (pathnames.length === 0) {
+    return;
+  }
+
+  try {
+    await del(pathnames);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown blob cleanup error";
+    console.warn(`Stored image blob cleanup failed: ${message}`);
+  }
 }
 
 async function failIfPending(imageId: string, errorCode: string) {

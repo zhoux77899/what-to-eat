@@ -493,6 +493,191 @@ export async function saveRecommendation(
   return { recommendation: recommendationRows[0], dishes };
 }
 
+type DeletedHistoryImages = {
+  deletedCount: number;
+  remainingCount?: number;
+  blobPathnames: string[];
+};
+
+function toDeletedHistoryImages(
+  rows: Array<{
+    deleted_count?: number | string | null;
+    remaining_count?: number | string | null;
+    blob_pathname?: string | null;
+  }>
+): DeletedHistoryImages {
+  const first = rows[0];
+
+  return {
+    deletedCount: Number(first?.deleted_count ?? 0),
+    remainingCount:
+      first?.remaining_count === undefined || first.remaining_count === null
+        ? undefined
+        : Number(first.remaining_count),
+    blobPathnames: rows
+      .map((row) => row.blob_pathname)
+      .filter((pathname): pathname is string => Boolean(pathname))
+  };
+}
+
+export async function deleteRecommendation(userId: string, recommendationId: string) {
+  const db = createDb();
+  const result = await db.execute<{
+    deleted_count: number;
+    blob_pathname: string | null;
+  }>(sql`
+    with target_recommendation as (
+      select id
+      from recommendations
+      where id = ${recommendationId}::uuid
+        and user_id = ${userId}::uuid
+      for update
+    ),
+    target_dishes as (
+      select id, image_id
+      from recommended_dishes
+      where recommendation_id in (select id from target_recommendation)
+    ),
+    image_candidates as (
+      select image_id
+      from target_dishes
+      where image_id is not null
+    ),
+    deleted_dishes as (
+      delete from recommended_dishes
+      using target_dishes
+      where recommended_dishes.id = target_dishes.id
+      returning recommended_dishes.id
+    ),
+    deleted_recommendation as (
+      delete from recommendations
+      using target_recommendation
+      where recommendations.id = target_recommendation.id
+      returning recommendations.id
+    ),
+    deleted_images as (
+      delete from generated_images
+      using image_candidates
+      where generated_images.id = image_candidates.image_id
+        and generated_images.user_id = ${userId}::uuid
+        and generated_images.kind = 'dish'
+        and (select count(*) from deleted_dishes) >= 0
+        and not exists (
+          select 1
+          from recommended_dishes
+          where recommended_dishes.image_id = generated_images.id
+        )
+      returning generated_images.blob_pathname
+    )
+    select
+      (select count(*) from deleted_recommendation)::integer as deleted_count,
+      deleted_images.blob_pathname
+    from deleted_images
+    union all
+    select
+      (select count(*) from deleted_recommendation)::integer as deleted_count,
+      null::text as blob_pathname
+    where not exists (select 1 from deleted_images)
+  `);
+  const summary = toDeletedHistoryImages(result.rows);
+
+  if (summary.deletedCount !== 1) {
+    throw new BusinessError("RECOMMENDATION_NOT_FOUND");
+  }
+
+  return { blobPathnames: summary.blobPathnames };
+}
+
+export async function deleteRecommendedDish(userId: string, dishId: string) {
+  const db = createDb();
+  const result = await db.execute<{
+    deleted_count: number;
+    remaining_count: number;
+    blob_pathname: string | null;
+  }>(sql`
+    with target_dish as (
+      select
+        recommended_dishes.id,
+        recommended_dishes.recommendation_id,
+        recommended_dishes.image_id
+      from recommended_dishes
+      join recommendations
+        on recommendations.id = recommended_dishes.recommendation_id
+      where recommended_dishes.id = ${dishId}::uuid
+        and recommendations.user_id = ${userId}::uuid
+      for update of recommendations
+    ),
+    deleted_dish as (
+      delete from recommended_dishes
+      using target_dish
+      where recommended_dishes.id = target_dish.id
+      returning target_dish.recommendation_id, target_dish.image_id
+    ),
+    remaining as (
+      select
+        deleted_dish.recommendation_id,
+        count(recommended_dishes.id)::integer as remaining_count
+      from deleted_dish
+      left join recommended_dishes
+        on recommended_dishes.recommendation_id = deleted_dish.recommendation_id
+      group by deleted_dish.recommendation_id
+    ),
+    updated_recommendation as (
+      update recommendations
+      set candidate_count = remaining.remaining_count
+      from remaining
+      where recommendations.id = remaining.recommendation_id
+        and remaining.remaining_count > 0
+      returning recommendations.id
+    ),
+    deleted_recommendation as (
+      delete from recommendations
+      using remaining
+      where recommendations.id = remaining.recommendation_id
+        and remaining.remaining_count = 0
+      returning recommendations.id
+    ),
+    deleted_images as (
+      delete from generated_images
+      using deleted_dish
+      where generated_images.id = deleted_dish.image_id
+        and generated_images.user_id = ${userId}::uuid
+        and generated_images.kind = 'dish'
+        and (
+          (select count(*) from updated_recommendation)
+          + (select count(*) from deleted_recommendation)
+        ) >= 0
+        and not exists (
+          select 1
+          from recommended_dishes
+          where recommended_dishes.image_id = generated_images.id
+        )
+      returning generated_images.blob_pathname
+    )
+    select
+      (select count(*) from deleted_dish)::integer as deleted_count,
+      coalesce((select remaining_count from remaining), 0)::integer as remaining_count,
+      deleted_images.blob_pathname
+    from deleted_images
+    union all
+    select
+      (select count(*) from deleted_dish)::integer as deleted_count,
+      coalesce((select remaining_count from remaining), 0)::integer as remaining_count,
+      null::text as blob_pathname
+    where not exists (select 1 from deleted_images)
+  `);
+  const summary = toDeletedHistoryImages(result.rows);
+
+  if (summary.deletedCount !== 1) {
+    throw new BusinessError("DISH_NOT_FOUND");
+  }
+
+  return {
+    blobPathnames: summary.blobPathnames,
+    remainingCount: summary.remainingCount ?? 0
+  };
+}
+
 export async function listRecommendations(userId: string) {
   await reconcileTimedOutGeneratedImages(userId);
 

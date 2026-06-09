@@ -1387,6 +1387,29 @@ body {
   z-index: 1;
 }
 
+.app-confirm-dialog-backdrop {
+  --hero-ink: var(--auth-ink);
+  --hero-paper: var(--auth-paper);
+  --hero-menu-paper: var(--auth-menu-paper);
+  --hero-menu-paper-deep: var(--auth-menu-paper-deep);
+  --hero-salmon: var(--auth-salmon);
+  --hero-green: var(--auth-green);
+}
+
+.app-confirm-dialog-card {
+  max-width: 28rem;
+}
+
+.app-confirm-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.72rem;
+  justify-content: flex-end;
+  margin-block-start: 1.35rem;
+  position: relative;
+  z-index: 1;
+}
+
 @media (max-width: 720px) {
   .home-hero {
     background-position: 50% 50%;
