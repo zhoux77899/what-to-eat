@@ -245,10 +245,10 @@ export function FridgeWorkbench() {
             {t("quantity")}
             <Input
               className="app-paper-input"
-              min="0.001"
+              min="1"
               onChange={(event) => setForm({ ...form, quantity: event.target.value })}
               required
-              step="0.001"
+              step="1"
               type="number"
               value={form.quantity}
             />
