@@ -2,28 +2,30 @@ import type { NextRequest } from "next/server";
 
 import { fail, failFromError, ok } from "@/server/api-response";
 import { getCurrentClerkUserId } from "@/server/auth";
-import { createRecommendation } from "@/server/recommendation-service";
-import { parseJsonBody } from "@/server/request";
-import { recommendRequestSchema } from "@/server/validation";
+import { removeRecommendedDish } from "@/server/recommendation-service";
+import { recordIdSchema } from "@/server/validation";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
-export async function POST(request: NextRequest) {
+type RouteContext = { params: Promise<{ dishId: string }> };
+
+export async function DELETE(_request: NextRequest, context: RouteContext) {
   const clerkUserId = await getCurrentClerkUserId();
 
   if (!clerkUserId) {
     return fail("UNAUTHENTICATED");
   }
 
-  const parsed = await parseJsonBody(request, recommendRequestSchema);
+  const dishId = recordIdSchema.safeParse((await context.params).dishId);
 
-  if (!parsed.success) {
+  if (!dishId.success) {
     return fail("VALIDATION_ERROR");
   }
 
   try {
-    return ok(await createRecommendation(clerkUserId, parsed.data));
+    await removeRecommendedDish(clerkUserId, dishId.data);
+    return ok({ deleted: true });
   } catch (error) {
     return failFromError(error);
   }

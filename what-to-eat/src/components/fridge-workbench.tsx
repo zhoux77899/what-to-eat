@@ -5,8 +5,13 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  getImageStatusPollDelay,
+  resolveClientImageStatus
+} from "@/lib/client-image-status";
 import { getErrorTranslationKey, requestJson } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 
@@ -19,9 +24,26 @@ type FridgeItem = {
   imageStatus: "pending" | "succeeded" | "failed" | null;
   imageUrl: string | null;
   imageErrorCode: string | null;
+  imageDeadlineAt: string | null;
 };
 
 const EMPTY_FORM = { name: "", quantity: "1", unit: "" };
+
+function normalizeFridgeItems(items: FridgeItem[]) {
+  return items.map((item) => ({
+    ...item,
+    imageStatus: resolveClientImageStatus(item.imageStatus, item.imageDeadlineAt)
+  }));
+}
+
+function getFridgeImagePollDelay(items: FridgeItem[]) {
+  return getImageStatusPollDelay(
+    items.map((item) => ({
+      status: item.imageStatus,
+      deadlineAt: item.imageDeadlineAt
+    }))
+  );
+}
 
 export function FridgeWorkbench() {
   const t = useTranslations("fridge");
@@ -31,13 +53,15 @@ export function FridgeWorkbench() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [errorKey, setErrorKey] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<FridgeItem | null>(null);
 
   const loadItems = useCallback(async () => {
     try {
       const data = await requestJson<{ items: FridgeItem[] }>("/api/fridge-items");
-      setItems(data.items);
+      setItems(normalizeFridgeItems(data.items));
       setErrorKey(null);
     } catch (error) {
+      setItems((current) => normalizeFridgeItems(current));
       setErrorKey(getErrorTranslationKey(error));
     }
   }, []);
@@ -45,6 +69,20 @@ export function FridgeWorkbench() {
   useEffect(() => {
     queueMicrotask(() => void loadItems());
   }, [loadItems]);
+
+  useEffect(() => {
+    const pollDelay = getFridgeImagePollDelay(items);
+
+    if (pollDelay === null) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      void loadItems();
+    }, pollDelay);
+
+    return () => window.clearTimeout(timeout);
+  }, [items, loadItems]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -90,6 +128,16 @@ export function FridgeWorkbench() {
     } finally {
       setBusy(false);
     }
+  }
+
+  async function confirmDeleteItem() {
+    if (!pendingDelete) {
+      return;
+    }
+
+    const itemId = pendingDelete.id;
+    setPendingDelete(null);
+    await remove(itemId);
   }
 
   async function retryImage(itemId: string) {
@@ -165,7 +213,7 @@ export function FridgeWorkbench() {
                     <Button
                       className="home-paper-button app-paper-button-compact app-paper-button-danger"
                       disabled={busy}
-                      onClick={() => remove(item.id)}
+                      onClick={() => setPendingDelete(item)}
                       type="button"
                       variant="ghost"
                     >
@@ -197,10 +245,10 @@ export function FridgeWorkbench() {
             {t("quantity")}
             <Input
               className="app-paper-input"
-              min="0.001"
+              min="1"
               onChange={(event) => setForm({ ...form, quantity: event.target.value })}
               required
-              step="0.001"
+              step="1"
               type="number"
               value={form.quantity}
             />
@@ -241,6 +289,20 @@ export function FridgeWorkbench() {
         <p className="app-muted-text">{t("mergeNote")}</p>
         {errorKey ? <p className="auth-modal-error">{tErrors(errorKey)}</p> : null}
       </section>
+      <ConfirmDeleteDialog
+        cancelLabel={t("deleteCancel")}
+        confirmLabel={t("deleteConfirm")}
+        description={t("deleteDescription", { name: pendingDelete?.name ?? "" })}
+        disabled={busy}
+        onConfirm={() => void confirmDeleteItem()}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPendingDelete(null);
+          }
+        }}
+        open={pendingDelete !== null}
+        title={t("deleteTitle")}
+      />
     </div>
   );
 }

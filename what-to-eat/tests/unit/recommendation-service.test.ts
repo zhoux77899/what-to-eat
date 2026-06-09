@@ -2,6 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   attachDishImage: vi.fn(),
+  createPendingStoredImage: vi.fn(),
+  deleteRecommendation: vi.fn(),
+  deleteRecommendedDish: vi.fn(),
+  deleteStoredImageBlobs: vi.fn(),
   ensureUser: vi.fn(),
   generateRecommendationText: vi.fn(),
   generateStoredImage: vi.fn(),
@@ -10,11 +14,14 @@ const mocks = vi.hoisted(() => ({
   getPreferences: vi.fn(),
   listFridgeItems: vi.fn(),
   reserveGenerationCapacity: vi.fn(),
+  scheduleStoredImageCompletion: vi.fn(),
   saveRecommendation: vi.fn()
 }));
 
 vi.mock("@/server/data", () => ({
   attachDishImage: mocks.attachDishImage,
+  deleteRecommendation: mocks.deleteRecommendation,
+  deleteRecommendedDish: mocks.deleteRecommendedDish,
   ensureUser: mocks.ensureUser,
   getPreferences: mocks.getPreferences,
   listFridgeItems: mocks.listFridgeItems,
@@ -35,10 +42,17 @@ vi.mock("@/server/generation-mode", () => ({
 }));
 
 vi.mock("@/server/images", () => ({
+  createPendingStoredImage: mocks.createPendingStoredImage,
+  deleteStoredImageBlobs: mocks.deleteStoredImageBlobs,
+  scheduleStoredImageCompletion: mocks.scheduleStoredImageCompletion,
   generateStoredImage: mocks.generateStoredImage
 }));
 
-import { createRecommendation } from "@/server/recommendation-service";
+import {
+  createRecommendation,
+  removeRecommendation,
+  removeRecommendedDish
+} from "@/server/recommendation-service";
 
 describe("recommendation service", () => {
   beforeEach(() => {
@@ -58,14 +72,24 @@ describe("recommendation service", () => {
         version: 1
       }
     ]);
-    mocks.generateStoredImage.mockImplementation(async (input) => {
-      const imageId = input.prompt.includes("First dish") ? "image-first" : "image-second";
+    mocks.createPendingStoredImage.mockImplementation(async (input) => {
+      const imageId =
+        mocks.createPendingStoredImage.mock.calls.length === 1 ? "image-first" : "image-second";
       await input.attach(imageId);
-      return { id: imageId, status: "succeeded" };
+      return {
+        id: imageId,
+        status: "pending",
+        publicUrl: null,
+        deadlineAt: "2026-06-06T00:04:30.000Z"
+      };
     });
+    mocks.generateStoredImage.mockResolvedValue({ id: "legacy-image", status: "succeeded" });
+    mocks.deleteRecommendation.mockResolvedValue({ blobPathnames: [] });
+    mocks.deleteRecommendedDish.mockResolvedValue({ blobPathnames: [], remainingCount: 0 });
+    mocks.deleteStoredImageBlobs.mockResolvedValue(undefined);
   });
 
-  it("matches generated dishes to persisted dish positions instead of returned row order", async () => {
+  it("matches generated dishes to persisted positions while scheduling non-blocking image tasks", async () => {
     mocks.generateRecommendationText.mockResolvedValue({
       dishes: [
         {
@@ -116,5 +140,38 @@ describe("recommendation service", () => {
       "persisted-first",
       "persisted-second"
     ]);
+    expect(result.dishes.map((dish) => dish.image.status)).toEqual(["pending", "pending"]);
+    expect(result.dishes.map((dish) => dish.image.deadlineAt)).toEqual([
+      "2026-06-06T00:04:30.000Z",
+      "2026-06-06T00:04:30.000Z"
+    ]);
+    expect(mocks.scheduleStoredImageCompletion).toHaveBeenCalledTimes(2);
+    expect(mocks.generateStoredImage).not.toHaveBeenCalled();
+  });
+
+  it("deletes a whole recommendation and cleans up its dish image blobs", async () => {
+    mocks.deleteRecommendation.mockResolvedValue({
+      blobPathnames: ["generated/dish/image-1.png", "generated/dish/image-2.png"]
+    });
+
+    await removeRecommendation("clerk-user-1", "recommendation-1");
+
+    expect(mocks.deleteRecommendation).toHaveBeenCalledWith("user-1", "recommendation-1");
+    expect(mocks.deleteStoredImageBlobs).toHaveBeenCalledWith([
+      "generated/dish/image-1.png",
+      "generated/dish/image-2.png"
+    ]);
+  });
+
+  it("deletes one historical dish and cleans up its current dish image blob", async () => {
+    mocks.deleteRecommendedDish.mockResolvedValue({
+      blobPathnames: ["generated/dish/image-1.png"],
+      remainingCount: 1
+    });
+
+    await removeRecommendedDish("clerk-user-1", "dish-1");
+
+    expect(mocks.deleteRecommendedDish).toHaveBeenCalledWith("user-1", "dish-1");
+    expect(mocks.deleteStoredImageBlobs).toHaveBeenCalledWith(["generated/dish/image-1.png"]);
   });
 });

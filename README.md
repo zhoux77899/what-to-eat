@@ -17,7 +17,7 @@ Version one includes:
 - Editable consumption suggestions with atomic per-dish fridge decrements.
 - Ingredient and dish images stored as public Vercel Blob references.
 - Lightweight history containing recommendation headers, dish rows, and image references only.
-- Local Codex Mode for opt-in local structured-text validation through `@openai/codex-sdk`.
+- Local Codex Mode for opt-in local structured-text validation through `@openai/codex-sdk` and image attempts through the local `@openai/codex` CLI.
 
 Version one does not persist temporary requirements, consumption suggestions, fridge snapshots, or preference snapshots. It also does not support platform-owned OpenAI keys, consumer-subscription quota in deployed environments, arbitrary providers, custom model ids, streaming output, teams, or billing.
 
@@ -30,8 +30,8 @@ Version one does not persist temporary requirements, consumption suggestions, fr
 | Refrigerator inventory | Implemented | CRUD, normalized merge behavior, image state, retry action, and atomic consumption confirmation are wired to Postgres services. |
 | OpenAI key management | Implemented | AES-256-GCM persistence, hints, delete, replace, and upstream validation are wired. |
 | Recommendation generation | Implemented | Structured non-streaming text generation, candidate validation, history persistence, image attempts, and ephemeral consumption suggestions are wired. |
-| Recommendation history | Implemented | History lists saved dishes and image status; failed dish images can be retried. |
-| Local Codex Mode | Partially implemented | Structured text uses the local SDK. Image attempts fail safely because the SDK does not expose generated image bytes. |
+| Recommendation history | Implemented | History lists saved dishes and image status; failed dish images can be retried, individual dishes can be deleted with their current images, and whole records can be deleted. |
+| Local Codex Mode | Implemented for local development | Structured text uses the local SDK. Image attempts use a constrained `codex exec` bridge that triggers local imagegen, copies the generated PNG into the app temp directory, and fails safely when local image capability is unavailable. |
 | Database migration | Generated locally | The initial Drizzle migration is committed under `what-to-eat/drizzle/`; apply it after configuring a Neon development-branch `DATABASE_URL`. |
 | Source-level tests | Implemented | Unit tests cover schema shape, domain validation, source-level data-layer guards, generation mode gating, localized UI structure, and route source constraints. |
 | Authenticated browser E2E | Pending | Current Playwright coverage exercises public locale pages and authentication gates only. Signed-in business workflows still need real Clerk-backed E2E coverage. |
@@ -47,6 +47,7 @@ Version one does not persist temporary requirements, consumption suggestions, fr
 - Tailwind CSS
 - Vitest and Playwright
 - `@openai/codex-sdk` for local-only structured text validation
+- `@openai/codex` CLI for local-only image file-output attempts
 
 ## Local Development
 
@@ -85,6 +86,14 @@ LOCAL_CODEX_ENABLED=true
 
 Do not configure `LOCAL_CODEX_ENABLED` in Vercel Preview or Production. Local Codex Mode is a development convenience, not a deployed provider or a replacement for OpenAI API keys.
 
+When Local Codex Mode attempts ingredient or dish images, the app runs `codex exec` locally with plugins disabled and low reasoning effort for the background image task. Codex triggers local imagegen, which writes under `$CODEX_HOME/generated_images/<threadId>/`; the app parses the CLI thread id, copies the generated PNG into `.tmp/local-codex-images/`, removes the `#ff00ff` chroma-key background, uploads successful images to Vercel Blob, and records safe image failure states when local image capability is unavailable.
+
+## Vercel Deployment Notes
+
+Image-capable API routes use the Node.js runtime with `maxDuration = 300`. The stored-image lifecycle aborts image generation after `270_000` ms, leaving roughly 30 seconds for cleanup before the Vercel function window closes.
+
+This deployment profile assumes Vercel Fluid Compute is enabled. Fluid Compute is enabled by default for new Vercel projects and supports a 300-second Node.js function duration on Hobby, Pro, and Enterprise plans. If Fluid Compute is disabled, Hobby projects only support up to 60 seconds and must either re-enable Fluid Compute or reduce the image timeout and route `maxDuration` before deployment.
+
 ## Database Migrations
 
 This branch includes the initial migration at `what-to-eat/drizzle/0000_smart_madame_masque.sql`.
@@ -111,6 +120,8 @@ Run `corepack pnpm db:generate` only after changing `src/db/schema.ts`, then rev
 | `/api/fridge-items/apply-consumption` | `POST` | Atomically confirm one dish's edited fridge decrements. |
 | `/api/recommend` | `POST` | Generate one to five dishes and return ephemeral consumption suggestions. |
 | `/api/recommendations` | `GET` | List lightweight dish history. |
+| `/api/recommendations/:recommendationId` | `DELETE` | Delete one recommendation history record and its current dish images. |
+| `/api/recommendations/dishes/:dishId` | `DELETE` | Delete one historical dish and its current dish image. |
 | `/api/recommendations/:dishId/retry-image` | `POST` | Retry one historical dish image. |
 
 ## Verification

@@ -6,6 +6,7 @@ export const BUSINESS_ERROR_CODES = [
   "RATE_LIMITED",
   "FRIDGE_EMPTY",
   "FRIDGE_ITEM_NOT_FOUND",
+  "RECOMMENDATION_NOT_FOUND",
   "FRIDGE_CONFLICT",
   "DISH_NOT_FOUND",
   "MODEL_RESPONSE_INVALID",
@@ -25,6 +26,7 @@ export const ERROR_MESSAGE_KEYS: Record<BusinessErrorCode, `errors.${string}`> =
   RATE_LIMITED: "errors.rateLimited",
   FRIDGE_EMPTY: "errors.fridgeEmpty",
   FRIDGE_ITEM_NOT_FOUND: "errors.fridgeItemNotFound",
+  RECOMMENDATION_NOT_FOUND: "errors.recommendationNotFound",
   FRIDGE_CONFLICT: "errors.fridgeConflict",
   DISH_NOT_FOUND: "errors.dishNotFound",
   MODEL_RESPONSE_INVALID: "errors.modelResponseInvalid",
@@ -41,6 +43,7 @@ export function getHttpStatusForError(code: BusinessErrorCode) {
     case "VALIDATION_ERROR":
       return 400;
     case "FRIDGE_ITEM_NOT_FOUND":
+    case "RECOMMENDATION_NOT_FOUND":
     case "DISH_NOT_FOUND":
       return 404;
     case "MISSING_OPENAI_KEY":

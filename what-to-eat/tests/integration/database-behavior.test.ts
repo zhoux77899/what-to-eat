@@ -6,17 +6,28 @@ import { and, eq, inArray } from "drizzle-orm";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { createDb } from "@/db";
-import { generationRateLimitBuckets, users } from "@/db/schema";
+import { generatedImages, generationRateLimitBuckets, users } from "@/db/schema";
 import {
   addFridgeItem,
   applyFridgeConsumption,
+  attachDishImage,
+  createGeneratedImage,
+  deleteRecommendation,
+  deleteRecommendedDish,
   ensureUser,
   listFridgeItems,
   listRecommendations,
+  markGeneratedImageSucceeded,
+  reconcileTimedOutGeneratedImages,
   reserveGenerationCapacity,
   saveRecommendation
 } from "@/server/data";
 import { RECOMMENDATION_WINDOW_LIMIT } from "@/lib/rate-limit";
+import {
+  IMAGE_GENERATION_STALE_GRACE_MS,
+  IMAGE_GENERATION_TIMED_OUT,
+  IMAGE_GENERATION_TIMEOUT_MS
+} from "@/server/image-lifecycle";
 
 const integrationDatabaseUrl = process.env.INTEGRATION_DATABASE_URL;
 
@@ -242,5 +253,141 @@ describe("database-backed refrigerator behavior", () => {
     expect(recommendation).not.toHaveProperty("preferenceSnapshot");
     expect(recommendation).not.toHaveProperty("fridgeSnapshot");
     expect(dish).not.toHaveProperty("consumptions");
+  });
+
+  it("deletes one recommendation history record and its current dish image rows", async () => {
+    const user = await createTestUser("history-delete-recommendation");
+    const saved = await saveRecommendation(user.id, {
+      locale: "en",
+      textModel: "gpt-5.5",
+      generationMode: "production_openai",
+      dishes: [
+        {
+          name: "Tomato toast",
+          summary: "A quick tomato snack.",
+          instructions: ["Toast the bread.", "Top it with tomato."],
+          estimatedMinutes: 8,
+          consumptions: []
+        }
+      ]
+    });
+    const image = await createGeneratedImage(user.id, "dish", "production_openai");
+
+    await markGeneratedImageSucceeded(image.id, {
+      blobPathname: `generated/dish/${image.id}.png`,
+      publicUrl: `https://blob.test/${image.id}.png`
+    });
+    await attachDishImage(saved.dishes[0]!.id, image.id);
+
+    const deleted = await deleteRecommendation(user.id, saved.recommendation!.id);
+
+    expect(deleted.blobPathnames).toEqual([`generated/dish/${image.id}.png`]);
+    expect(await listRecommendations(user.id)).toEqual([]);
+
+    const rows = await db.select().from(generatedImages).where(eq(generatedImages.id, image.id));
+    expect(rows).toEqual([]);
+  });
+
+  it("deletes one historical dish image and keeps the remaining recommendation count accurate", async () => {
+    const user = await createTestUser("history-delete-dish");
+    const saved = await saveRecommendation(user.id, {
+      locale: "en",
+      textModel: "gpt-5.5",
+      generationMode: "production_openai",
+      dishes: [
+        {
+          name: "Tomato toast",
+          summary: "A quick tomato snack.",
+          instructions: ["Toast the bread.", "Top it with tomato."],
+          estimatedMinutes: 8,
+          consumptions: []
+        },
+        {
+          name: "Spinach soup",
+          summary: "A simple green soup.",
+          instructions: ["Simmer the spinach."],
+          estimatedMinutes: 12,
+          consumptions: []
+        }
+      ]
+    });
+    const image = await createGeneratedImage(user.id, "dish", "production_openai");
+
+    await markGeneratedImageSucceeded(image.id, {
+      blobPathname: `generated/dish/${image.id}.png`,
+      publicUrl: `https://blob.test/${image.id}.png`
+    });
+    await attachDishImage(saved.dishes[0]!.id, image.id);
+
+    const deleted = await deleteRecommendedDish(user.id, saved.dishes[0]!.id);
+    const history = await listRecommendations(user.id);
+
+    expect(deleted).toEqual({
+      blobPathnames: [`generated/dish/${image.id}.png`],
+      remainingCount: 1
+    });
+    expect(history).toHaveLength(1);
+    expect(history[0]).toMatchObject({ candidateCount: 1 });
+    expect(history[0]!.dishes).toHaveLength(1);
+    expect(history[0]!.dishes[0]).toMatchObject({ name: "Spinach soup" });
+
+    const rows = await db.select().from(generatedImages).where(eq(generatedImages.id, image.id));
+    expect(rows).toEqual([]);
+  });
+
+  it("removes the parent recommendation when the last historical dish is deleted", async () => {
+    const user = await createTestUser("history-delete-last-dish");
+    const saved = await saveRecommendation(user.id, {
+      locale: "en",
+      textModel: "gpt-5.5",
+      generationMode: "production_openai",
+      dishes: [
+        {
+          name: "Tomato toast",
+          summary: "A quick tomato snack.",
+          instructions: ["Toast the bread.", "Top it with tomato."],
+          estimatedMinutes: 8,
+          consumptions: []
+        }
+      ]
+    });
+
+    const deleted = await deleteRecommendedDish(user.id, saved.dishes[0]!.id);
+
+    expect(deleted).toEqual({
+      blobPathnames: [],
+      remainingCount: 0
+    });
+    expect(await listRecommendations(user.id)).toEqual([]);
+  });
+
+  it("reconciles stale pending generated images as timed out", async () => {
+    const user = await createTestUser("image-stale");
+    const now = new Date("2026-06-06T02:00:00.000Z");
+    const image = await createGeneratedImage(user.id, "dish", "production_openai");
+
+    await db
+      .update(generatedImages)
+      .set({
+        createdAt: new Date(
+          now.getTime() - IMAGE_GENERATION_TIMEOUT_MS - IMAGE_GENERATION_STALE_GRACE_MS - 1_000
+        )
+      })
+      .where(eq(generatedImages.id, image.id));
+
+    await reconcileTimedOutGeneratedImages(user.id, now);
+
+    const [updatedImage] = await db
+      .select({
+        status: generatedImages.status,
+        errorCode: generatedImages.errorCode
+      })
+      .from(generatedImages)
+      .where(eq(generatedImages.id, image.id));
+
+    expect(updatedImage).toEqual({
+      status: "failed",
+      errorCode: IMAGE_GENERATION_TIMED_OUT
+    });
   });
 });

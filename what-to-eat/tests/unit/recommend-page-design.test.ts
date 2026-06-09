@@ -162,6 +162,29 @@ describe("signed-in page surface design", () => {
     );
   });
 
+  it("uses one shared Radix confirmation dialog for destructive workbench actions", () => {
+    const dialogSource = readProjectFile("src/components/confirm-delete-dialog.tsx");
+    const fridgeSource = readProjectFile("src/components/fridge-workbench.tsx");
+    const historySource = readProjectFile("src/components/history-workbench.tsx");
+    const globalCss = readProjectFile("src/app/globals.css");
+    const confirmBackdropRule = readCssRule(globalCss, ".app-confirm-dialog-backdrop");
+
+    expect(dialogSource).toContain('@radix-ui/react-dialog');
+    expect(dialogSource).toContain("Dialog.Content");
+    expect(dialogSource).toContain("ConfirmDeleteDialog");
+    expect(dialogSource).toContain(
+      "home-paper-button app-paper-button-compact app-paper-button-secondary"
+    );
+    expect(dialogSource).toContain(
+      "home-paper-button app-paper-button-compact app-paper-button-danger"
+    );
+    expect(fridgeSource).toContain("ConfirmDeleteDialog");
+    expect(historySource).toContain("ConfirmDeleteDialog");
+    expect(globalCss).toContain(".app-confirm-dialog-card");
+    expect(confirmBackdropRule).toContain("--hero-ink: var(--auth-ink)");
+    expect(confirmBackdropRule).toContain("--hero-paper: var(--auth-paper)");
+  });
+
   it("avoids viewport-height minimums on the minimal recommendation surface", () => {
     const globalCss = readProjectFile("src/app/globals.css");
 

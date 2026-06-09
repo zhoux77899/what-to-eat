@@ -3,9 +3,13 @@
 import { Check, LoaderCircle, Sparkles } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import {
+  getImageStatusPollDelay,
+  resolveClientImageStatus
+} from "@/lib/client-image-status";
 import { getErrorTranslationKey, requestJson } from "@/lib/api-client";
 
 type Consumption = {
@@ -26,12 +30,45 @@ type Dish = {
   image: {
     status: "pending" | "succeeded" | "failed";
     publicUrl: string | null;
+    deadlineAt: string | null;
   };
 };
 
 type RecommendationResponse = {
   dishes: Dish[];
 };
+
+type RecommendationImageDish = {
+  id: string;
+  imageStatus: "pending" | "succeeded" | "failed" | null;
+  imageUrl: string | null;
+  imageDeadlineAt: string | null;
+};
+
+type RecommendationImageResponse = {
+  recommendations: {
+    dishes: RecommendationImageDish[];
+  }[];
+};
+
+function normalizeDishes(dishes: Dish[]) {
+  return dishes.map((dish) => ({
+    ...dish,
+    image: {
+      ...dish.image,
+      status: resolveClientImageStatus(dish.image.status, dish.image.deadlineAt) ?? "failed"
+    }
+  }));
+}
+
+function getDishImagePollDelay(dishes: Dish[]) {
+  return getImageStatusPollDelay(
+    dishes.map((dish) => ({
+      status: dish.image.status,
+      deadlineAt: dish.image.deadlineAt
+    }))
+  );
+}
 
 export function RecommendWorkbench() {
   const t = useTranslations("recommend");
@@ -42,6 +79,50 @@ export function RecommendWorkbench() {
   const [confirmedDishIds, setConfirmedDishIds] = useState<string[]>([]);
   const [errorKey, setErrorKey] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  const loadDishImages = useCallback(async () => {
+    try {
+      const data = await requestJson<RecommendationImageResponse>("/api/recommendations");
+      const imageByDishId = new Map<string, Dish["image"]>();
+
+      for (const recommendation of data.recommendations) {
+        for (const dish of recommendation.dishes) {
+          imageByDishId.set(dish.id, {
+            status: dish.imageStatus ?? "failed",
+            publicUrl: dish.imageUrl,
+            deadlineAt: dish.imageDeadlineAt
+          });
+        }
+      }
+
+      setDishes((current) =>
+        normalizeDishes(
+          current.map((dish) => ({
+            ...dish,
+            image: imageByDishId.get(dish.id) ?? dish.image
+          }))
+        )
+      );
+      setErrorKey(null);
+    } catch (error) {
+      setDishes((current) => normalizeDishes(current));
+      setErrorKey(getErrorTranslationKey(error));
+    }
+  }, []);
+
+  useEffect(() => {
+    const pollDelay = getDishImagePollDelay(dishes);
+
+    if (pollDelay === null) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      void loadDishImages();
+    }, pollDelay);
+
+    return () => window.clearTimeout(timeout);
+  }, [dishes, loadDishImages]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -56,7 +137,7 @@ export function RecommendWorkbench() {
           temporaryRequirement: temporaryRequirement || null
         })
       });
-      setDishes(result.dishes);
+      setDishes(normalizeDishes(result.dishes));
       setConfirmedDishIds([]);
       setErrorKey(null);
     } catch (error) {
