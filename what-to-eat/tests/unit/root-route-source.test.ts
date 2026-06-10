@@ -1,17 +1,17 @@
-import { existsSync, readFileSync } from "node:fs";
-import path from "node:path";
+import { redirect } from "next/navigation";
+import { describe, expect, it, vi } from "vitest";
 
-import { describe, expect, it } from "vitest";
+import RootPage from "@/app/page";
+import { routing } from "@/i18n/routing";
+
+vi.mock("next/navigation", () => ({
+  redirect: vi.fn()
+}));
 
 describe("root route", () => {
   it("redirects the bare project URL to the default Chinese locale", () => {
-    const rootPagePath = path.join(process.cwd(), "src", "app", "page.tsx");
+    RootPage();
 
-    expect(existsSync(rootPagePath)).toBe(true);
-
-    const rootPageSource = readFileSync(rootPagePath, "utf8");
-
-    expect(rootPageSource).toContain('from "next/navigation"');
-    expect(rootPageSource).toContain('redirect("/zh")');
+    expect(redirect).toHaveBeenCalledWith(`/${routing.defaultLocale}`);
   });
 });
