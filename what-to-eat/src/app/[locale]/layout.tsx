@@ -1,4 +1,5 @@
 import { ClerkProvider } from "@clerk/nextjs";
+import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
@@ -9,6 +10,14 @@ import { AuthModalProvider } from "@/components/auth/auth-modal-provider";
 import { AuthRuntimeProvider } from "@/components/auth/auth-runtime-provider";
 import { routing } from "@/i18n/routing";
 import { hasUsableClerkConfig } from "@/lib/clerk-config";
+
+export const metadata: Metadata = {
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/brand/app-icon-512.png"
+  }
+};
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));

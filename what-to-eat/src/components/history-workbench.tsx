@@ -172,8 +172,8 @@ export function HistoryWorkbench() {
           </div>
           <div className="grid gap-4 lg:grid-cols-2">
             {recommendation.dishes.map((dish) => (
-              <article className="app-paper-card grid gap-3 sm:grid-cols-[7rem_1fr]" key={dish.id}>
-                <div className="relative aspect-square overflow-hidden rounded-xl border border-current/20 bg-white/50">
+              <article className="app-recipe-card app-history-dish-card" key={dish.id}>
+                <div className="app-image-frame app-history-image-frame">
                   {dish.imageUrl ? (
                     <Image
                       alt={dish.name}
@@ -184,14 +184,14 @@ export function HistoryWorkbench() {
                       width={224}
                     />
                   ) : (
-                    <ImageOff className="absolute left-1/2 top-1/2 h-8 w-8 -translate-x-1/2 -translate-y-1/2 opacity-50" />
+                    <ImageOff className="app-image-frame-icon" />
                   )}
                 </div>
                 <div className="grid gap-2">
                   <div>
                     <h2 className="app-card-title">{dish.name}</h2>
                     <p className="app-muted-text">{dish.summary}</p>
-                    <p className="app-muted-text">
+                    <p className="app-status-sticker">
                       {t("estimatedMinutes", { minutes: dish.estimatedMinutes })}
                     </p>
                   </div>

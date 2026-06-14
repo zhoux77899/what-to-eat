@@ -1,15 +1,15 @@
 "use client";
 
-import { UserButton, useAuth } from "@clerk/nextjs";
+import { UserButton, useAuth, useUser } from "@clerk/nextjs";
 import {
+  Bell,
+  ClipboardList,
   ChevronDown,
   History,
   KeyRound,
   Languages,
   Refrigerator,
-  SlidersHorizontal,
-  Sparkles,
-  Utensils
+  SlidersHorizontal
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -18,6 +18,7 @@ import { usePathname } from "next/navigation";
 import { useAuthModal } from "@/components/auth/auth-modal-provider";
 import { useAuthRuntime } from "@/components/auth/auth-runtime-provider";
 import { ProtectedLink } from "@/components/auth/protected-link";
+import { BrandLogoImage } from "@/components/brand-assets";
 import { cn } from "@/lib/utils";
 
 type AppShellProps = {
@@ -32,21 +33,20 @@ export function AppShell({ locale, children }: AppShellProps) {
 function AppShellContent({ locale, children }: AppShellProps) {
   const t = useTranslations("navigation");
   const alternateLocale = locale === "zh" ? "en" : "zh";
+  const brandLocale = locale === "en" ? "en" : "zh";
   const { clerkEnabled } = useAuthRuntime();
   const pathname = usePathname();
 
   const isCurrentPath = (href: string) => pathname === href;
 
   return (
-    <div className="app-shell">
+    <div className="app-shell app-kitchen-page">
       <header className="app-shell-header">
         <div className="app-shell-header-inner">
           <Link className="app-shell-brand" href={`/${locale}`}>
-            <span className="app-shell-brand-mark" aria-hidden="true">
-              <Utensils className="h-5 w-5" />
-            </span>
-            <span>{t("brand")}</span>
+            <BrandLogoImage label={t("brand")} locale={brandLocale} />
           </Link>
+          <span className="app-shell-brand-divider" aria-hidden="true" />
 
           <nav aria-label={t("appNavigation")} className="app-shell-nav">
             <ProtectedLink
@@ -56,8 +56,8 @@ function AppShellContent({ locale, children }: AppShellProps) {
               )}
               href={`/${locale}/app`}
             >
-              <Sparkles className="app-nav-icon" aria-hidden="true" />
-              <span className="home-paper-button-label">{t("recommend")}</span>
+              <ClipboardList className="app-nav-icon" aria-hidden="true" />
+              <span className="home-paper-button-label">{t("menu")}</span>
             </ProtectedLink>
 
             <ProtectedLink
@@ -73,7 +73,7 @@ function AppShellContent({ locale, children }: AppShellProps) {
 
             <details className="app-shell-menu">
               <summary className="home-paper-button app-menu-trigger">
-                <span className="home-paper-button-label">{t("menu")}</span>
+                <span className="home-paper-button-label">{t("more")}</span>
                 <ChevronDown className="app-nav-icon app-menu-chevron" aria-hidden="true" />
               </summary>
               <div className="app-menu-panel">
@@ -114,12 +114,26 @@ function AppShellContent({ locale, children }: AppShellProps) {
               </div>
             </details>
 
+          </nav>
+
+          <div className="app-shell-actions">
+            <button
+              aria-label={t("notifications")}
+              className="app-shell-notification-button"
+              type="button"
+            >
+              <Bell className="app-nav-icon" aria-hidden="true" />
+            </button>
             {clerkEnabled ? (
-              <ClerkAuthActions locale={locale} signInLabel={t("signIn")} />
+              <ClerkAuthActions
+                defaultChefName={t("defaultChefName")}
+                locale={locale}
+                signInLabel={t("signIn")}
+              />
             ) : (
               <LocalAuthActions locale={locale} signInLabel={t("signIn")} />
             )}
-          </nav>
+          </div>
         </div>
       </header>
       <main className="app-shell-main">{children}</main>
@@ -127,9 +141,19 @@ function AppShellContent({ locale, children }: AppShellProps) {
   );
 }
 
-function ClerkAuthActions({ locale, signInLabel }: { locale: string; signInLabel: string }) {
+function ClerkAuthActions({
+  defaultChefName,
+  locale,
+  signInLabel
+}: {
+  defaultChefName: string;
+  locale: string;
+  signInLabel: string;
+}) {
   const { isLoaded, isSignedIn } = useAuth();
+  const { user } = useUser();
   const { requestSignIn } = useAuthModal();
+  const displayName = user?.fullName || user?.username || defaultChefName;
 
   if (isLoaded && !isSignedIn) {
     return (
@@ -146,6 +170,7 @@ function ClerkAuthActions({ locale, signInLabel }: { locale: string; signInLabel
   if (isLoaded && isSignedIn) {
     return (
       <div className="app-user-button">
+        <span className="app-user-name">{displayName}</span>
         <UserButton />
       </div>
     );

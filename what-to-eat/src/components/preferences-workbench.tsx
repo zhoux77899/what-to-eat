@@ -38,7 +38,7 @@ export function PreferencesWorkbench({ locale }: { locale: "zh" | "en" }) {
   }
 
   return (
-    <form className="app-workbench-surface app-workbench-form" onSubmit={submit}>
+    <form className="app-workbench-surface app-workbench-form app-kitchen-panel" onSubmit={submit}>
       <p className="app-page-description">{t("description")}</p>
       <label className="app-form-field">
         {t("fieldLabel")}
@@ -56,7 +56,7 @@ export function PreferencesWorkbench({ locale }: { locale: "zh" | "en" }) {
           <span className="home-paper-button-label">{t("save")}</span>
         </Button>
       </div>
-      {saved ? <p className="app-muted-text">{t("saved")}</p> : null}
+      {saved ? <p className="app-status-sticker">{t("saved")}</p> : null}
       {errorKey ? <p className="auth-modal-error">{tErrors(errorKey)}</p> : null}
     </form>
   );

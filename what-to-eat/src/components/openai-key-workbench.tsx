@@ -67,9 +67,9 @@ export function OpenAiKeyWorkbench() {
   }
 
   return (
-    <form className="app-workbench-surface app-workbench-form" onSubmit={submit}>
+    <form className="app-workbench-surface app-workbench-form app-kitchen-panel" onSubmit={submit}>
       <p className="app-page-description">{t("description")}</p>
-      <p className="app-muted-text">
+      <p className="app-status-sticker">
         {t("currentStatus", { status: t(`status.${status}`), hint: hint ?? t("noHint") })}
       </p>
       <label className="app-form-field">
