@@ -1,8 +1,29 @@
+<p align="center">
+  <img src="what-to-eat/public/brand/logo-en.webp" alt="What to eat logo" width="560">
+</p>
+
+<p align="center">
+  <strong>English</strong> | <a href="README.zh-CN.md">中文</a>
+</p>
+
 # what-to-eat
 
 `what-to-eat` is a Vercel-ready Next.js application that recommends dishes from a user's refrigerator inventory.
 
 The MVP is OpenAI-only BYOK: each user supplies an OpenAI developer API key. The server encrypts keys, generates structured dish candidates with fixed model `gpt-5.5`, attempts ingredient and dish images with fixed model `gpt-image-2`, uploads successful images to public Vercel Blob storage, and stores lightweight recommendation history.
+
+## How to use
+
+1. Sign in with Google or GitHub.
+2. Save your own OpenAI developer API key in the OpenAI key page. The app stores only an encrypted key and shows a safe hint.
+3. Add ingredients to the fridge with natural-language names, positive quantities, and free-text units, such as `2 tomatoes` or `1 bunch of water spinach`.
+4. Save long-term food preferences in natural language, such as dietary restrictions, cooking style, or weekday time limits.
+5. Generate one to five dish candidates from the recommendation page. You can add one temporary requirement for the current request only.
+6. Review generated dishes, instructions, estimated time, dish images, and editable fridge consumption suggestions.
+7. Choose a dish and confirm its edited consumption suggestions. The app deducts fridge quantities atomically and removes exhausted items.
+8. Open recommendation history to review saved dish text and image status.
+9. Retry failed ingredient or dish images when image generation fails but the text result remains useful.
+10. Delete whole recommendation records or individual historical dishes when they are no longer needed.
 
 ## Product Boundary
 
@@ -33,7 +54,7 @@ Version one does not persist temporary requirements, consumption suggestions, fr
 | Recommendation history | Implemented | History lists saved dishes and image status; failed dish images can be retried, individual dishes can be deleted with their current images, and whole records can be deleted. |
 | Local Codex Mode | Implemented for local development | Structured text uses the local SDK. Image attempts use a constrained `codex exec` bridge that triggers local imagegen, copies the generated PNG into the app temp directory, and fails safely when local image capability is unavailable. |
 | Database migration | Generated locally | The initial Drizzle migration is committed under `what-to-eat/drizzle/`; apply it after configuring a Neon development-branch `DATABASE_URL`. |
-| Source-level tests | Implemented | Unit tests cover schema shape, domain validation, source-level data-layer guards, generation mode gating, localized UI structure, and route source constraints. |
+| Source-level tests | Implemented | Unit tests cover schema shape, domain validation, source-level data-layer guards, generation mode gating, localized UI structure, brand assets, and route source constraints. |
 | Authenticated browser E2E | Pending | Current Playwright coverage exercises public locale pages and authentication gates only. Signed-in business workflows still need real Clerk-backed E2E coverage. |
 
 ## Stack
@@ -48,6 +69,22 @@ Version one does not persist temporary requirements, consumption suggestions, fr
 - Vitest and Playwright
 - `@openai/codex-sdk` for local-only structured text validation
 - `@openai/codex` CLI for local-only image file-output attempts
+
+## Brand Assets
+
+Brand assets live under `what-to-eat/public/brand/`.
+
+- `logo-en.webp` and `logo-zh.webp` are the full README logos.
+- `header-logo-en.webp` and `header-logo-zh.webp` are transparent app-shell logos.
+- `app-icon-1024.png`, `app-icon-512.png`, and `app-icon-192.png` are derived app icons.
+- `source-logo-board.png` is the approved source board for repeatable asset generation.
+
+Regenerate derived assets after changing the source board:
+
+```bash
+cd what-to-eat
+node scripts/generate-brand-assets.mjs
+```
 
 ## Local Development
 
@@ -137,6 +174,10 @@ corepack pnpm test:e2e
 ```
 
 Release checks also require a real Neon development branch, Clerk application, OpenAI developer key, and Vercel Blob token so the database migration and authenticated business workflows can be verified end to end.
+
+## Agent Notes
+
+Coding agents should read [AGENTS.md](AGENTS.md) before editing this repository.
 
 ## License
 
