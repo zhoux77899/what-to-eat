@@ -51,9 +51,13 @@ describe("signed-in page surface design", () => {
     expect(recipeBoardRule).not.toMatch(/\n\s*border:/);
   });
 
-  it("uses a notebook request strip, result ribbon, recipe cards, and confirmation tip", () => {
+  it("uses one side-panel prompt request form, result ribbon, recipe cards, and confirmation tip", () => {
     const pageSource = readProjectFile("src/app/[locale]/app/page.tsx");
     const workbenchSource = readProjectFile("src/components/recommend-workbench.tsx");
+    const globalCss = readProjectFile("src/app/globals.css");
+    const recommendWorkspaceRule = readCssRule(globalCss, ".app-recommend-workspace");
+    const requestStripRule = readCssRule(globalCss, ".app-recommend-request-strip");
+    const resultsRule = readCssRule(globalCss, ".app-recommend-results");
     const hasHiddenHeading =
       pageSource.includes('className="sr-only"') &&
       pageSource.includes('id="recommend-page-title"') &&
@@ -66,6 +70,7 @@ describe("signed-in page surface design", () => {
     expect(pageSource).not.toContain("MEAL_IMAGE_MODEL");
     expect(pageSource).not.toContain("TEXT_RECOMMENDATION_MODEL");
     expect(hasHiddenHeading || hasAriaLabel).toBe(true);
+    expect(workbenchSource).toContain("app-workspace-grid app-recommend-workspace");
     expect(workbenchSource).toContain("app-recommend-request-strip");
     expect(workbenchSource).toContain("app-recommend-results-ribbon");
     expect(workbenchSource).toContain("app-recommend-dish-grid");
@@ -73,6 +78,22 @@ describe("signed-in page surface design", () => {
     expect(workbenchSource).toContain("app-recommend-tip");
     expect(workbenchSource).toContain('t("confirmationTip")');
     expect(workbenchSource).toContain('t("generate")');
+    expect(workbenchSource).not.toContain("mealIdea");
+    expect(workbenchSource).not.toContain("app-craving-field");
+    expect(workbenchSource).not.toContain("app-temporary-requirement-field");
+    expect(workbenchSource.match(/<textarea/g)?.length ?? 0).toBe(1);
+    expect(workbenchSource.match(/temporaryRequirementPlaceholder/g)?.length ?? 0).toBe(1);
+    expect(workbenchSource).toContain("temporaryRequirement: temporaryRequirement.trim() || null");
+    expect(recommendWorkspaceRule).toContain(
+      "grid-template-columns: minmax(0, 1fr) minmax(15rem, 18rem)"
+    );
+    expect(recommendWorkspaceRule).toContain("gap: clamp(2rem, 3vw, 2.5rem)");
+    expect(requestStripRule).toContain("align-self: start");
+    expect(requestStripRule).toContain("grid-column: 2");
+    expect(requestStripRule).toContain("grid-row: 1");
+    expect(requestStripRule).toContain("grid-template-columns: 1fr");
+    expect(requestStripRule).toContain("position: sticky");
+    expect(resultsRule).toContain("grid-column: 1");
   });
 
   it("defines the shared illustrated kitchen design system for signed-in pages", () => {
@@ -106,7 +127,8 @@ describe("signed-in page surface design", () => {
       'isCurrentPath(`/${locale}/fridge`) && "app-nav-primary-active"'
     );
     expect(appShellSource).toContain("BrandLogoImage");
-    expect(appShellSource).toContain("app-shell-notification-button");
+    expect(appShellSource).not.toContain("app-shell-notification-button");
+    expect(appShellSource).not.toContain("Bell");
     expect(appShellSource).not.toContain("Utensils");
   });
 
@@ -147,12 +169,13 @@ describe("signed-in page surface design", () => {
     expect(openAiKeySource).toContain("app-status-sticker");
   });
 
-  it("uses one fridge inventory panel before an open sticky form panel", () => {
+  it("maps the fridge inventory and form panels to the same columns as app recipes and generation", () => {
     const fridgeSource = readProjectFile("src/components/fridge-workbench.tsx");
     const globalCss = readProjectFile("src/app/globals.css");
     const inventoryPanelIndex = fridgeSource.indexOf("app-fridge-inventory-panel");
     const formPanelIndex = fridgeSource.indexOf("app-fridge-form-panel");
     const fridgeWorkspaceRule = readCssRule(globalCss, ".app-fridge-workspace");
+    const inventoryPanelRule = readCssRule(globalCss, ".app-fridge-inventory-panel");
     const formPanelRule = readCssRule(globalCss, ".app-fridge-form-panel");
     const mobileEditingFormRule = readCssRule(
       globalCss,
@@ -168,7 +191,14 @@ describe("signed-in page surface design", () => {
       "grid-template-columns: minmax(0, 1fr) minmax(15rem, 18rem)"
     );
     expect(fridgeSource).not.toContain("grid-cols-2");
-    expect(formPanelRule).toContain("position: sticky");
+    expect(inventoryPanelRule).toContain("align-self: start");
+    expect(inventoryPanelRule).toContain("grid-column: 1");
+    expect(inventoryPanelRule).toContain("grid-row: 1");
+    expect(formPanelRule).toContain("align-self: start");
+    expect(formPanelRule).toContain("grid-column: 2");
+    expect(formPanelRule).toContain("grid-row: 1");
+    expect(formPanelRule).toContain("position: static");
+    expect(formPanelRule).not.toContain("top:");
     expect(mobileEditingFormRule).toContain("order: -1");
   });
 

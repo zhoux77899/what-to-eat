@@ -2,7 +2,6 @@
 
 import { UserButton, useAuth, useUser } from "@clerk/nextjs";
 import {
-  Bell,
   ClipboardList,
   ChevronDown,
   History,
@@ -117,13 +116,6 @@ function AppShellContent({ locale, children }: AppShellProps) {
           </nav>
 
           <div className="app-shell-actions">
-            <button
-              aria-label={t("notifications")}
-              className="app-shell-notification-button"
-              type="button"
-            >
-              <Bell className="app-nav-icon" aria-hidden="true" />
-            </button>
             {clerkEnabled ? (
               <ClerkAuthActions
                 defaultChefName={t("defaultChefName")}

@@ -72,7 +72,6 @@ function getDishImagePollDelay(dishes: Dish[]) {
 
 export function RecommendWorkbench() {
   const t = useTranslations("recommend");
-  const [mealIdea, setMealIdea] = useState("");
   const [candidateCount, setCandidateCount] = useState("3");
   const [temporaryRequirement, setTemporaryRequirement] = useState("");
   const [dishes, setDishes] = useState<Dish[]>([]);
@@ -134,7 +133,7 @@ export function RecommendWorkbench() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           candidateCount: Number(candidateCount),
-          temporaryRequirement: [mealIdea, temporaryRequirement].filter(Boolean).join("\n") || null
+          temporaryRequirement: temporaryRequirement.trim() || null
         })
       });
       setDishes(normalizeDishes(result.dishes));
@@ -206,16 +205,14 @@ export function RecommendWorkbench() {
   }
 
   return (
-    <div className="app-recommend-workbench">
+    <div className="app-workspace-grid app-recommend-workspace app-recommend-workbench">
       <RecommendationRequestStrip
         busy={busy}
         candidateCount={candidateCount}
         errorKey={errorKey}
         onCandidateCountChange={setCandidateCount}
-        onMealIdeaChange={setMealIdea}
         onSubmit={submit}
         onTemporaryRequirementChange={setTemporaryRequirement}
-        mealIdea={mealIdea}
         temporaryRequirement={temporaryRequirement}
       />
 
@@ -251,9 +248,7 @@ function RecommendationRequestStrip({
   busy,
   candidateCount,
   errorKey,
-  mealIdea,
   onCandidateCountChange,
-  onMealIdeaChange,
   onSubmit,
   onTemporaryRequirementChange,
   temporaryRequirement
@@ -261,9 +256,7 @@ function RecommendationRequestStrip({
   busy: boolean;
   candidateCount: string;
   errorKey: string | null;
-  mealIdea: string;
   onCandidateCountChange: (value: string) => void;
-  onMealIdeaChange: (value: string) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onTemporaryRequirementChange: (value: string) => void;
   temporaryRequirement: string;
@@ -273,14 +266,14 @@ function RecommendationRequestStrip({
 
   return (
     <form className="app-recommend-request-strip" onSubmit={onSubmit}>
-      <label className="app-form-field app-craving-field">
+      <label className="app-form-field app-recommend-prompt-field">
         <span className="app-request-label">{t("formTitle")}</span>
         <textarea
           className="app-paper-input app-request-input"
           maxLength={500}
-          onChange={(event) => onMealIdeaChange(event.target.value)}
+          onChange={(event) => onTemporaryRequirementChange(event.target.value)}
           placeholder={t("temporaryRequirementPlaceholder")}
-          value={mealIdea}
+          value={temporaryRequirement}
         />
       </label>
       <label className="app-form-field app-candidate-count-field">
@@ -296,16 +289,6 @@ function RecommendationRequestStrip({
             </option>
           ))}
         </select>
-      </label>
-      <label className="app-form-field app-temporary-requirement-field">
-        <span className="app-request-label">{t("temporaryRequirement")}</span>
-        <textarea
-          className="app-paper-input app-request-input"
-          maxLength={500}
-          onChange={(event) => onTemporaryRequirementChange(event.target.value)}
-          placeholder={t("temporaryRequirementPlaceholder")}
-          value={temporaryRequirement}
-        />
       </label>
       <Button className="home-paper-button app-paper-button-primary app-generate-button" disabled={busy}>
         {busy ? (

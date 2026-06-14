@@ -836,7 +836,10 @@ body {
 }
 
 .app-fridge-inventory-panel {
+  align-self: start;
   display: grid;
+  grid-column: 1;
+  grid-row: 1;
   min-height: 11rem;
   padding: clamp(1.1rem, 3vw, 1.65rem);
 }
@@ -867,11 +870,13 @@ body {
 }
 
 .app-fridge-form-panel {
+  align-self: start;
   display: grid;
   gap: 1rem;
+  grid-column: 2;
+  grid-row: 1;
   padding: 0.35rem 0.1rem;
-  position: sticky;
-  top: 6.5rem;
+  position: static;
 }
 
 .app-paper-card {
@@ -1550,7 +1555,14 @@ body {
   }
 
   .app-fridge-form-panel {
+    grid-column: 1;
+    grid-row: auto;
     position: static;
+  }
+
+  .app-fridge-inventory-panel {
+    grid-column: 1;
+    grid-row: auto;
   }
 
   .app-fridge-workspace-editing .app-fridge-form-panel {
@@ -1735,8 +1747,7 @@ body {
 
 .app-nav-primary,
 .app-menu-trigger,
-.app-sign-in-button,
-.app-shell-notification-button {
+.app-sign-in-button {
   --paper-button-bg: color-mix(in srgb, white 56%, var(--kitchen-paper));
   --paper-button-border: 1px;
   --paper-button-radius: 0.58rem;
@@ -1759,8 +1770,7 @@ body {
 
 .app-nav-primary:hover,
 .app-menu-trigger:hover,
-.app-sign-in-button:hover,
-.app-shell-notification-button:hover {
+.app-sign-in-button:hover {
   background: color-mix(in srgb, var(--kitchen-yolk) 18%, white);
   border-color: color-mix(in srgb, var(--kitchen-line) 64%, transparent);
   transform: translateY(-1px);
@@ -1825,12 +1835,17 @@ body {
 }
 
 .app-recommend-workbench {
-  display: grid;
-  gap: clamp(1rem, 2vw, 1.35rem);
+  min-width: 0;
+}
+
+.app-recommend-workspace {
+  gap: clamp(2rem, 3vw, 2.5rem);
+  grid-template-columns: minmax(0, 1fr) minmax(15rem, 18rem);
 }
 
 .app-recommend-request-strip {
-  align-items: end;
+  align-self: start;
+  align-items: stretch;
   background:
     linear-gradient(90deg, color-mix(in srgb, var(--kitchen-paper-deep) 42%, transparent) 0 0.62rem, transparent 0.62rem),
     linear-gradient(180deg, color-mix(in srgb, white 58%, transparent), color-mix(in srgb, var(--kitchen-paper) 96%, transparent)),
@@ -1842,9 +1857,12 @@ body {
     0 0.9rem 1.8rem color-mix(in srgb, var(--kitchen-ink) 9%, transparent);
   display: grid;
   gap: clamp(0.9rem, 2vw, 1.35rem);
-  grid-template-columns: minmax(16rem, 1fr) minmax(9rem, 0.34fr) minmax(16rem, 1fr) auto;
+  grid-column: 2;
+  grid-row: 1;
+  grid-template-columns: 1fr;
   padding: clamp(1rem, 2vw, 1.3rem) clamp(1rem, 2.2vw, 1.6rem);
-  position: relative;
+  position: sticky;
+  top: 6.5rem;
 }
 
 .app-recommend-request-strip::before {
@@ -1903,6 +1921,9 @@ body {
 }
 
 .app-recommend-results {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
   display: grid;
   gap: 1rem;
 }
@@ -2187,11 +2208,22 @@ body {
     justify-content: flex-start;
   }
 
-  .app-recommend-request-strip {
-    grid-template-columns: minmax(0, 1fr) minmax(8rem, 12rem);
+  .app-recommend-workspace {
+    grid-template-columns: 1fr;
   }
 
-  .app-temporary-requirement-field,
+  .app-recommend-request-strip,
+  .app-recommend-results {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .app-recommend-request-strip {
+    grid-template-columns: minmax(0, 1fr) minmax(8rem, 12rem);
+    position: static;
+  }
+
+  .app-recommend-prompt-field,
   .app-generate-button {
     grid-column: 1 / -1;
   }
@@ -2235,7 +2267,7 @@ body {
   }
 
   .app-candidate-count-field,
-  .app-temporary-requirement-field,
+  .app-recommend-prompt-field,
   .app-generate-button {
     grid-column: auto;
   }

@@ -33,7 +33,7 @@
   "recommend": {
     "title": "生成餐食推荐",
     "description": "根据冰箱中的既有食材生成一至五道候选菜。临时要求和食材消耗建议不会写入历史。",
-    "formTitle": "这顿想吃什么",
+    "formTitle": "本次推荐提示词",
     "candidateCount": "候选菜数量",
     "temporaryRequirement": "本次临时要求",
     "temporaryRequirementPlaceholder": "例如：今晚想清淡一点，最好 20 分钟内完成",
