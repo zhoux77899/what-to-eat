@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, LoaderCircle, Sparkles } from "lucide-react";
+import { Check, Clock3, Lightbulb, LoaderCircle, Minus, Plus, Sparkles } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
@@ -72,7 +72,6 @@ function getDishImagePollDelay(dishes: Dish[]) {
 
 export function RecommendWorkbench() {
   const t = useTranslations("recommend");
-  const tErrors = useTranslations("errors");
   const [candidateCount, setCandidateCount] = useState("3");
   const [temporaryRequirement, setTemporaryRequirement] = useState("");
   const [dishes, setDishes] = useState<Dish[]>([]);
@@ -134,7 +133,7 @@ export function RecommendWorkbench() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           candidateCount: Number(candidateCount),
-          temporaryRequirement: temporaryRequirement || null
+          temporaryRequirement: temporaryRequirement.trim() || null
         })
       });
       setDishes(normalizeDishes(result.dishes));
@@ -164,6 +163,29 @@ export function RecommendWorkbench() {
     );
   }
 
+  function adjustConsumption(dishId: string, fridgeItemId: string, delta: number) {
+    setDishes((current) =>
+      current.map((dish) =>
+        dish.id === dishId
+          ? {
+              ...dish,
+              consumptions: dish.consumptions.map((consumption) =>
+                consumption.fridgeItemId === fridgeItemId
+                  ? {
+                      ...consumption,
+                      consumedQuantity: Math.max(
+                        0.001,
+                        Number((consumption.consumedQuantity + delta).toFixed(3))
+                      )
+                    }
+                  : consumption
+              )
+            }
+          : dish
+      )
+    );
+  }
+
   async function confirm(dish: Dish) {
     setBusy(true);
 
@@ -183,130 +205,243 @@ export function RecommendWorkbench() {
   }
 
   return (
-    <div className="grid gap-6">
-      <form className="app-paper-card app-form-card" onSubmit={submit}>
-        <span className="app-paper-card-pin" aria-hidden="true" />
-        <h2 className="app-card-title">{t("formTitle")}</h2>
-        <label className="app-form-field">
-          {t("candidateCount")}
-          <select
-            className="app-paper-input px-3"
-            onChange={(event) => setCandidateCount(event.target.value)}
-            value={candidateCount}
-          >
-            {[1, 2, 3, 4, 5].map((value) => (
-              <option key={value} value={value}>
-                {value}
-              </option>
+    <div className="app-workspace-grid app-recommend-workspace app-recommend-workbench">
+      <RecommendationRequestStrip
+        busy={busy}
+        candidateCount={candidateCount}
+        errorKey={errorKey}
+        onCandidateCountChange={setCandidateCount}
+        onSubmit={submit}
+        onTemporaryRequirementChange={setTemporaryRequirement}
+        temporaryRequirement={temporaryRequirement}
+      />
+
+      {dishes.length > 0 ? (
+        <section className="app-recommend-results" aria-live="polite">
+          <div className="app-recommend-results-ribbon">
+            <span>{t("resultsTitle")}</span>
+          </div>
+          <div className="app-recommend-dish-grid">
+            {dishes.map((dish) => (
+              <DishRecommendationCard
+                busy={busy}
+                confirmed={confirmedDishIds.includes(dish.id)}
+                dish={dish}
+                key={dish.id}
+                onAdjustConsumption={adjustConsumption}
+                onConfirm={confirm}
+                onConsumptionChange={updateConsumption}
+              />
             ))}
-          </select>
-        </label>
-        <label className="app-form-field">
-          {t("temporaryRequirement")}
-          <textarea
-            className="app-paper-input min-h-24 px-3 py-3"
-            maxLength={500}
-            onChange={(event) => setTemporaryRequirement(event.target.value)}
-            placeholder={t("temporaryRequirementPlaceholder")}
-            value={temporaryRequirement}
-          />
-        </label>
-        <div className="app-action-row">
-          <Button
-            className="home-paper-button app-paper-button-primary app-table-button"
-            disabled={busy}
-          >
-            {busy ? (
-              <LoaderCircle className="app-button-icon animate-spin" aria-hidden="true" />
-            ) : (
-              <Sparkles className="app-button-icon" aria-hidden="true" />
-            )}
-            <span className="home-paper-button-label">{t("generate")}</span>
-          </Button>
-        </div>
-        <p className="app-muted-text">{t("temporaryNote")}</p>
-        {errorKey ? <p className="auth-modal-error">{tErrors(errorKey)}</p> : null}
-      </form>
+          </div>
+          <p className="app-recommend-tip">
+            <Lightbulb className="app-inline-icon" aria-hidden="true" />
+            <span>{t("confirmationTip")}</span>
+          </p>
+        </section>
+      ) : null}
+    </div>
+  );
+}
 
-      {dishes.map((dish) => {
-        const confirmed = confirmedDishIds.includes(dish.id);
+function RecommendationRequestStrip({
+  busy,
+  candidateCount,
+  errorKey,
+  onCandidateCountChange,
+  onSubmit,
+  onTemporaryRequirementChange,
+  temporaryRequirement
+}: {
+  busy: boolean;
+  candidateCount: string;
+  errorKey: string | null;
+  onCandidateCountChange: (value: string) => void;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onTemporaryRequirementChange: (value: string) => void;
+  temporaryRequirement: string;
+}) {
+  const t = useTranslations("recommend");
+  const tErrors = useTranslations("errors");
 
-        return (
-          <article className="app-paper-card grid gap-4 md:grid-cols-[12rem_1fr]" key={dish.id}>
-            <div className="relative aspect-square overflow-hidden rounded-xl border border-current/20 bg-white/50">
-              {dish.image.publicUrl ? (
-                <Image
-                  alt={dish.name}
-                  className="h-full w-full object-cover"
-                  height={384}
-                  src={dish.image.publicUrl}
-                  unoptimized
-                  width={384}
-                />
-              ) : (
-                <div className="grid h-full place-items-center px-3 text-center text-sm opacity-70">
-                  {t(`imageStatus.${dish.image.status}`)}
-                </div>
-              )}
-            </div>
-            <div className="grid gap-3">
-              <div>
-                <h2 className="app-card-title">{dish.name}</h2>
-                <p className="app-muted-text">{dish.summary}</p>
-                <p className="app-muted-text">
-                  {t("estimatedMinutes", { minutes: dish.estimatedMinutes })}
-                </p>
-              </div>
-              <ol className="list-decimal space-y-1 pl-5 text-sm">
-                {dish.instructions.map((instruction) => (
-                  <li key={instruction}>{instruction}</li>
-                ))}
-              </ol>
-              <div className="grid gap-2">
-                <h3 className="font-black">{t("consumptionTitle")}</h3>
-                {dish.consumptions.length === 0 ? (
-                  <p className="app-muted-text">{t("noConsumption")}</p>
-                ) : (
-                  dish.consumptions.map((consumption) => (
-                    <label className="grid grid-cols-[1fr_7rem_auto] items-center gap-2 text-sm" key={consumption.fridgeItemId}>
-                      <span>{consumption.fridgeItemName}</span>
-                      <input
-                        className="app-paper-input min-h-0 px-2 py-1"
-                        disabled={confirmed}
-                        min="0.001"
-                        onChange={(event) =>
-                          updateConsumption(
-                            dish.id,
-                            consumption.fridgeItemId,
-                            Number(event.target.value)
-                          )
-                        }
-                        step="0.001"
-                        type="number"
-                        value={consumption.consumedQuantity}
-                      />
-                      <span>{consumption.unit}</span>
-                    </label>
-                  ))
-                )}
-              </div>
-              <div className="app-action-row">
-                <Button
-                  className="home-paper-button app-paper-button-compact app-paper-button-primary"
-                  disabled={busy || confirmed || dish.consumptions.length === 0}
-                  onClick={() => confirm(dish)}
-                  type="button"
-                >
-                  <Check className="app-button-icon" aria-hidden="true" />
-                  <span className="home-paper-button-label">
-                    {confirmed ? t("consumptionConfirmed") : t("confirmConsumption")}
-                  </span>
-                </Button>
-              </div>
-            </div>
-          </article>
-        );
-      })}
+  return (
+    <form className="app-recommend-request-strip" onSubmit={onSubmit}>
+      <label className="app-form-field app-recommend-prompt-field">
+        <span className="app-request-label">{t("formTitle")}</span>
+        <textarea
+          className="app-paper-input app-request-input"
+          maxLength={500}
+          onChange={(event) => onTemporaryRequirementChange(event.target.value)}
+          placeholder={t("temporaryRequirementPlaceholder")}
+          value={temporaryRequirement}
+        />
+      </label>
+      <label className="app-form-field app-candidate-count-field">
+        <span className="app-request-label">{t("candidateCount")}</span>
+        <select
+          className="app-paper-input app-request-select"
+          onChange={(event) => onCandidateCountChange(event.target.value)}
+          value={candidateCount}
+        >
+          {[1, 2, 3, 4, 5].map((value) => (
+            <option key={value} value={value}>
+              {value}
+            </option>
+          ))}
+        </select>
+      </label>
+      <Button className="home-paper-button app-paper-button-primary app-generate-button" disabled={busy}>
+        {busy ? (
+          <LoaderCircle className="app-button-icon animate-spin" aria-hidden="true" />
+        ) : (
+          <Sparkles className="app-button-icon" aria-hidden="true" />
+        )}
+        <span className="home-paper-button-label">{t("generate")}</span>
+      </Button>
+      {errorKey ? <p className="auth-modal-error app-request-error">{tErrors(errorKey)}</p> : null}
+    </form>
+  );
+}
+
+function DishRecommendationCard({
+  busy,
+  confirmed,
+  dish,
+  onAdjustConsumption,
+  onConfirm,
+  onConsumptionChange
+}: {
+  busy: boolean;
+  confirmed: boolean;
+  dish: Dish;
+  onAdjustConsumption: (dishId: string, fridgeItemId: string, delta: number) => void;
+  onConfirm: (dish: Dish) => void;
+  onConsumptionChange: (dishId: string, fridgeItemId: string, consumedQuantity: number) => void;
+}) {
+  const t = useTranslations("recommend");
+
+  return (
+    <article className="app-recipe-card">
+      <DishImageFrame dish={dish} />
+      <div className="app-recipe-card-body">
+        <header className="app-recipe-card-header">
+          <h2 className="app-card-title">{dish.name}</h2>
+          <span className="app-status-sticker app-time-sticker">
+            <Clock3 className="app-inline-icon" aria-hidden="true" />
+            {t("estimatedMinutes", { minutes: dish.estimatedMinutes })}
+          </span>
+        </header>
+        <p className="app-muted-text">{dish.summary}</p>
+        <ol className="app-instruction-list">
+          {dish.instructions.map((instruction) => (
+            <li key={instruction}>{instruction}</li>
+          ))}
+        </ol>
+        <ConsumptionTable
+          confirmed={confirmed}
+          dish={dish}
+          onAdjustConsumption={onAdjustConsumption}
+          onConsumptionChange={onConsumptionChange}
+        />
+        <Button
+          className="home-paper-button app-paper-button-compact app-paper-button-danger app-confirm-consumption-button"
+          disabled={busy || confirmed || dish.consumptions.length === 0}
+          onClick={() => onConfirm(dish)}
+          type="button"
+        >
+          <Check className="app-button-icon" aria-hidden="true" />
+          <span className="home-paper-button-label">
+            {confirmed ? t("consumptionConfirmed") : t("confirmConsumption")}
+          </span>
+        </Button>
+      </div>
+    </article>
+  );
+}
+
+function DishImageFrame({ dish }: { dish: Dish }) {
+  const t = useTranslations("recommend");
+
+  return (
+    <div className="app-image-frame app-dish-image-frame">
+      {dish.image.publicUrl ? (
+        <Image
+          alt={dish.name}
+          className="h-full w-full object-cover"
+          height={384}
+          src={dish.image.publicUrl}
+          unoptimized
+          width={512}
+        />
+      ) : (
+        <div className="app-image-frame-placeholder">{t(`imageStatus.${dish.image.status}`)}</div>
+      )}
+      <span className="app-status-sticker app-image-status-sticker">
+        {t(`imageStatus.${dish.image.status}`)}
+      </span>
+    </div>
+  );
+}
+
+function ConsumptionTable({
+  confirmed,
+  dish,
+  onAdjustConsumption,
+  onConsumptionChange
+}: {
+  confirmed: boolean;
+  dish: Dish;
+  onAdjustConsumption: (dishId: string, fridgeItemId: string, delta: number) => void;
+  onConsumptionChange: (dishId: string, fridgeItemId: string, consumedQuantity: number) => void;
+}) {
+  const t = useTranslations("recommend");
+
+  return (
+    <div className="app-consumption-table">
+      <h3 className="app-consumption-title">{t("consumptionTitle")}</h3>
+      {dish.consumptions.length === 0 ? (
+        <p className="app-muted-text">{t("noConsumption")}</p>
+      ) : (
+        dish.consumptions.map((consumption) => (
+          <label className="app-consumption-row" key={consumption.fridgeItemId}>
+            <span className="app-consumption-name">{consumption.fridgeItemName}</span>
+            <input
+              className="app-paper-input app-consumption-input"
+              disabled={confirmed}
+              min="0.001"
+              onChange={(event) =>
+                onConsumptionChange(
+                  dish.id,
+                  consumption.fridgeItemId,
+                  Number(event.target.value)
+                )
+              }
+              step="0.001"
+              type="number"
+              value={consumption.consumedQuantity}
+            />
+            <span className="app-consumption-unit">{consumption.unit}</span>
+            <span className="app-consumption-steppers" aria-hidden={confirmed}>
+              <button
+                className="app-stepper-button"
+                disabled={confirmed}
+                onClick={() => onAdjustConsumption(dish.id, consumption.fridgeItemId, -1)}
+                type="button"
+              >
+                <Minus className="app-stepper-icon" aria-hidden="true" />
+              </button>
+              <button
+                className="app-stepper-button"
+                disabled={confirmed}
+                onClick={() => onAdjustConsumption(dish.id, consumption.fridgeItemId, 1)}
+                type="button"
+              >
+                <Plus className="app-stepper-icon" aria-hidden="true" />
+              </button>
+            </span>
+          </label>
+        ))
+      )}
     </div>
   );
 }

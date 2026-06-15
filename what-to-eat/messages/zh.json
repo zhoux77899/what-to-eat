@@ -9,7 +9,10 @@
     "history": "推荐历史",
     "openAiKey": "OpenAI 密钥",
     "language": "English",
-    "signIn": "登录"
+    "signIn": "登录",
+    "more": "更多",
+    "notifications": "通知",
+    "defaultChefName": "小厨娘"
   },
   "auth": {
     "title": "登录",
@@ -30,17 +33,19 @@
   "recommend": {
     "title": "生成餐食推荐",
     "description": "根据冰箱中的既有食材生成一至五道候选菜。临时要求和食材消耗建议不会写入历史。",
-    "formTitle": "这顿想吃什么",
+    "formTitle": "本次推荐提示词",
     "candidateCount": "候选菜数量",
     "temporaryRequirement": "本次临时要求",
     "temporaryRequirementPlaceholder": "例如：今晚想清淡一点，最好 20 分钟内完成",
     "temporaryNote": "临时要求只影响本次生成。选择一道菜后，可编辑并确认它的食材消耗。",
     "generate": "生成",
+    "resultsTitle": "推荐结果",
     "estimatedMinutes": "预计 {minutes} 分钟",
     "consumptionTitle": "建议消耗",
     "noConsumption": "这道菜没有可确认的冰箱消耗建议。",
     "confirmConsumption": "确认消耗",
     "consumptionConfirmed": "已确认消耗",
+    "confirmationTip": "小贴士：确认后将从冰箱中扣减所选食材的数量，数量为 0 的食材将自动删除。",
     "imageStatus": {
       "pending": "图片生成中",
       "failed": "图片生成失败，文字推荐仍然可用",

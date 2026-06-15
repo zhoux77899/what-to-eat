@@ -10,21 +10,12 @@ export default async function RecommendPage({ params }: { params: Promise<{ loca
 
   return (
     <AppShell locale={locale}>
-      <section className="app-page app-table-page">
+      <section className="app-page app-recommend-page">
         <h1 className="sr-only" id="recommend-page-title">
           {t("title")}
         </h1>
-        <section className="app-table-canvas" aria-labelledby="recommend-page-title">
-          <div className="app-table-plate" aria-hidden="true">
-            <span className="app-table-plate-shadow" />
-            <span className="app-table-plate-rim" />
-            <span className="app-table-plate-bowl" />
-            <span className="app-table-chopstick app-table-chopstick-left" />
-            <span className="app-table-chopstick app-table-chopstick-right" />
-          </div>
-          <div className="relative z-10 w-full">
-            <RecommendWorkbench />
-          </div>
+        <section className="app-recipe-board" aria-labelledby="recommend-page-title">
+          <RecommendWorkbench />
         </section>
       </section>
     </AppShell>

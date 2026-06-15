@@ -38,46 +38,74 @@ describe("signed-in page surface design", () => {
     }
   });
 
-  it("uses an open table canvas for the recommendation page instead of a framed card", () => {
+  it("uses the illustrated recipe board for the recommendation page instead of the old table prop scene", () => {
     const pageSource = readProjectFile("src/app/[locale]/app/page.tsx");
     const globalCss = readProjectFile("src/app/globals.css");
-    const tableCanvasRule = readCssRule(globalCss, ".app-table-canvas");
+    const recipeBoardRule = readCssRule(globalCss, ".app-recipe-board");
 
-    expect(pageSource).toContain("app-table-canvas");
-    expect(pageSource).toContain("app-table-plate");
-    expect(tableCanvasRule).not.toContain("box-shadow:");
-    expect(tableCanvasRule).not.toMatch(/\n\s*border:/);
-    expect(globalCss).not.toMatch(/\.app-table-canvas(?:-minimal)?::before/);
-    expect(globalCss).not.toMatch(/\.app-table-canvas(?:-minimal)?::after/);
+    expect(pageSource).toContain("app-recipe-board");
+    expect(pageSource).not.toContain("app-table-plate");
+    expect(pageSource).not.toContain("app-table-canvas");
+    expect(recipeBoardRule).toContain("display: grid");
+    expect(recipeBoardRule).not.toContain("box-shadow:");
+    expect(recipeBoardRule).not.toMatch(/\n\s*border:/);
   });
 
-  it("keeps the recommendation page minimal while preserving an accessible title and generate action", () => {
+  it("uses one side-panel prompt request form, result ribbon, recipe cards, and confirmation tip", () => {
     const pageSource = readProjectFile("src/app/[locale]/app/page.tsx");
     const workbenchSource = readProjectFile("src/components/recommend-workbench.tsx");
+    const globalCss = readProjectFile("src/app/globals.css");
+    const recommendWorkspaceRule = readCssRule(globalCss, ".app-recommend-workspace");
+    const requestStripRule = readCssRule(globalCss, ".app-recommend-request-strip");
+    const resultsRule = readCssRule(globalCss, ".app-recommend-results");
     const hasHiddenHeading =
       pageSource.includes('className="sr-only"') &&
       pageSource.includes('id="recommend-page-title"') &&
       pageSource.includes('aria-labelledby="recommend-page-title"');
     const hasAriaLabel = pageSource.includes('aria-label={t("title")}');
 
-    expect(pageSource).not.toContain("app-page-heading");
     expect(pageSource).not.toContain("app-table-description");
     expect(pageSource).not.toContain("app-table-model-note");
     expect(pageSource).not.toContain("ImageIcon");
     expect(pageSource).not.toContain("MEAL_IMAGE_MODEL");
     expect(pageSource).not.toContain("TEXT_RECOMMENDATION_MODEL");
     expect(hasHiddenHeading || hasAriaLabel).toBe(true);
-    expect(workbenchSource).toContain("app-table-button");
+    expect(workbenchSource).toContain("app-workspace-grid app-recommend-workspace");
+    expect(workbenchSource).toContain("app-recommend-request-strip");
+    expect(workbenchSource).toContain("app-recommend-results-ribbon");
+    expect(workbenchSource).toContain("app-recommend-dish-grid");
+    expect(workbenchSource).toContain("app-recipe-card");
+    expect(workbenchSource).toContain("app-recommend-tip");
+    expect(workbenchSource).toContain('t("confirmationTip")');
     expect(workbenchSource).toContain('t("generate")');
+    expect(workbenchSource).not.toContain("mealIdea");
+    expect(workbenchSource).not.toContain("app-craving-field");
+    expect(workbenchSource).not.toContain("app-temporary-requirement-field");
+    expect(workbenchSource.match(/<textarea/g)?.length ?? 0).toBe(1);
+    expect(workbenchSource.match(/temporaryRequirementPlaceholder/g)?.length ?? 0).toBe(1);
+    expect(workbenchSource).toContain("temporaryRequirement: temporaryRequirement.trim() || null");
+    expect(recommendWorkspaceRule).toContain(
+      "grid-template-columns: minmax(0, 1fr) minmax(15rem, 18rem)"
+    );
+    expect(recommendWorkspaceRule).toContain("gap: clamp(2rem, 3vw, 2.5rem)");
+    expect(requestStripRule).toContain("align-self: start");
+    expect(requestStripRule).toContain("grid-column: 2");
+    expect(requestStripRule).toContain("grid-row: 1");
+    expect(requestStripRule).toContain("grid-template-columns: 1fr");
+    expect(requestStripRule).toContain("position: sticky");
+    expect(resultsRule).toContain("grid-column: 1");
   });
 
-  it("defines shared full-width workbench surfaces for menu pages without changing the paper card component", () => {
+  it("defines the shared illustrated kitchen design system for signed-in pages", () => {
     const globalCss = readProjectFile("src/app/globals.css");
     const workbenchPageRule = readCssRule(globalCss, ".app-workbench-page");
     const workbenchFormRule = readCssRule(globalCss, ".app-workbench-form");
 
-    expect(globalCss).toContain(".app-table-canvas");
-    expect(globalCss).toContain(".app-table-plate");
+    expect(globalCss).toContain(".app-kitchen-page");
+    expect(globalCss).toContain(".app-recipe-board");
+    expect(globalCss).toContain(".app-recipe-card");
+    expect(globalCss).toContain(".app-status-sticker");
+    expect(globalCss).toContain(".app-image-frame");
     expect(globalCss).toContain(".app-workbench-page");
     expect(globalCss).toContain(".app-workbench-surface");
     expect(globalCss).toContain(".app-paper-card");
@@ -98,6 +126,10 @@ describe("signed-in page surface design", () => {
     expect(primaryNavigation).toContain(
       'isCurrentPath(`/${locale}/fridge`) && "app-nav-primary-active"'
     );
+    expect(appShellSource).toContain("BrandLogoImage");
+    expect(appShellSource).not.toContain("app-shell-notification-button");
+    expect(appShellSource).not.toContain("Bell");
+    expect(appShellSource).not.toContain("Utensils");
   });
 
   it("keeps menu-page workbench surfaces open instead of drawing a framed background band", () => {
@@ -108,12 +140,42 @@ describe("signed-in page surface design", () => {
     expect(globalCss).not.toContain(".app-workbench-surface::before");
   });
 
-  it("uses one fridge inventory panel before an open sticky form panel", () => {
+  it("reuses the static brand assets in layout metadata and app shell", () => {
+    const layoutSource = readProjectFile("src/app/[locale]/layout.tsx");
+    const appShellSource = readProjectFile("src/components/app-shell.tsx");
+    const brandSource = readProjectFile("src/components/brand-assets.tsx");
+
+    expect(layoutSource).toContain("/favicon.ico");
+    expect(layoutSource).toContain("/brand/app-icon-512.png");
+    expect(appShellSource).toContain("BrandLogoImage");
+    expect(brandSource).toContain("/brand/header-logo-zh.webp");
+    expect(brandSource).toContain("/brand/header-logo-en.webp");
+  });
+
+  it("uses the shared recipe visual language across signed-in workbench pages", () => {
+    const fridgeSource = readProjectFile("src/components/fridge-workbench.tsx");
+    const historySource = readProjectFile("src/components/history-workbench.tsx");
+    const preferencesSource = readProjectFile("src/components/preferences-workbench.tsx");
+    const openAiKeySource = readProjectFile("src/components/openai-key-workbench.tsx");
+
+    expect(fridgeSource).toContain("app-recipe-card app-fridge-inventory-panel");
+    expect(fridgeSource).toContain("app-image-frame");
+    expect(fridgeSource).toContain("app-status-sticker");
+    expect(historySource).toContain("app-recipe-card app-history-dish-card");
+    expect(historySource).toContain("app-image-frame");
+    expect(historySource).toContain("app-status-sticker");
+    expect(preferencesSource).toContain("app-workbench-surface app-workbench-form app-kitchen-panel");
+    expect(openAiKeySource).toContain("app-workbench-surface app-workbench-form app-kitchen-panel");
+    expect(openAiKeySource).toContain("app-status-sticker");
+  });
+
+  it("maps the fridge inventory and form panels to the same columns as app recipes and generation", () => {
     const fridgeSource = readProjectFile("src/components/fridge-workbench.tsx");
     const globalCss = readProjectFile("src/app/globals.css");
     const inventoryPanelIndex = fridgeSource.indexOf("app-fridge-inventory-panel");
     const formPanelIndex = fridgeSource.indexOf("app-fridge-form-panel");
     const fridgeWorkspaceRule = readCssRule(globalCss, ".app-fridge-workspace");
+    const inventoryPanelRule = readCssRule(globalCss, ".app-fridge-inventory-panel");
     const formPanelRule = readCssRule(globalCss, ".app-fridge-form-panel");
     const mobileEditingFormRule = readCssRule(
       globalCss,
@@ -129,7 +191,14 @@ describe("signed-in page surface design", () => {
       "grid-template-columns: minmax(0, 1fr) minmax(15rem, 18rem)"
     );
     expect(fridgeSource).not.toContain("grid-cols-2");
-    expect(formPanelRule).toContain("position: sticky");
+    expect(inventoryPanelRule).toContain("align-self: start");
+    expect(inventoryPanelRule).toContain("grid-column: 1");
+    expect(inventoryPanelRule).toContain("grid-row: 1");
+    expect(formPanelRule).toContain("align-self: start");
+    expect(formPanelRule).toContain("grid-column: 2");
+    expect(formPanelRule).toContain("grid-row: 1");
+    expect(formPanelRule).toContain("position: static");
+    expect(formPanelRule).not.toContain("top:");
     expect(mobileEditingFormRule).toContain("order: -1");
   });
 
@@ -158,7 +227,7 @@ describe("signed-in page surface design", () => {
       "home-paper-button app-paper-button-compact app-paper-button-secondary"
     );
     expect(recommendSource).toContain(
-      "home-paper-button app-paper-button-compact app-paper-button-primary"
+      "home-paper-button app-paper-button-compact app-paper-button-danger"
     );
   });
 
@@ -189,6 +258,6 @@ describe("signed-in page surface design", () => {
     const globalCss = readProjectFile("src/app/globals.css");
 
     expect(globalCss).not.toMatch(/\.app-table-page-minimal\s*{[^}]*min-height:\s*calc\(100svh/s);
-    expect(globalCss).not.toMatch(/\.app-table-canvas-minimal\s*{[^}]*min-height:\s*calc\(100svh/s);
+    expect(globalCss).not.toMatch(/\.app-recipe-board\s*{[^}]*min-height:\s*calc\(100svh/s);
   });
 });

@@ -9,7 +9,10 @@
     "history": "History",
     "openAiKey": "OpenAI key",
     "language": "中文",
-    "signIn": "Sign in"
+    "signIn": "Sign in",
+    "more": "More",
+    "notifications": "Notifications",
+    "defaultChefName": "Chef"
   },
   "auth": {
     "title": "Sign in",
@@ -30,17 +33,19 @@
   "recommend": {
     "title": "Generate a meal recommendation",
     "description": "Generate one to five dish candidates from the ingredients already in your fridge. Temporary requirements and consumption suggestions are not saved to history.",
-    "formTitle": "What sounds good",
+    "formTitle": "Prompt for this recommendation",
     "candidateCount": "Number of candidates",
     "temporaryRequirement": "Temporary requirement",
     "temporaryRequirementPlaceholder": "For example: keep dinner light and finish within 20 minutes",
     "temporaryNote": "The temporary requirement affects this generation only. After choosing a dish, edit and confirm its ingredient consumption.",
     "generate": "Generate",
+    "resultsTitle": "Recommended dishes",
     "estimatedMinutes": "About {minutes} minutes",
     "consumptionTitle": "Suggested consumption",
     "noConsumption": "This dish has no fridge consumption suggestions to confirm.",
     "confirmConsumption": "Confirm consumption",
     "consumptionConfirmed": "Consumption confirmed",
+    "confirmationTip": "Tip: confirming will deduct the selected ingredients from your fridge. Items with quantity 0 are deleted automatically.",
     "imageStatus": {
       "pending": "Generating image",
       "failed": "Image generation failed. The text recommendation is still available.",

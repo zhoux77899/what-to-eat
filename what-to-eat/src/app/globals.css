@@ -836,7 +836,10 @@ body {
 }
 
 .app-fridge-inventory-panel {
+  align-self: start;
   display: grid;
+  grid-column: 1;
+  grid-row: 1;
   min-height: 11rem;
   padding: clamp(1.1rem, 3vw, 1.65rem);
 }
@@ -867,11 +870,13 @@ body {
 }
 
 .app-fridge-form-panel {
+  align-self: start;
   display: grid;
   gap: 1rem;
+  grid-column: 2;
+  grid-row: 1;
   padding: 0.35rem 0.1rem;
-  position: sticky;
-  top: 6.5rem;
+  position: static;
 }
 
 .app-paper-card {
@@ -1550,7 +1555,14 @@ body {
   }
 
   .app-fridge-form-panel {
+    grid-column: 1;
+    grid-row: auto;
     position: static;
+  }
+
+  .app-fridge-inventory-panel {
+    grid-column: 1;
+    grid-row: auto;
   }
 
   .app-fridge-workspace-editing .app-fridge-form-panel {
@@ -1649,5 +1661,633 @@ body {
   .app-table-button:hover,
   .app-table-button:active {
     transform: rotate(-1.2deg);
+  }
+}
+
+.brand-logo-image {
+  display: block;
+  height: auto;
+  max-height: 4.2rem;
+  max-width: min(24rem, 36vw);
+  object-fit: contain;
+  width: auto;
+}
+
+.app-icon-image {
+  border-radius: 22%;
+  display: block;
+  height: auto;
+  width: 100%;
+}
+
+.app-kitchen-page {
+  --kitchen-ink: #4b2d16;
+  --kitchen-paper: #fff9ea;
+  --kitchen-paper-deep: #f4ddad;
+  --kitchen-line: #8a5b2d;
+  --kitchen-green: #80934a;
+  --kitchen-green-dark: #53682e;
+  --kitchen-tomato: #e45e45;
+  --kitchen-yolk: #efb947;
+  --kitchen-cream: #fffdf5;
+  background:
+    radial-gradient(circle at 3% 8%, color-mix(in srgb, var(--kitchen-green) 18%, transparent) 0 8rem, transparent 14rem),
+    radial-gradient(circle at 98% 12%, color-mix(in srgb, var(--kitchen-yolk) 24%, transparent) 0 8rem, transparent 15rem),
+    linear-gradient(180deg, #fff8e7 0%, #fffdf6 44%, #f8e9c9 100%);
+  color: var(--kitchen-ink);
+}
+
+.app-shell.app-kitchen-page::before,
+.app-shell.app-kitchen-page::after {
+  display: none;
+}
+
+.app-shell-header {
+  padding: clamp(0.65rem, 1.8vw, 1rem) clamp(0.9rem, 2vw, 1.4rem) 0;
+}
+
+.app-shell-header-inner {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 62%, transparent), color-mix(in srgb, var(--kitchen-paper) 94%, transparent)),
+    var(--kitchen-paper);
+  border: 1.5px solid color-mix(in srgb, var(--kitchen-line) 62%, transparent);
+  border-radius: 0 0 1.1rem 1.1rem;
+  box-shadow:
+    0 0.2rem 0 color-mix(in srgb, var(--kitchen-line) 42%, transparent),
+    0 1rem 2rem color-mix(in srgb, var(--kitchen-ink) 9%, transparent);
+  display: grid;
+  gap: clamp(0.8rem, 1.8vw, 1.2rem);
+  grid-template-columns: auto 1px minmax(0, 1fr) auto;
+  max-width: 92rem;
+  min-height: 5.4rem;
+  padding: 0.5rem clamp(0.7rem, 2vw, 1.35rem);
+}
+
+.app-shell-brand {
+  gap: 0;
+}
+
+.app-shell-brand-divider {
+  background: color-mix(in srgb, var(--kitchen-line) 42%, transparent);
+  display: block;
+  height: 3.3rem;
+  width: 1px;
+}
+
+.app-shell-nav {
+  justify-content: flex-start;
+}
+
+.app-shell-actions {
+  align-items: center;
+  display: flex;
+  gap: 0.72rem;
+  justify-content: flex-end;
+}
+
+.app-nav-primary,
+.app-menu-trigger,
+.app-sign-in-button {
+  --paper-button-bg: color-mix(in srgb, white 56%, var(--kitchen-paper));
+  --paper-button-border: 1px;
+  --paper-button-radius: 0.58rem;
+  --paper-button-inner-opacity: 0;
+  --paper-button-paper-ring: 0;
+  --paper-button-offset-x: 0;
+  --paper-button-offset-y: 0;
+  --paper-button-shadow-y: 0;
+  --paper-button-shadow-blur: 0;
+  border-color: color-mix(in srgb, var(--kitchen-line) 42%, transparent);
+  border-radius: 0.58rem;
+  box-shadow: none;
+  color: var(--kitchen-ink);
+  font-size: 1rem;
+  font-weight: 850;
+  min-height: 3rem;
+  padding: 0.54rem 1.12rem;
+  transform: none;
+}
+
+.app-nav-primary:hover,
+.app-menu-trigger:hover,
+.app-sign-in-button:hover {
+  background: color-mix(in srgb, var(--kitchen-yolk) 18%, white);
+  border-color: color-mix(in srgb, var(--kitchen-line) 64%, transparent);
+  transform: translateY(-1px);
+}
+
+.app-nav-primary-active {
+  background: color-mix(in srgb, var(--kitchen-green) 20%, white);
+  border-color: var(--kitchen-green-dark);
+  box-shadow: inset 0 -0.24rem 0 color-mix(in srgb, var(--kitchen-green-dark) 72%, transparent);
+}
+
+.app-shell-notification-button {
+  align-items: center;
+  cursor: pointer;
+  display: inline-flex;
+  justify-content: center;
+  padding: 0;
+  width: 3rem;
+}
+
+.app-user-button {
+  background: color-mix(in srgb, white 64%, var(--kitchen-paper));
+  border: 1px solid color-mix(in srgb, var(--kitchen-line) 44%, transparent);
+  border-radius: 0.72rem;
+  gap: 0.55rem;
+  min-height: 3rem;
+  padding: 0.24rem 0.54rem;
+}
+
+.app-user-name {
+  font-size: 0.95rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.app-menu-panel {
+  background: var(--kitchen-paper);
+  border: 1.5px solid color-mix(in srgb, var(--kitchen-line) 78%, transparent);
+  border-radius: 0.82rem;
+  box-shadow: 0 0.8rem 1.8rem color-mix(in srgb, var(--kitchen-ink) 16%, transparent);
+  transform: none;
+}
+
+.app-menu-panel::before {
+  display: none;
+}
+
+.app-shell-main {
+  max-width: 92rem;
+  padding: clamp(1.2rem, 2.8vw, 2rem) clamp(0.9rem, 2vw, 1.4rem) clamp(2rem, 5vw, 3rem);
+}
+
+.app-recommend-page {
+  gap: clamp(1rem, 2vw, 1.4rem);
+}
+
+.app-recipe-board {
+  display: grid;
+  gap: clamp(1rem, 2vw, 1.35rem);
+  min-height: 0;
+  width: 100%;
+}
+
+.app-recommend-workbench {
+  min-width: 0;
+}
+
+.app-recommend-workspace {
+  gap: clamp(2rem, 3vw, 2.5rem);
+  grid-template-columns: minmax(0, 1fr) minmax(15rem, 18rem);
+}
+
+.app-recommend-request-strip {
+  align-self: start;
+  align-items: stretch;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--kitchen-paper-deep) 42%, transparent) 0 0.62rem, transparent 0.62rem),
+    linear-gradient(180deg, color-mix(in srgb, white 58%, transparent), color-mix(in srgb, var(--kitchen-paper) 96%, transparent)),
+    var(--kitchen-paper);
+  border: 1.7px solid var(--kitchen-line);
+  border-radius: 0.8rem;
+  box-shadow:
+    0 0.18rem 0 color-mix(in srgb, var(--kitchen-line) 48%, transparent),
+    0 0.9rem 1.8rem color-mix(in srgb, var(--kitchen-ink) 9%, transparent);
+  display: grid;
+  gap: clamp(0.9rem, 2vw, 1.35rem);
+  grid-column: 2;
+  grid-row: 1;
+  grid-template-columns: 1fr;
+  padding: clamp(1rem, 2vw, 1.3rem) clamp(1rem, 2.2vw, 1.6rem);
+  position: sticky;
+  top: 6.5rem;
+}
+
+.app-recommend-request-strip::before {
+  background: repeating-linear-gradient(
+    180deg,
+    transparent 0 1.1rem,
+    color-mix(in srgb, var(--kitchen-line) 52%, transparent) 1.1rem 1.18rem
+  );
+  content: "";
+  height: calc(100% - 1.6rem);
+  left: 0.72rem;
+  position: absolute;
+  top: 0.8rem;
+  width: 0.5rem;
+}
+
+.app-request-label {
+  color: var(--kitchen-ink);
+  font-size: 1.05rem;
+  font-weight: 900;
+}
+
+.app-request-input,
+.app-request-select {
+  background: color-mix(in srgb, white 68%, var(--kitchen-paper));
+  border: 1.4px solid color-mix(in srgb, var(--kitchen-line) 70%, transparent);
+  border-radius: 0.5rem;
+  box-shadow: inset 0 0.08rem 0.2rem color-mix(in srgb, var(--kitchen-ink) 8%, transparent);
+  min-height: 3.2rem;
+}
+
+.app-request-input {
+  min-height: 5.2rem;
+  resize: vertical;
+}
+
+.app-generate-button {
+  --paper-button-bg: linear-gradient(180deg, #9cad65, var(--kitchen-green));
+  --paper-button-border: 1.6px;
+  --paper-button-radius: 0.56rem;
+  --paper-button-rest-transform: none;
+  --paper-button-hover-transform: translateY(-1px);
+  align-self: center;
+  box-shadow:
+    0 0 0 0.18rem color-mix(in srgb, #f8e7aa 72%, transparent),
+    0.16rem 0.18rem 0 var(--kitchen-ink),
+    0 0.8rem 1.3rem color-mix(in srgb, var(--kitchen-green-dark) 22%, transparent);
+  color: white;
+  font-size: 1.18rem;
+  min-height: 4.6rem;
+  min-width: 12.5rem;
+}
+
+.app-request-error {
+  grid-column: 1 / -1;
+}
+
+.app-recommend-results {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.app-recommend-results-ribbon {
+  align-items: center;
+  display: flex;
+  gap: 0.9rem;
+  overflow: hidden;
+}
+
+.app-recommend-results-ribbon span {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--kitchen-tomato) 20%, var(--kitchen-paper)), var(--kitchen-paper));
+  border: 1.5px solid color-mix(in srgb, var(--kitchen-line) 64%, transparent);
+  border-radius: 0.25rem;
+  box-shadow: 0.12rem 0.14rem 0 color-mix(in srgb, var(--kitchen-line) 34%, transparent);
+  color: var(--kitchen-ink);
+  display: inline-flex;
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  font-weight: 950;
+  line-height: 1;
+  padding: 0.42rem 1.25rem;
+  position: relative;
+}
+
+.app-recommend-results-ribbon::after {
+  border-top: 1.5px dashed color-mix(in srgb, var(--kitchen-yolk) 84%, var(--kitchen-line));
+  content: "";
+  flex: 1;
+}
+
+.app-recommend-dish-grid {
+  align-items: stretch;
+  display: grid;
+  gap: clamp(1rem, 2vw, 1.35rem);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.app-recipe-card,
+.app-kitchen-panel {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 58%, transparent), color-mix(in srgb, var(--kitchen-paper) 94%, transparent)),
+    var(--kitchen-paper);
+  border: 1.5px solid color-mix(in srgb, var(--kitchen-line) 76%, transparent);
+  border-radius: 0.88rem;
+  box-shadow:
+    0 0.16rem 0 color-mix(in srgb, var(--kitchen-line) 36%, transparent),
+    0 0.82rem 1.7rem color-mix(in srgb, var(--kitchen-ink) 10%, transparent);
+  color: var(--kitchen-ink);
+  position: relative;
+}
+
+.app-recipe-card {
+  display: grid;
+  gap: 0;
+  overflow: hidden;
+  padding: 0.58rem;
+}
+
+.app-recipe-card-body {
+  background: color-mix(in srgb, white 72%, var(--kitchen-paper));
+  border: 1px solid color-mix(in srgb, var(--kitchen-line) 24%, transparent);
+  border-radius: 0 0 0.64rem 0.64rem;
+  display: grid;
+  gap: 0.66rem;
+  padding: clamp(0.85rem, 1.6vw, 1.05rem);
+}
+
+.app-recipe-card-header {
+  align-items: start;
+  display: flex;
+  gap: 0.7rem;
+  justify-content: space-between;
+}
+
+.app-card-title {
+  color: var(--kitchen-ink);
+  font-size: clamp(1.12rem, 2vw, 1.45rem);
+  font-weight: 950;
+  line-height: 1.12;
+}
+
+.app-image-frame {
+  align-items: center;
+  aspect-ratio: 16 / 9;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--kitchen-yolk) 28%, transparent), transparent 42%),
+    color-mix(in srgb, white 70%, var(--kitchen-paper-deep));
+  border: 1px solid color-mix(in srgb, var(--kitchen-line) 42%, transparent);
+  border-radius: 0.65rem 0.65rem 0 0;
+  display: grid;
+  justify-items: center;
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.app-dish-image-frame {
+  min-height: clamp(11rem, 16vw, 15rem);
+}
+
+.app-image-frame-placeholder {
+  color: color-mix(in srgb, var(--kitchen-ink) 72%, #6e6250);
+  font-weight: 850;
+  padding: 1rem;
+  text-align: center;
+  text-wrap: pretty;
+}
+
+.app-image-frame-icon {
+  color: color-mix(in srgb, var(--kitchen-ink) 50%, transparent);
+  height: 2rem;
+  width: 2rem;
+}
+
+.app-status-sticker {
+  align-items: center;
+  background: color-mix(in srgb, var(--kitchen-green) 18%, var(--kitchen-paper));
+  border: 1px solid color-mix(in srgb, var(--kitchen-green-dark) 48%, transparent);
+  border-radius: 0.34rem;
+  color: color-mix(in srgb, var(--kitchen-green-dark) 82%, var(--kitchen-ink));
+  display: inline-flex;
+  font-size: 0.8rem;
+  font-weight: 850;
+  gap: 0.32rem;
+  justify-self: start;
+  line-height: 1.2;
+  padding: 0.32rem 0.52rem;
+  text-wrap: pretty;
+}
+
+.app-image-status-sticker {
+  position: absolute;
+  right: 0.52rem;
+  top: 0.52rem;
+  z-index: 2;
+}
+
+.app-time-sticker {
+  background: transparent;
+  border-color: transparent;
+  color: var(--kitchen-ink);
+  flex: 0 0 auto;
+  padding-inline: 0;
+}
+
+.app-instruction-list {
+  border-bottom: 1px solid color-mix(in srgb, var(--kitchen-line) 20%, transparent);
+  color: color-mix(in srgb, var(--kitchen-ink) 82%, #5f5242);
+  display: grid;
+  font-size: 0.88rem;
+  gap: 0.28rem;
+  line-height: 1.5;
+  list-style: decimal;
+  padding-block-end: 0.5rem;
+  padding-inline-start: 1.1rem;
+}
+
+.app-consumption-table {
+  display: grid;
+  gap: 0.32rem;
+}
+
+.app-consumption-title {
+  font-size: 0.9rem;
+  font-weight: 950;
+}
+
+.app-consumption-row {
+  align-items: center;
+  background: color-mix(in srgb, white 52%, var(--kitchen-paper));
+  border: 1px solid color-mix(in srgb, var(--kitchen-line) 24%, transparent);
+  border-radius: 0.38rem;
+  display: grid;
+  gap: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(4.6rem, 5.8rem) minmax(2.7rem, auto) auto;
+  min-height: 2.2rem;
+  overflow: hidden;
+}
+
+.app-consumption-name,
+.app-consumption-unit {
+  font-size: 0.86rem;
+  font-weight: 800;
+  padding-inline: 0.5rem;
+}
+
+.app-consumption-input {
+  background: transparent;
+  border: 0;
+  border-inline: 1px solid color-mix(in srgb, var(--kitchen-line) 20%, transparent);
+  border-radius: 0;
+  box-shadow: none;
+  min-height: 2.2rem;
+  padding: 0.2rem 0.45rem;
+  text-align: center;
+}
+
+.app-consumption-steppers {
+  display: inline-flex;
+  height: 100%;
+}
+
+.app-stepper-button {
+  align-items: center;
+  background: color-mix(in srgb, white 68%, var(--kitchen-paper));
+  border: 0;
+  border-left: 1px solid color-mix(in srgb, var(--kitchen-line) 28%, transparent);
+  color: var(--kitchen-ink);
+  cursor: pointer;
+  display: inline-flex;
+  justify-content: center;
+  min-width: 2rem;
+}
+
+.app-stepper-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.app-stepper-icon {
+  height: 1rem;
+  width: 1rem;
+}
+
+.app-confirm-consumption-button {
+  justify-self: center;
+  margin-block-start: 0.3rem;
+  min-width: min(100%, 20rem);
+}
+
+.app-recommend-tip {
+  align-items: center;
+  background: color-mix(in srgb, white 58%, var(--kitchen-paper));
+  border: 1px solid color-mix(in srgb, var(--kitchen-line) 42%, transparent);
+  border-radius: 0.5rem;
+  display: flex;
+  gap: 0.55rem;
+  line-height: 1.5;
+  padding: 0.72rem 0.9rem;
+  text-wrap: pretty;
+}
+
+.app-workbench-surface.app-kitchen-panel,
+.app-fridge-form-panel.app-kitchen-panel {
+  display: grid;
+  gap: 1rem;
+  padding: clamp(1rem, 2vw, 1.4rem);
+}
+
+.app-fridge-inventory-panel {
+  padding: clamp(0.85rem, 2vw, 1.1rem);
+}
+
+.app-fridge-item-row {
+  grid-template-columns: 7rem minmax(0, 1fr);
+}
+
+.app-fridge-image-frame,
+.app-history-image-frame {
+  aspect-ratio: 1;
+  border-radius: 0.65rem;
+}
+
+.app-history-dish-card {
+  grid-template-columns: 7rem minmax(0, 1fr);
+}
+
+@media (max-width: 1040px) {
+  .app-shell-header-inner {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .app-shell-brand-divider {
+    display: none;
+  }
+
+  .app-shell-nav,
+  .app-shell-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+
+  .app-recommend-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .app-recommend-request-strip,
+  .app-recommend-results {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .app-recommend-request-strip {
+    grid-template-columns: minmax(0, 1fr) minmax(8rem, 12rem);
+    position: static;
+  }
+
+  .app-recommend-prompt-field,
+  .app-generate-button {
+    grid-column: 1 / -1;
+  }
+
+  .app-recommend-dish-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .brand-logo-image {
+    max-height: 3.2rem;
+    max-width: min(18rem, 72vw);
+  }
+
+  .app-shell-header-inner {
+    border-radius: 0.9rem;
+    grid-template-columns: 1fr;
+  }
+
+  .app-shell-nav,
+  .app-shell-actions {
+    width: 100%;
+  }
+
+  .app-shell-actions {
+    justify-content: space-between;
+  }
+
+  .app-nav-primary,
+  .app-menu-trigger,
+  .app-sign-in-button {
+    min-height: 2.75rem;
+    padding-inline: 0.84rem;
+  }
+
+  .app-recommend-request-strip,
+  .app-recommend-dish-grid,
+  .app-history-dish-card {
+    grid-template-columns: 1fr;
+  }
+
+  .app-candidate-count-field,
+  .app-recommend-prompt-field,
+  .app-generate-button {
+    grid-column: auto;
+  }
+
+  .app-generate-button {
+    justify-self: stretch;
+    min-width: 0;
+  }
+
+  .app-consumption-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .app-consumption-input {
+    border-block: 1px solid color-mix(in srgb, var(--kitchen-line) 20%, transparent);
+    border-inline: 0;
+    text-align: left;
+  }
+
+  .app-consumption-steppers {
+    min-height: 2.2rem;
   }
 }

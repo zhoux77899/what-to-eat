@@ -157,14 +157,14 @@ export function FridgeWorkbench() {
     <div
       className={cn("app-workspace-grid app-fridge-workspace", editingId && "app-fridge-workspace-editing")}
     >
-      <section className="app-paper-card app-fridge-inventory-panel">
+      <section className="app-recipe-card app-fridge-inventory-panel">
         {items.length === 0 ? (
           <p className="app-muted-text">{t("empty")}</p>
         ) : (
           <div className="app-fridge-item-list">
             {items.map((item) => (
               <article className="app-fridge-item-row" key={item.id}>
-                <div className="relative aspect-square overflow-hidden rounded-xl border border-current/20 bg-white/50">
+                <div className="app-image-frame app-fridge-image-frame">
                   {item.imageUrl ? (
                     <Image
                       alt={item.name}
@@ -175,7 +175,7 @@ export function FridgeWorkbench() {
                       width={224}
                     />
                   ) : (
-                    <ImageOff className="absolute left-1/2 top-1/2 h-8 w-8 -translate-x-1/2 -translate-y-1/2 opacity-50" />
+                    <ImageOff className="app-image-frame-icon" />
                   )}
                 </div>
                 <div className="grid gap-2">
@@ -184,7 +184,7 @@ export function FridgeWorkbench() {
                     <p className="app-muted-text">
                       {item.quantity} {item.unit}
                     </p>
-                    <p className="app-muted-text">
+                    <p className="app-status-sticker">
                       {t(`imageStatus.${item.imageStatus ?? "notRequested"}`)}
                     </p>
                   </div>
@@ -228,7 +228,7 @@ export function FridgeWorkbench() {
         )}
       </section>
 
-      <section className="app-fridge-form-panel">
+      <section className="app-fridge-form-panel app-kitchen-panel">
         <h2 className="app-card-title">{editingId ? t("editTitle") : t("addTitle")}</h2>
         <form className="grid gap-4" onSubmit={submit}>
           <label className="app-form-field">

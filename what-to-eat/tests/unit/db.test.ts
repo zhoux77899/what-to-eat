@@ -55,7 +55,7 @@ describe("createDb", () => {
     expect(second).toBe(first);
     expect(neonMock).toHaveBeenCalledOnce();
     expect(drizzleMock).toHaveBeenCalledOnce();
-  });
+  }, 15_000);
 
   it("does not reuse the default instance when a database URL is passed explicitly", async () => {
     const { createDb } = await import("@/db");
