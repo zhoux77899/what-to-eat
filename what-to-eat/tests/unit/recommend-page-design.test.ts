@@ -29,6 +29,18 @@ describe("signed-in page surface design", () => {
     "src/app/[locale]/settings/openai-key/page.tsx"
   ];
 
+  it("uses the brand logo and icon-library actions on the public home hero", () => {
+    const homeSource = readProjectFile("src/app/[locale]/page.tsx");
+
+    expect(homeSource).toContain("BrandLogoImage");
+    expect(homeSource).toContain("home-hero-stage");
+    expect(homeSource).toContain("Sparkles");
+    expect(homeSource).toContain("Languages");
+    expect(homeSource).not.toContain("<svg");
+    expect(homeSource).not.toContain("<path");
+    expect(homeSource).toContain('ProtectedLink className="home-paper-button home-hero-cta"');
+  });
+
   it("removes card components from every signed-in page reached from the app menu", () => {
     for (const path of signedInPages) {
       const pageSource = readProjectFile(path);
@@ -101,6 +113,7 @@ describe("signed-in page surface design", () => {
     const workbenchPageRule = readCssRule(globalCss, ".app-workbench-page");
     const workbenchFormRule = readCssRule(globalCss, ".app-workbench-form");
 
+    expect(globalCss).not.toContain("backdrop-filter");
     expect(globalCss).toContain(".app-kitchen-page");
     expect(globalCss).toContain(".app-recipe-board");
     expect(globalCss).toContain(".app-recipe-card");
@@ -109,6 +122,9 @@ describe("signed-in page surface design", () => {
     expect(globalCss).toContain(".app-workbench-page");
     expect(globalCss).toContain(".app-workbench-surface");
     expect(globalCss).toContain(".app-paper-card");
+    expect(globalCss).toContain("--panel-radius: 0.875rem");
+    expect(globalCss).toContain("--control-radius: 0.625rem");
+    expect(globalCss).toContain("--sticker-radius: 0.375rem");
     expect(workbenchPageRule).toContain("width: 100%");
     expect(workbenchPageRule).not.toContain("max-width");
     expect(workbenchFormRule).toContain("width: 100%");
