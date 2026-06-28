@@ -125,6 +125,13 @@ describe("AuthModal", () => {
     expect(source).toContain("Dialog.Root");
     expect(source).toContain("Dialog.Content");
   });
+
+  it("renders the hand-drawn provider stickers", () => {
+    renderWithIntl(<AuthModal locale="zh" onClose={vi.fn()} open returnTo="/zh/app" />);
+
+    expect(document.querySelector(".auth-provider-icon-google")).toBeInTheDocument();
+    expect(document.querySelector(".auth-provider-icon-github")).toBeInTheDocument();
+  });
 });
 
 describe("ProtectedLink", () => {

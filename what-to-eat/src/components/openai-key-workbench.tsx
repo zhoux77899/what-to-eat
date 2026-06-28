@@ -14,7 +14,7 @@ export function OpenAiKeyWorkbench() {
   const tErrors = useTranslations("errors");
   const [apiKey, setApiKey] = useState("");
   const [status, setStatus] = useState("not_configured");
-  const [hint, setHint] = useState<string | null>(null);
+  const [hasStoredKey, setHasStoredKey] = useState(false);
   const [errorKey, setErrorKey] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -28,7 +28,7 @@ export function OpenAiKeyWorkbench() {
       key: { hint: string; status: string } | null;
       status: string;
     }>("/api/openai-key");
-    setHint(data.key?.hint ?? null);
+    setHasStoredKey(data.key !== null);
     setStatus(data.status);
   }
 
@@ -90,16 +90,6 @@ export function OpenAiKeyWorkbench() {
   return (
     <form className="app-workbench-surface app-workbench-form app-kitchen-panel" onSubmit={submit}>
       <p className="app-page-description">{t("description")}</p>
-      <div className="app-key-status" aria-live="polite">
-        <p>
-          <strong>{t("statusLabel")}</strong>
-          <span>{loaded ? t(`status.${status}`) : t("loading")}</span>
-        </p>
-        <p>
-          <strong>{t("keyHintLabel")}</strong>
-          <span>{loaded ? (hint ?? t("noHint")) : t("loading")}</span>
-        </p>
-      </div>
       <label className="app-form-field">
         {t("fieldLabel")}
         <Input
@@ -137,7 +127,7 @@ export function OpenAiKeyWorkbench() {
         </Button>
         <Button
           className="home-paper-button app-paper-button-compact app-paper-button-danger"
-          disabled={!loaded || keyBusy || hint === null}
+          disabled={!loaded || keyBusy || !hasStoredKey}
           onClick={() => setDeleteOpen(true)}
           type="button"
           variant="ghost"

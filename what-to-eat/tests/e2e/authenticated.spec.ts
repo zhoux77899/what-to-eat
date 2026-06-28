@@ -76,6 +76,10 @@ test.describe("authenticated workbench flows", () => {
     );
 
     await page.goto("/en/app");
+    await page.getByRole("button", { name: "Increase candidate count" }).click();
+    await expect(page.locator(".app-candidate-count-value")).toHaveText("4");
+    await page.getByRole("button", { name: "Decrease candidate count" }).click();
+    await expect(page.locator(".app-candidate-count-value")).toHaveText("3");
     await page.locator(".app-generate-button").click();
     await page.getByText("Suggested consumption", { exact: true }).click();
     await page.getByRole("button", { name: "Confirm consumption" }).click();

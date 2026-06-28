@@ -29,6 +29,21 @@ describe("full-site UI redesign contract", () => {
     expect(shell).toContain("useSearchParams");
   });
 
+  it("keeps shared controls horizontal and overlay menus out of document flow", () => {
+    const styles = read("src/styles/redesign.css");
+
+    expect(styles).toMatch(
+      /\.home-paper-button[\s\S]*?display:\s*inline-flex[\s\S]*?white-space:\s*nowrap/
+    );
+    expect(styles).toMatch(/\.app-shell-menu\s*\{[^}]*position:\s*relative/s);
+    expect(styles).toMatch(
+      /\.app-menu-panel\s*\{[^}]*display:\s*grid[^}]*position:\s*absolute/s
+    );
+    expect(styles).toMatch(/\.app-menu-link\s*\{[^}]*display:\s*flex/s);
+    expect(styles).toMatch(/\.app-form-field\s*\{[^}]*display:\s*grid/s);
+    expect(styles).toMatch(/\.app-action-row\s*\{[^}]*display:\s*flex/s);
+  });
+
   it("exposes accessible consumption controls and explicit initial loading states", () => {
     const recommend = read("src/components/recommend-workbench.tsx");
     const fridge = read("src/components/fridge-workbench.tsx");
@@ -69,6 +84,18 @@ describe("full-site UI redesign contract", () => {
     expect(styles).toContain("@media (max-width: 1023px)");
   });
 
+  it("places recommendation controls in a full-width right-side stepper card", () => {
+    const recommend = read("src/components/recommend-workbench.tsx");
+    const styles = read("src/styles/redesign.css");
+
+    expect(recommend).toContain('aria-label={t("decreaseCandidateCount")}');
+    expect(recommend).toContain('aria-label={t("increaseCandidateCount")}');
+    expect(recommend).not.toContain("<select");
+    expect(styles).toMatch(/\.app-recommend-request-strip\s*\{[^}]*grid-column:\s*2/s);
+    expect(styles).toMatch(/\.app-recommend-results[^}]*grid-column:\s*1/s);
+    expect(styles).toMatch(/\.app-candidate-count-stepper\s*\{[^}]*width:\s*100%/s);
+  });
+
   it("keeps history lightweight and mobile controls touch safe", () => {
     const history = read("src/components/history-workbench.tsx");
     const styles = read("src/styles/redesign.css");
@@ -104,14 +131,15 @@ describe("full-site UI redesign contract", () => {
     expect(styles).not.toMatch(/border-(left|right):\s*(?:[3-9]|\d{2,})px/);
   });
 
-  it("uses library icons and exposes account actions from the mobile more menu", () => {
+  it("restores provider sticker artwork and keeps account actions only where needed", () => {
     const auth = read("src/components/auth/auth-modal.tsx");
     const shell = read("src/components/app-shell.tsx");
 
-    expect(auth).not.toContain("<svg");
-    expect(auth).toContain('from "lucide-react"');
-    expect(shell).toContain("app-mobile-account");
-    expect(shell).toContain("<ClerkAuthActions");
+    expect(auth).toContain("GoogleStickerIcon");
+    expect(auth).toContain("GitHubStickerIcon");
+    expect(auth).toContain("auth-provider-icon-paper");
+    expect(shell).not.toContain('className="app-menu-account"');
+    expect(shell).toContain('className="app-mobile-account"');
   });
 
   it("makes recommendation history collapsible and prevents preference writes after load failure", () => {

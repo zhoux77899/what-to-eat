@@ -369,6 +369,11 @@ function RecommendationRequestStrip({
 }) {
   const t = useTranslations("recommend");
   const tErrors = useTranslations("errors");
+  const candidateCountValue = Number(candidateCount);
+
+  const changeCandidateCount = (delta: number) => {
+    onCandidateCountChange(String(Math.min(5, Math.max(1, candidateCountValue + delta))));
+  };
 
   return (
     <form className="app-recommend-request-strip" onSubmit={onSubmit}>
@@ -382,20 +387,32 @@ function RecommendationRequestStrip({
           value={temporaryRequirement}
         />
       </label>
-      <label className="app-form-field app-candidate-count-field">
+      <div className="app-form-field app-candidate-count-field">
         <span className="app-request-label">{t("candidateCount")}</span>
-        <select
-          className="app-paper-input app-request-select"
-          onChange={(event) => onCandidateCountChange(event.target.value)}
-          value={candidateCount}
-        >
-          {[1, 2, 3, 4, 5].map((value) => (
-            <option key={value} value={value}>
-              {value}
-            </option>
-          ))}
-        </select>
-      </label>
+        <div className="app-candidate-count-stepper">
+          <button
+            aria-label={t("decreaseCandidateCount")}
+            className="app-stepper-button"
+            disabled={busy || candidateCountValue <= 1}
+            onClick={() => changeCandidateCount(-1)}
+            type="button"
+          >
+            <Minus aria-hidden="true" />
+          </button>
+          <output className="app-candidate-count-value" aria-live="polite">
+            {candidateCountValue}
+          </output>
+          <button
+            aria-label={t("increaseCandidateCount")}
+            className="app-stepper-button"
+            disabled={busy || candidateCountValue >= 5}
+            onClick={() => changeCandidateCount(1)}
+            type="button"
+          >
+            <Plus aria-hidden="true" />
+          </button>
+        </div>
+      </div>
       <Button className="home-paper-button app-paper-button-primary app-generate-button" disabled={busy}>
         {busy ? (
           <LoaderCircle className="app-button-icon animate-spin" aria-hidden="true" />

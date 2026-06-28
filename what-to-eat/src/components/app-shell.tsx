@@ -131,17 +131,6 @@ function AppShellContent({ locale, children }: AppShellProps) {
                 <Suspense fallback={<LocaleSwitchFallback label={t("language")} />}>
                   <LocaleSwitchLinkWithSearch href={localePath} label={t("language")} />
                 </Suspense>
-                <div className="app-menu-account">
-                  {clerkEnabled ? (
-                    <ClerkAuthActions
-                      defaultChefName={t("defaultChefName")}
-                      locale={locale}
-                      signInLabel={t("signIn")}
-                    />
-                  ) : (
-                    <LocalAuthActions locale={locale} signInLabel={t("signIn")} />
-                  )}
-                </div>
               </div>
             </details>
 

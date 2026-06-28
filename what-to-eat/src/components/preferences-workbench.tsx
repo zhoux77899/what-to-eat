@@ -73,16 +73,13 @@ export function PreferencesWorkbench({ locale }: { locale: "zh" | "en" }) {
   }
 
   return (
-    <form className="app-workbench-surface app-workbench-form app-kitchen-panel" onSubmit={submit}>
+    <form
+      aria-busy={loading}
+      aria-label={t("fieldLabel")}
+      className="app-workbench-surface app-workbench-form app-kitchen-panel"
+      onSubmit={submit}
+    >
       <p className="app-page-description">{t("description")}</p>
-      {loading ? (
-        <div aria-label={t("loading")} className="app-loading-state" role="status">
-          <div className="app-skeleton">
-            <span className="app-skeleton-line" aria-hidden="true" />
-            <span className="app-skeleton-line app-skeleton-line-short" aria-hidden="true" />
-          </div>
-        </div>
-      ) : null}
       <label className="app-form-field">
         {t("fieldLabel")}
         <textarea

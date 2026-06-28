@@ -40,6 +40,8 @@
     "description": "Generate one to five dish candidates from the ingredients already in your fridge. Temporary requirements and consumption suggestions are not saved to history.",
     "formTitle": "Prompt for this recommendation",
     "candidateCount": "Number of candidates",
+    "decreaseCandidateCount": "Decrease candidate count",
+    "increaseCandidateCount": "Increase candidate count",
     "temporaryRequirement": "Temporary requirement",
     "temporaryRequirementPlaceholder": "For example: keep dinner light and finish within 20 minutes",
     "temporaryNote": "The temporary requirement affects this generation only. After choosing a dish, edit and confirm its ingredient consumption.",

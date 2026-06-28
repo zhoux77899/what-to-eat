@@ -68,6 +68,19 @@ describe("workbench state feedback", () => {
     requestJsonMock.mockReset();
   });
 
+  it("shows final preference form geometry without a loading skeleton", () => {
+    requestJsonMock.mockReturnValue(new Promise<never>(() => undefined));
+
+    renderWithIntl(<PreferencesWorkbench locale="en" />);
+
+    expect(screen.getByRole("textbox", { name: "Long-term preference" })).toBeDisabled();
+    expect(document.querySelector(".app-skeleton")).not.toBeInTheDocument();
+    expect(screen.getByRole("form", { name: "Long-term preference" })).toHaveAttribute(
+      "aria-busy",
+      "true"
+    );
+  });
+
   it("clears saved preference feedback as soon as the saved value changes", async () => {
     requestJsonMock
       .mockResolvedValueOnce({ preferences: { preferenceText: "No cilantro" } })
@@ -101,6 +114,19 @@ describe("workbench state feedback", () => {
 
     expect(screen.getByRole("dialog", { name: "Delete API key" })).toBeVisible();
     expect(requestJsonMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps OpenAI key state internal", async () => {
+    requestJsonMock.mockResolvedValueOnce({
+      key: { hint: "sk-...1234", status: "valid" },
+      status: "valid"
+    });
+
+    renderWithIntl(<OpenAiKeyWorkbench />);
+
+    expect(await screen.findByRole("button", { name: "Delete key" })).toBeEnabled();
+    expect(screen.queryByText("Key status")).not.toBeInTheDocument();
+    expect(screen.queryByText("Key hint")).not.toBeInTheDocument();
   });
 
   it("focuses preference feedback after a keyboard-triggered save failure", async () => {

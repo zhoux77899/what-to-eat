@@ -91,7 +91,8 @@ describe("signed-in product UI design", () => {
     expect(key).toContain("const [validating, setValidating]");
     expect(key).toContain("const [deleting, setDeleting]");
     expect(key).toContain("ConfirmDeleteDialog");
-    expect(key).toContain("app-key-status");
+    expect(key).toContain("const [hasStoredKey, setHasStoredKey]");
+    expect(key).not.toContain("app-key-status");
     expect(key).not.toContain("currentStatus");
   });
 
