@@ -12,7 +12,9 @@ export default async function OpenAiKeyPage({ params }: { params: Promise<{ loca
     <AppShell locale={locale}>
       <section className="app-page app-workbench-page">
         <div className="app-page-heading">
-          <h1 className="app-page-title">{t("title")}</h1>
+          <h1 className="app-page-title" id="openai-key-page-title" tabIndex={-1}>
+            {t("title")}
+          </h1>
         </div>
         <OpenAiKeyWorkbench />
       </section>

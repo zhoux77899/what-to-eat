@@ -1,8 +1,9 @@
 "use client";
 
-import { ImageOff, RefreshCw, Trash2 } from "lucide-react";
+import { ChevronDown, ImageOff, RefreshCw, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
@@ -64,12 +65,15 @@ function getHistoryImagePollDelay(recommendations: Recommendation[]) {
   );
 }
 
-export function HistoryWorkbench() {
+export function HistoryWorkbench({ locale }: { locale: string }) {
   const t = useTranslations("history");
   const tErrors = useTranslations("errors");
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [errorKey, setErrorKey] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [deletingRowIds, setDeletingRowIds] = useState<string[]>([]);
+  const [retryingRowIds, setRetryingRowIds] = useState<string[]>([]);
+  const [rowErrors, setRowErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
 
   const load = useCallback(async () => {
@@ -80,6 +84,8 @@ export function HistoryWorkbench() {
     } catch (error) {
       setRecommendations((current) => normalizeRecommendations(current));
       setErrorKey(getErrorTranslationKey(error));
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -102,15 +108,23 @@ export function HistoryWorkbench() {
   }, [recommendations, load]);
 
   async function retryImage(dishId: string) {
-    setBusy(true);
+    setRetryingRowIds((current) => [...current, dishId]);
 
     try {
       await requestJson(`/api/recommendations/${dishId}/retry-image`, { method: "POST" });
       await load();
+      setRowErrors((current) => {
+        const next = { ...current };
+        delete next[dishId];
+        return next;
+      });
     } catch (error) {
-      setErrorKey(getErrorTranslationKey(error));
+      setRowErrors((current) => ({
+        ...current,
+        [dishId]: getErrorTranslationKey(error)
+      }));
     } finally {
-      setBusy(false);
+      setRetryingRowIds((current) => current.filter((id) => id !== dishId));
     }
   }
 
@@ -125,37 +139,76 @@ export function HistoryWorkbench() {
         ? `/api/recommendations/${target.id}`
         : `/api/recommendations/dishes/${target.id}`;
 
-    setBusy(true);
+    setDeletingRowIds((current) => [...current, target.id]);
 
     try {
       await requestJson(url, { method: "DELETE" });
       setPendingDelete(null);
       await load();
+      setRowErrors((current) => {
+        const next = { ...current };
+        delete next[target.id];
+        return next;
+      });
     } catch (error) {
-      setErrorKey(getErrorTranslationKey(error));
+      setRowErrors((current) => ({
+        ...current,
+        [target.id]: getErrorTranslationKey(error)
+      }));
     } finally {
-      setBusy(false);
+      setDeletingRowIds((current) => current.filter((id) => id !== target.id));
     }
   }
 
+  if (loading) {
+    return (
+      <div className="app-loading-state" role="status">
+        <div className="app-skeleton">
+          <span>{t("loading")}</span>
+          <span className="app-skeleton-line" aria-hidden="true" />
+          <span className="app-skeleton-line app-skeleton-line-short" aria-hidden="true" />
+        </div>
+      </div>
+    );
+  }
+
+  function recommendationDeleting(recommendationId: string) {
+    return deletingRowIds.includes(recommendationId);
+  }
+
   if (recommendations.length === 0 && !errorKey) {
-    return <p className="app-page-description">{t("empty")}</p>;
+    return (
+      <div className="app-empty-state">
+        <p>{t("empty")}</p>
+        <Link className="home-paper-button app-paper-button-primary" href={`/${locale}/app`}>
+          {t("emptyAction")}
+        </Link>
+      </div>
+    );
   }
 
   return (
-    <div className="grid gap-6">
-      {errorKey ? <p className="auth-modal-error">{tErrors(errorKey)}</p> : null}
+    <div className="app-history-timeline">
+      {errorKey ? (
+        <p className="auth-modal-error" role="alert">
+          {tErrors(errorKey)}
+        </p>
+      ) : null}
       {recommendations.map((recommendation) => (
-        <section className="grid gap-3" key={recommendation.id}>
-          <div className="app-action-row app-action-row-compact">
-            <p className="app-muted-text">
+        <details className="app-history-entry" key={recommendation.id}>
+          <summary className="app-history-entry-summary">
+            <span className="app-muted-text">
               {t("generatedAt", {
                 date: new Date(recommendation.createdAt).toLocaleString(recommendation.locale)
               })}
-            </p>
+            </span>
+            <ChevronDown className="app-history-entry-chevron" aria-hidden="true" />
+          </summary>
+          <div className="app-history-entry-body">
+          <div className="app-history-entry-header app-action-row app-action-row-compact">
             <Button
               className="home-paper-button app-paper-button-compact app-paper-button-danger"
-              disabled={busy}
+              disabled={deletingRowIds.includes(recommendation.id)}
               onClick={() =>
                 setPendingDelete({
                   id: recommendation.id,
@@ -170,9 +223,14 @@ export function HistoryWorkbench() {
               <span className="home-paper-button-label">{t("deleteRecommendation")}</span>
             </Button>
           </div>
-          <div className="grid gap-4 lg:grid-cols-2">
+          {rowErrors[recommendation.id] ? (
+            <p className="auth-modal-error" role="alert">
+              {tErrors(rowErrors[recommendation.id])}
+            </p>
+          ) : null}
+          <div className="app-history-dish-list">
             {recommendation.dishes.map((dish) => (
-              <article className="app-recipe-card app-history-dish-card" key={dish.id}>
+              <article className="app-history-dish-row" key={dish.id}>
                 <div className="app-image-frame app-history-image-frame">
                   {dish.imageUrl ? (
                     <Image
@@ -192,14 +250,29 @@ export function HistoryWorkbench() {
                     <h2 className="app-card-title">{dish.name}</h2>
                     <p className="app-muted-text">{dish.summary}</p>
                     <p className="app-status-sticker">
+                      {t(`imageStatus.${dish.imageStatus ?? "pending"}`)}
+                    </p>
+                    <p className="app-muted-text">
                       {t("estimatedMinutes", { minutes: dish.estimatedMinutes })}
                     </p>
+                    <details className="app-dish-details">
+                      <summary>{t("viewSteps")}</summary>
+                      <ol className="app-instruction-list">
+                        {dish.instructions.map((instruction) => (
+                          <li key={instruction}>{instruction}</li>
+                        ))}
+                      </ol>
+                    </details>
                   </div>
                   <div className="app-action-row app-action-row-compact">
                     {dish.imageStatus === "failed" ? (
                       <Button
                         className="home-paper-button app-paper-button-compact app-paper-button-secondary"
-                        disabled={busy}
+                        disabled={
+                          recommendationDeleting(recommendation.id) ||
+                          deletingRowIds.includes(dish.id) ||
+                          retryingRowIds.includes(dish.id)
+                        }
                         onClick={() => retryImage(dish.id)}
                         type="button"
                         variant="secondary"
@@ -210,7 +283,11 @@ export function HistoryWorkbench() {
                     ) : null}
                     <Button
                       className="home-paper-button app-paper-button-compact app-paper-button-danger"
-                      disabled={busy}
+                      disabled={
+                        recommendationDeleting(recommendation.id) ||
+                        deletingRowIds.includes(dish.id) ||
+                        retryingRowIds.includes(dish.id)
+                      }
                       onClick={() =>
                         setPendingDelete({
                           id: dish.id,
@@ -225,11 +302,17 @@ export function HistoryWorkbench() {
                       <span className="home-paper-button-label">{t("deleteDish")}</span>
                     </Button>
                   </div>
+                  {rowErrors[dish.id] ? (
+                    <p className="auth-modal-error" role="alert">
+                      {tErrors(rowErrors[dish.id])}
+                    </p>
+                  ) : null}
                 </div>
               </article>
             ))}
           </div>
-        </section>
+          </div>
+        </details>
       ))}
       <ConfirmDeleteDialog
         cancelLabel={t("deleteCancel")}
@@ -239,7 +322,7 @@ export function HistoryWorkbench() {
             ? t("deleteRecommendationDescription", { name: pendingDelete.label })
             : t("deleteDishDescription", { name: pendingDelete?.label ?? "" })
         }
-        disabled={busy}
+        disabled={pendingDelete ? deletingRowIds.includes(pendingDelete.id) : false}
         onConfirm={() => void deletePending()}
         onOpenChange={(open) => {
           if (!open) {
@@ -247,6 +330,7 @@ export function HistoryWorkbench() {
           }
         }}
         open={pendingDelete !== null}
+        restoreFocusId="history-page-title"
         title={
           pendingDelete?.type === "recommendation"
             ? t("deleteRecommendationTitle")

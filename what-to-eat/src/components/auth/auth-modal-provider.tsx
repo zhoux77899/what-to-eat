@@ -1,5 +1,6 @@
 "use client";
 
+import * as Dialog from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import {
   createContext,
@@ -110,46 +111,32 @@ export function useAuthModal() {
 function AuthConfigurationModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const t = useTranslations("auth");
 
-  if (!open) {
-    return null;
-  }
-
   return (
-    <div
-      className="auth-modal-backdrop"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) {
-          onClose();
-        }
-      }}
-    >
-      <div
-        aria-labelledby="auth-modal-title"
-        aria-modal="true"
-        className="auth-modal-card"
-        role="dialog"
-      >
-        <div className="auth-modal-pin" aria-hidden="true" />
-        <div className="auth-modal-header">
-          <div className="auth-modal-copy">
-            <h2 className="auth-modal-title" id="auth-modal-title">
-              {t("title")}
-            </h2>
-            <p className="auth-modal-description">{t("description")}</p>
-          </div>
-          <button
-            aria-label={t("close")}
-            className="auth-modal-close"
-            onClick={onClose}
-            type="button"
-          >
-            <X className="auth-modal-close-icon" aria-hidden="true" />
-          </button>
-        </div>
-        <p className="auth-modal-error" role="alert">
-          {t("configurationError")}
-        </p>
-      </div>
-    </div>
+    <Dialog.Root open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="auth-modal-backdrop">
+          <Dialog.Content aria-label={t("title")} className="auth-modal-card">
+            <div className="auth-modal-header">
+              <div className="auth-modal-copy">
+                <Dialog.Title className="auth-modal-title">
+                  <span id="auth-modal-title">{t("title")}</span>
+                </Dialog.Title>
+                <Dialog.Description className="auth-modal-description">
+                  {t("description")}
+                </Dialog.Description>
+              </div>
+              <Dialog.Close asChild>
+                <button aria-label={t("close")} className="auth-modal-close" type="button">
+                  <X className="auth-modal-close-icon" aria-hidden="true" />
+                </button>
+              </Dialog.Close>
+            </div>
+            <p className="auth-modal-error" role="alert">
+              {t("configurationError")}
+            </p>
+          </Dialog.Content>
+        </Dialog.Overlay>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }

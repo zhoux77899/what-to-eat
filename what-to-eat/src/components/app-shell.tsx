@@ -7,12 +7,14 @@ import {
   History,
   KeyRound,
   Languages,
+  MoreHorizontal,
   Refrigerator,
   SlidersHorizontal
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 import { useAuthModal } from "@/components/auth/auth-modal-provider";
 import { useAuthRuntime } from "@/components/auth/auth-runtime-provider";
@@ -35,8 +37,12 @@ function AppShellContent({ locale, children }: AppShellProps) {
   const brandLocale = locale === "en" ? "en" : "zh";
   const { clerkEnabled } = useAuthRuntime();
   const pathname = usePathname();
+  const localePath = pathname.replace(/^\/(zh|en)(?=\/|$)/, `/${alternateLocale}`);
 
   const isCurrentPath = (href: string) => pathname === href;
+  const isMorePath =
+    isCurrentPath(`/${locale}/preferences`) ||
+    isCurrentPath(`/${locale}/settings/openai-key`);
 
   return (
     <div className="app-shell app-kitchen-page">
@@ -49,6 +55,7 @@ function AppShellContent({ locale, children }: AppShellProps) {
 
           <nav aria-label={t("appNavigation")} className="app-shell-nav">
             <ProtectedLink
+              aria-current={isCurrentPath(`/${locale}/app`) ? "page" : undefined}
               className={cn(
                 "home-paper-button app-nav-primary",
                 isCurrentPath(`/${locale}/app`) && "app-nav-primary-active"
@@ -56,10 +63,11 @@ function AppShellContent({ locale, children }: AppShellProps) {
               href={`/${locale}/app`}
             >
               <ClipboardList className="app-nav-icon" aria-hidden="true" />
-              <span className="home-paper-button-label">{t("menu")}</span>
+              <span className="home-paper-button-label">{t("recommend")}</span>
             </ProtectedLink>
 
             <ProtectedLink
+              aria-current={isCurrentPath(`/${locale}/fridge`) ? "page" : undefined}
               className={cn(
                 "home-paper-button app-nav-primary",
                 isCurrentPath(`/${locale}/fridge`) && "app-nav-primary-active"
@@ -70,13 +78,34 @@ function AppShellContent({ locale, children }: AppShellProps) {
               <span className="home-paper-button-label">{t("fridge")}</span>
             </ProtectedLink>
 
+            <ProtectedLink
+              aria-current={isCurrentPath(`/${locale}/history`) ? "page" : undefined}
+              className={cn(
+                "home-paper-button app-nav-primary",
+                isCurrentPath(`/${locale}/history`) && "app-nav-primary-active"
+              )}
+              href={`/${locale}/history`}
+            >
+              <History className="app-nav-icon" aria-hidden="true" />
+              <span className="home-paper-button-label">{t("history")}</span>
+            </ProtectedLink>
+
             <details className="app-shell-menu">
-              <summary className="home-paper-button app-menu-trigger">
+              <summary
+                aria-current={isMorePath ? "page" : undefined}
+                className={cn(
+                  "home-paper-button app-menu-trigger",
+                  isMorePath && "app-menu-trigger-active"
+                )}
+              >
                 <span className="home-paper-button-label">{t("more")}</span>
                 <ChevronDown className="app-nav-icon app-menu-chevron" aria-hidden="true" />
               </summary>
               <div className="app-menu-panel">
                 <ProtectedLink
+                  aria-current={
+                    isCurrentPath(`/${locale}/preferences`) ? "page" : undefined
+                  }
                   className={cn(
                     "app-menu-link",
                     isCurrentPath(`/${locale}/preferences`) && "app-menu-link-active"
@@ -87,16 +116,9 @@ function AppShellContent({ locale, children }: AppShellProps) {
                   <span>{t("preferences")}</span>
                 </ProtectedLink>
                 <ProtectedLink
-                  className={cn(
-                    "app-menu-link",
-                    isCurrentPath(`/${locale}/history`) && "app-menu-link-active"
-                  )}
-                  href={`/${locale}/history`}
-                >
-                  <History className="app-menu-link-icon" aria-hidden="true" />
-                  <span>{t("history")}</span>
-                </ProtectedLink>
-                <ProtectedLink
+                  aria-current={
+                    isCurrentPath(`/${locale}/settings/openai-key`) ? "page" : undefined
+                  }
                   className={cn(
                     "app-menu-link",
                     isCurrentPath(`/${locale}/settings/openai-key`) && "app-menu-link-active"
@@ -106,10 +128,20 @@ function AppShellContent({ locale, children }: AppShellProps) {
                   <KeyRound className="app-menu-link-icon" aria-hidden="true" />
                   <span>{t("openAiKey")}</span>
                 </ProtectedLink>
-                <Link className="app-menu-link" href={`/${alternateLocale}`}>
-                  <Languages className="app-menu-link-icon" aria-hidden="true" />
-                  <span>{t("language")}</span>
-                </Link>
+                <Suspense fallback={<LocaleSwitchFallback label={t("language")} />}>
+                  <LocaleSwitchLinkWithSearch href={localePath} label={t("language")} />
+                </Suspense>
+                <div className="app-menu-account">
+                  {clerkEnabled ? (
+                    <ClerkAuthActions
+                      defaultChefName={t("defaultChefName")}
+                      locale={locale}
+                      signInLabel={t("signIn")}
+                    />
+                  ) : (
+                    <LocalAuthActions locale={locale} signInLabel={t("signIn")} />
+                  )}
+                </div>
               </div>
             </details>
 
@@ -129,7 +161,114 @@ function AppShellContent({ locale, children }: AppShellProps) {
         </div>
       </header>
       <main className="app-shell-main">{children}</main>
+      <nav aria-label={t("mobileNavigation")} className="app-mobile-nav">
+        <ProtectedLink
+          aria-current={isCurrentPath(`/${locale}/app`) ? "page" : undefined}
+          className={cn(
+            "app-mobile-nav-link",
+            isCurrentPath(`/${locale}/app`) && "app-mobile-nav-link-active"
+          )}
+          href={`/${locale}/app`}
+        >
+          <ClipboardList className="app-mobile-nav-icon" aria-hidden="true" />
+          <span>{t("recommend")}</span>
+        </ProtectedLink>
+        <ProtectedLink
+          aria-current={isCurrentPath(`/${locale}/fridge`) ? "page" : undefined}
+          className={cn(
+            "app-mobile-nav-link",
+            isCurrentPath(`/${locale}/fridge`) && "app-mobile-nav-link-active"
+          )}
+          href={`/${locale}/fridge`}
+        >
+          <Refrigerator className="app-mobile-nav-icon" aria-hidden="true" />
+          <span>{t("fridge")}</span>
+        </ProtectedLink>
+        <ProtectedLink
+          aria-current={isCurrentPath(`/${locale}/history`) ? "page" : undefined}
+          className={cn(
+            "app-mobile-nav-link",
+            isCurrentPath(`/${locale}/history`) && "app-mobile-nav-link-active"
+          )}
+          href={`/${locale}/history`}
+        >
+          <History className="app-mobile-nav-icon" aria-hidden="true" />
+          <span>{t("history")}</span>
+        </ProtectedLink>
+        <details className="app-mobile-more">
+          <summary
+            aria-current={isMorePath ? "page" : undefined}
+            className={cn("app-mobile-nav-link", isMorePath && "app-mobile-nav-link-active")}
+          >
+            <MoreHorizontal className="app-mobile-nav-icon" aria-hidden="true" />
+            <span>{t("more")}</span>
+          </summary>
+          <div className="app-mobile-more-panel">
+            <ProtectedLink
+              aria-current={isCurrentPath(`/${locale}/preferences`) ? "page" : undefined}
+              className={cn(
+                "app-menu-link",
+                isCurrentPath(`/${locale}/preferences`) && "app-menu-link-active"
+              )}
+              href={`/${locale}/preferences`}
+            >
+              <SlidersHorizontal className="app-menu-link-icon" aria-hidden="true" />
+              <span>{t("preferences")}</span>
+            </ProtectedLink>
+            <ProtectedLink
+              aria-current={
+                isCurrentPath(`/${locale}/settings/openai-key`) ? "page" : undefined
+              }
+              className={cn(
+                "app-menu-link",
+                isCurrentPath(`/${locale}/settings/openai-key`) && "app-menu-link-active"
+              )}
+              href={`/${locale}/settings/openai-key`}
+            >
+              <KeyRound className="app-menu-link-icon" aria-hidden="true" />
+              <span>{t("openAiKey")}</span>
+            </ProtectedLink>
+            <Suspense fallback={<LocaleSwitchFallback label={t("language")} />}>
+              <LocaleSwitchLinkWithSearch href={localePath} label={t("language")} />
+            </Suspense>
+            <div className="app-mobile-account">
+              {clerkEnabled ? (
+                <ClerkAuthActions
+                  defaultChefName={t("defaultChefName")}
+                  locale={locale}
+                  signInLabel={t("signIn")}
+                />
+              ) : (
+                <LocalAuthActions locale={locale} signInLabel={t("signIn")} />
+              )}
+            </div>
+          </div>
+        </details>
+      </nav>
     </div>
+  );
+}
+
+function LocaleSwitchLinkWithSearch({ href, label }: { href: string; label: string }) {
+  const search = useSearchParams().toString();
+  return <LocaleSwitchLink href={`${href}${search ? `?${search}` : ""}`} label={label} />;
+}
+
+function LocaleSwitchLink({ href, label }: { href: string; label: string }) {
+  return (
+    <Link className="app-menu-link" href={href}>
+      <Languages className="app-menu-link-icon" aria-hidden="true" />
+      <span>{label}</span>
+    </Link>
+  );
+}
+
+function LocaleSwitchFallback({ label }: { label: string }) {
+  return (
+    <span className="app-menu-link" aria-disabled="true">
+      <Languages className="app-menu-link-icon" aria-hidden="true" />
+      <span>{label}</span>
+    </span>
   );
 }
 

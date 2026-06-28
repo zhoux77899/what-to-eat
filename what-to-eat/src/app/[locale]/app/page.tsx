@@ -11,7 +11,7 @@ export default async function RecommendPage({ params }: { params: Promise<{ loca
   return (
     <AppShell locale={locale}>
       <section className="app-page app-recommend-page">
-        <h1 className="sr-only" id="recommend-page-title">
+        <h1 className="sr-only" id="recommend-page-title" tabIndex={-1}>
           {t("title")}
         </h1>
         <section className="app-recipe-board" aria-labelledby="recommend-page-title">

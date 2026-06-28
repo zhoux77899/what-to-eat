@@ -13,6 +13,7 @@
     "more": "More",
     "notifications": "Notifications",
     "defaultChefName": "Chef"
+    ,"mobileNavigation": "Mobile app navigation"
   },
   "auth": {
     "title": "Sign in",
@@ -28,7 +29,11 @@
   "home": {
     "pageLabel": "What to eat home page",
     "title": "What to eat today",
-    "primaryAction": "Start"
+    "primaryAction": "Start",
+    "stepsLabel": "How it works",
+    "stepFridge": "Check what is in the fridge",
+    "stepRecommend": "Generate one to five dishes",
+    "stepCook": "Choose one and confirm usage"
   },
   "recommend": {
     "title": "Generate a meal recommendation",
@@ -39,11 +44,22 @@
     "temporaryRequirementPlaceholder": "For example: keep dinner light and finish within 20 minutes",
     "temporaryNote": "The temporary requirement affects this generation only. After choosing a dish, edit and confirm its ingredient consumption.",
     "generate": "Generate",
+    "generating": "Generating dish candidates...",
+    "retryImage": "Retry image",
+    "retryingImage": "Retrying...",
     "resultsTitle": "Recommended dishes",
     "estimatedMinutes": "About {minutes} minutes",
     "consumptionTitle": "Suggested consumption",
     "noConsumption": "This dish has no fridge consumption suggestions to confirm.",
+    "viewSteps": "View steps",
+    "consumptionQuantity": "Consumption quantity for {name}",
+    "decreaseConsumption": "Decrease consumption for {name}",
+    "increaseConsumption": "Increase consumption for {name}",
     "confirmConsumption": "Confirm consumption",
+    "confirmConsumptionTitle": "Confirm fridge consumption",
+    "confirmConsumptionDescription": "Deduct the suggested ingredients for {name} from your fridge? Review the quantities before continuing.",
+    "confirmConsumptionAction": "Deduct ingredients",
+    "confirmConsumptionCancel": "Cancel",
     "consumptionConfirmed": "Consumption confirmed",
     "confirmationTip": "Tip: confirming will deduct the selected ingredients from your fridge. Items with quantity 0 are deleted automatically.",
     "imageStatus": {
@@ -61,15 +77,25 @@
     "fieldLabel": "API key",
     "placeholder": "sk-...",
     "save": "Save key",
+    "saving": "Saving...",
     "validate": "Re-validate",
+    "validating": "Validating...",
     "delete": "Delete key",
-    "currentStatus": "Current status: {status}; key hint: {hint}",
+    "deleting": "Deleting...",
+    "deleteTitle": "Delete OpenAI API key",
+    "deleteDescription": "Delete the currently saved OpenAI API key? This cannot be undone.",
+    "deleteConfirm": "Delete",
+    "deleteCancel": "Cancel",
+    "statusLabel": "Key status",
+    "keyHintLabel": "Key hint",
+    "loading": "Loading...",
     "noHint": "not configured",
     "status": {
       "not_configured": "not configured",
       "validation_required": "validation required",
       "valid": "valid",
       "invalid": "invalid"
+      ,"unknown": "unknown"
     },
     "imageVerificationNote": "gpt-image-2 may require your OpenAI organization to complete verification before image generation is available."
   },
@@ -79,11 +105,16 @@
     "fieldLabel": "Long-term preference",
     "placeholder": "For example: avoid cilantro, prefer light home-style meals, and keep weekday cooking under 30 minutes.",
     "save": "Save preferences",
+    "saving": "Saving...",
+    "loading": "Loading preferences...",
+    "retry": "Retry loading",
     "saved": "Preferences saved."
   },
   "history": {
     "title": "Recommendation history",
     "empty": "No recommendation history yet. Generated dish text and image status will appear here.",
+    "emptyAction": "Generate a recommendation",
+    "loading": "Loading recommendation history...",
     "generatedAt": "Generated at: {date}",
     "estimatedMinutes": "About {minutes} minutes",
     "retryImage": "Retry image",
@@ -95,6 +126,12 @@
     "deleteDishDescription": "Delete {name} and its dish image from history. This cannot be undone.",
     "deleteConfirm": "Delete",
     "deleteCancel": "Cancel"
+    ,"viewSteps": "View steps",
+    "imageStatus": {
+      "pending": "Generating image",
+      "succeeded": "Image generated",
+      "failed": "Image generation failed"
+    }
   },
   "fridge": {
     "title": "My fridge",
@@ -116,6 +153,8 @@
     "retryImage": "Retry image",
     "mergeNote": "For example: 2 tomatoes or 1 bunch of water spinach. Quantity or unit changes keep the image; name changes regenerate it.",
     "empty": "Your fridge is empty. Add a few ingredients before generating recommendations.",
+    "loading": "Loading fridge...",
+    "retryLoad": "Retry loading",
     "imageStatus": {
       "notRequested": "No image requested",
       "pending": "Generating image",

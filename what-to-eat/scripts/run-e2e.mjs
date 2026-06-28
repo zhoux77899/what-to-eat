@@ -1,7 +1,10 @@
 import { spawn, spawnSync } from "node:child_process";
 
-const readyUrl = "http://127.0.0.1:3000/zh";
+const e2ePort = process.env.E2E_PORT ?? "3011";
+const baseUrl = `http://127.0.0.1:${e2ePort}`;
+const readyUrl = `${baseUrl}/zh`;
 const startupTimeoutMs = 120_000;
+const serverReadyPattern = /\bReady in\b/i;
 
 function spawnCommand(command, args, options = {}) {
   if (process.platform === "win32") {
@@ -39,12 +42,12 @@ async function waitForServer(server, output) {
   const startedAt = Date.now();
 
   while (Date.now() - startedAt < startupTimeoutMs) {
-    if (await isServerReady()) {
-      return;
-    }
-
     if (server.exitCode !== null) {
       throw new Error(`Next dev exited before becoming ready.\n${output.join("")}`);
+    }
+
+    if (serverReadyPattern.test(output.join("")) && (await isServerReady())) {
+      return;
     }
 
     await new Promise((resolve) => setTimeout(resolve, 1_000));
@@ -67,7 +70,7 @@ function stopServer(server) {
       [
         "-NoProfile",
         "-Command",
-        "Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like '*pnpm exec next dev*--webpack*127.0.0.1*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }"
+        `Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like '*pnpm exec next dev*--webpack*127.0.0.1*--port ${e2ePort}*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }`
       ],
       {
         stdio: "ignore"
@@ -82,36 +85,46 @@ function stopServer(server) {
 async function main() {
   const serverOutput = [];
   let server;
-  let startedServer = false;
   let exitCode = 1;
 
   try {
-    if (!(await isServerReady())) {
-      startedServer = true;
-      server = spawnCommand(
-        "corepack",
-        ["pnpm", "exec", "next", "dev", "--webpack", "--hostname", "127.0.0.1"],
-        {
-          env: {
-            ...process.env,
-            NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
-              process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "pk_test_dummy",
-            CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY ?? "sk_test_dummy"
-          },
-          stdio: ["ignore", "pipe", "pipe"]
-        }
-      );
+    server = spawnCommand(
+      "corepack",
+      [
+        "pnpm",
+        "exec",
+        "next",
+        "dev",
+        "--webpack",
+        "--hostname",
+        "127.0.0.1",
+        "--port",
+        e2ePort
+      ],
+      {
+        env: {
+          ...process.env,
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
+            process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "pk_test_dummy",
+          CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY ?? "sk_test_dummy"
+        },
+        stdio: ["ignore", "pipe", "pipe"]
+      }
+    );
 
-      server.stdout.on("data", (chunk) => serverOutput.push(chunk.toString()));
-      server.stderr.on("data", (chunk) => serverOutput.push(chunk.toString()));
+    server.stdout.on("data", (chunk) => serverOutput.push(chunk.toString()));
+    server.stderr.on("data", (chunk) => serverOutput.push(chunk.toString()));
 
-      await waitForServer(server, serverOutput);
-    }
+    await waitForServer(server, serverOutput);
 
     const tests = spawnCommand(
       "corepack",
       ["pnpm", "exec", "playwright", "test", "--config", "playwright.config.ts"],
       {
+        env: {
+          ...process.env,
+          PLAYWRIGHT_BASE_URL: baseUrl
+        },
         stdio: "inherit"
       }
     );
@@ -121,7 +134,7 @@ async function main() {
       tests.on("exit", (code) => resolve(code ?? 1));
     });
   } finally {
-    if (startedServer && server) {
+    if (server) {
       stopServer(server);
     }
   }

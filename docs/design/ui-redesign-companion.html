@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>What to Eat UI Companion</title>
+  <style>
+    :root { --kitchen: oklch(96% .018 88); --surface: oklch(99% .006 88); --paper: oklch(94% .035 82); --ink: oklch(25% .035 65); --muted: oklch(43% .035 68); --green: oklch(58% .14 135); --green-dark: oklch(43% .12 137); --tomato: oklch(61% .18 33); --yolk: oklch(83% .16 84); --info: oklch(67% .09 205); }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--kitchen); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; letter-spacing: 0; }
+    .board { width: 1440px; min-height: 1400px; margin: 0 auto; padding: 56px 64px 72px; background: var(--kitchen); }
+    .head { display: grid; grid-template-columns: 1fr 420px; gap: 48px; align-items: center; border-bottom: 2px solid var(--ink); padding-bottom: 36px; }
+    .head h1 { margin: 0 0 10px; font-size: 52px; line-height: 1.05; }
+    .head p { max-width: 720px; margin: 0; color: var(--muted); font-size: 20px; }
+    .brand { width: 100%; height: 170px; object-fit: cover; object-position: center 58%; border: 2px solid var(--ink); border-radius: 8px; box-shadow: 4px 4px 0 var(--ink); }
+    h2 { margin: 0 0 18px; font-size: 22px; }
+    .section { padding-top: 34px; }
+    .swatches { display: grid; grid-template-columns: repeat(8, 1fr); gap: 12px; }
+    .swatch { min-height: 112px; padding: 70px 10px 10px; border: 2px solid var(--ink); border-radius: 8px; box-shadow: 3px 3px 0 var(--ink); font-size: 13px; font-weight: 700; }
+    .grid { display: grid; grid-template-columns: 1.65fr .8fr; gap: 24px; }
+    .panel { background: var(--surface); border: 2px solid var(--ink); border-radius: 8px; box-shadow: 4px 4px 0 var(--ink); overflow: hidden; }
+    .desktop-head { height: 72px; padding: 12px 18px; display: flex; align-items: center; gap: 18px; border-bottom: 2px solid var(--ink); background: var(--paper); }
+    .logo { font-weight: 900; font-size: 22px; color: var(--green-dark); }
+    nav { display: flex; gap: 8px; margin-left: auto; }
+    button, .chip { min-height: 44px; border: 2px solid var(--ink); border-radius: 7px; background: var(--surface); color: var(--ink); padding: 8px 14px; font: inherit; font-weight: 750; box-shadow: 2px 2px 0 var(--ink); }
+    .primary { background: var(--green); color: white; }
+    .danger { background: var(--tomato); color: white; }
+    .canvas { padding: 22px; display: grid; grid-template-columns: 280px 1fr; gap: 18px; min-height: 360px; }
+    .composer { border-right: 2px dashed var(--ink); padding-right: 18px; }
+    label { display: block; margin: 14px 0 6px; font-weight: 800; }
+    textarea { width: 100%; min-height: 96px; resize: none; border: 2px solid var(--ink); border-radius: 7px; background: var(--kitchen); padding: 10px; font: inherit; }
+    .recipe { display: grid; grid-template-columns: 150px 1fr; gap: 16px; padding: 16px; border: 2px solid var(--ink); border-radius: 8px; box-shadow: 3px 3px 0 var(--ink); }
+    .dish-art { min-height: 132px; border: 2px solid var(--ink); border-radius: 7px; background: var(--yolk); display: grid; place-items: center; font-size: 52px; }
+    .recipe h3 { margin: 0; font-size: 24px; }
+    .status { display: inline-flex; align-items: center; gap: 6px; border: 2px solid var(--ink); border-radius: 7px; padding: 3px 9px; background: var(--yolk); font-size: 13px; font-weight: 800; }
+    .inventory { margin-top: 16px; display: grid; grid-template-columns: 52px 1fr auto auto; align-items: center; gap: 12px; padding: 10px; border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); }
+    .thumb { width: 48px; aspect-ratio: 1; border: 2px solid var(--ink); border-radius: 7px; display: grid; place-items: center; background: var(--paper); }
+    .mobile { width: 330px; min-height: 520px; margin: 0 auto; position: relative; background: var(--surface); border: 2px solid var(--ink); border-radius: 8px; box-shadow: 5px 5px 0 var(--ink); overflow: hidden; }
+    .mobile-top { height: 58px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid var(--ink); background: var(--paper); }
+    .mobile-main { padding: 18px 14px 90px; }
+    .feedback { padding: 12px; border: 2px solid var(--ink); border-radius: 8px; background: color-mix(in oklch, var(--info) 28%, white); box-shadow: 2px 2px 0 var(--ink); }
+    .mascot { margin-top: 18px; padding: 18px; text-align: center; border: 2px dashed var(--ink); border-radius: 8px; background: var(--paper); }
+    .mascot strong { display: block; font-size: 36px; }
+    .mobile-nav { position: absolute; inset: auto 0 0; min-height: 72px; display: grid; grid-template-columns: repeat(4, 1fr); background: var(--surface); border-top: 2px solid var(--ink); }
+    .mobile-nav span { display: grid; place-items: center; align-content: center; font-size: 12px; font-weight: 800; }
+    .mobile-nav span:first-child { background: var(--green); color: white; }
+    .type-row { display: flex; align-items: baseline; gap: 32px; padding: 18px 0; border-bottom: 2px solid var(--ink); }
+    .type-row b { font-size: 32px; }
+    .type-row span { color: var(--muted); }
+    .states { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; }
+    .state-sample { min-height: 178px; padding: 14px; background: var(--surface); border: 2px solid var(--ink); border-radius: 8px; box-shadow: 3px 3px 0 var(--ink); }
+    .state-sample h3 { margin: 0 0 10px; font-size: 16px; }
+    .field { width: 100%; min-height: 44px; border: 2px solid var(--tomato); border-radius: 7px; padding: 9px; background: white; }
+    .error { color: var(--tomato); font-size: 13px; font-weight: 750; }
+    .image-fail { aspect-ratio: 16/9; display: grid; place-items: center; border: 2px dashed var(--tomato); border-radius: 7px; background: var(--paper); text-align: center; }
+    .stepper { display: grid; grid-template-columns: 44px 1fr 44px; gap: 6px; }
+    .stepper output { min-height: 44px; display: grid; place-items: center; border: 2px solid var(--ink); border-radius: 7px; }
+    .skeleton { height: 18px; margin: 10px 0; border-radius: 6px; background: oklch(84% .02 75); }
+    .skeleton.short { width: 65%; }
+    .dialog { padding: 12px; border: 2px solid var(--ink); border-radius: 8px; background: var(--paper); box-shadow: 3px 3px 0 var(--ink); }
+  </style>
+</head>
+<body>
+  <main class="board">
+    <header class="head"><div><h1>What to Eat</h1><p>A lively hand-drawn kitchen system for repeated product work. Strong character, quiet surfaces, explicit state.</p></div><img class="brand" src="../../what-to-eat/public/brand/source-ui-board.png" alt="Existing kitchen illustration direction"></header>
+    <section class="section"><h2>Semantic palette</h2><div class="swatches"><div class="swatch" style="background:var(--kitchen)">Kitchen</div><div class="swatch" style="background:var(--surface)">Surface</div><div class="swatch" style="background:var(--paper)">Paper</div><div class="swatch" style="background:var(--ink);color:white">Ink</div><div class="swatch" style="background:var(--green);color:white">Primary</div><div class="swatch" style="background:var(--tomato);color:white">Danger</div><div class="swatch" style="background:var(--yolk)">Warning</div><div class="swatch" style="background:var(--info)">Info</div></div></section>
+    <section class="section"><h2>Type and controls</h2><div class="type-row"><b>Cook with what you have</b><span>System sans, compact hierarchy, zero letter spacing</span><button class="primary">Generate dishes</button><button>Secondary</button><button class="danger">Delete</button></div></section>
+    <section class="section grid">
+      <div class="panel"><div class="desktop-head"><span class="logo">What to Eat?</span><nav><button class="primary">Recommend</button><button>Fridge</button><button>History</button><button>More</button></nav></div><div class="canvas"><aside class="composer"><h2>Tonight's request</h2><label for="request">Temporary requirement</label><textarea id="request">Something warm, quick, and not too spicy.</textarea><p><span class="chip">3 dishes</span></p><button class="primary">Generate dishes</button></aside><section><article class="recipe"><div class="dish-art">🍲</div><div><span class="status">Image ready</span><h3>Tomato egg rice bowl</h3><p>A fast home-style dinner with a bright sauce and clear inventory impact.</p><button>View steps</button></div></article><div class="inventory"><div class="thumb">🍅</div><div><strong>Tomato</strong><br><small>Ingredient image ready</small></div><b>3 pcs</b><button>Edit</button></div></section></div></div>
+      <div class="mobile"><div class="mobile-top"><b>What to Eat?</b><button aria-label="Open account menu">•••</button></div><div class="mobile-main"><h2>Recommendation</h2><div class="feedback"><strong>Three dishes are ready</strong><br><small>Images can finish independently.</small></div><div class="mascot"><strong>🍚</strong><b>Only here when a state needs warmth</b><p>Empty, loading, success, and onboarding.</p></div></div><div class="mobile-nav"><span>✦<br>Recommend</span><span>▤<br>Fridge</span><span>◷<br>History</span><span>•••<br>More</span></div></div>
+    </section>
+    <section class="section"><h2>Operational states</h2><div class="states">
+      <article class="state-sample"><h3>Field error</h3><div class="field">sk-••••</div><p class="error">The key could not be validated.</p></article>
+      <article class="state-sample"><h3>Image failed</h3><div class="image-fail"><span>Image unavailable<br><button>Retry</button></span></div></article>
+      <article class="state-sample"><h3>Image pending</h3><div class="image-fail" style="border-color:var(--yolk)"><span>Preparing image<br><small>Text stays available</small></span></div></article>
+      <article class="state-sample"><h3>Consumption stepper</h3><div class="stepper"><button aria-label="Decrease">−</button><output>2</output><button aria-label="Increase">+</button></div></article>
+      <article class="state-sample"><h3>Loading geometry</h3><div class="skeleton"></div><div class="skeleton short"></div><div class="skeleton"></div><div class="skeleton short"></div></article>
+      <article class="state-sample"><h3>Protected dialog</h3><div class="dialog"><b>Delete API key?</b><p>This cannot be undone.</p><button>Cancel</button> <button class="danger">Delete</button></div></article>
+    </div></section>
+  </main>
+</body>
+</html>

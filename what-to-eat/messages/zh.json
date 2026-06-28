@@ -13,6 +13,7 @@
     "more": "更多",
     "notifications": "通知",
     "defaultChefName": "小厨娘"
+    ,"mobileNavigation": "移动端应用导航"
   },
   "auth": {
     "title": "登录",
@@ -28,7 +29,11 @@
   "home": {
     "pageLabel": "今天吃什么首页",
     "title": "今天吃什么",
-    "primaryAction": "开始推荐"
+    "primaryAction": "开始推荐",
+    "stepsLabel": "使用流程",
+    "stepFridge": "看看冰箱里有什么",
+    "stepRecommend": "生成一至五道菜",
+    "stepCook": "选一道并确认消耗"
   },
   "recommend": {
     "title": "生成餐食推荐",
@@ -39,11 +44,22 @@
     "temporaryRequirementPlaceholder": "例如：今晚想清淡一点，最好 20 分钟内完成",
     "temporaryNote": "临时要求只影响本次生成。选择一道菜后，可编辑并确认它的食材消耗。",
     "generate": "生成",
+    "generating": "正在生成候选菜...",
+    "retryImage": "重试图片",
+    "retryingImage": "正在重试...",
     "resultsTitle": "推荐结果",
     "estimatedMinutes": "预计 {minutes} 分钟",
     "consumptionTitle": "建议消耗",
     "noConsumption": "这道菜没有可确认的冰箱消耗建议。",
+    "viewSteps": "查看做法",
+    "consumptionQuantity": "{name} 的消耗数量",
+    "decreaseConsumption": "减少 {name} 的消耗数量",
+    "increaseConsumption": "增加 {name} 的消耗数量",
     "confirmConsumption": "确认消耗",
+    "confirmConsumptionTitle": "确认扣减冰箱库存",
+    "confirmConsumptionDescription": "将按建议数量从冰箱中扣减制作 {name} 所需的食材。继续前请确认数量。",
+    "confirmConsumptionAction": "扣减食材",
+    "confirmConsumptionCancel": "取消",
     "consumptionConfirmed": "已确认消耗",
     "confirmationTip": "小贴士：确认后将从冰箱中扣减所选食材的数量，数量为 0 的食材将自动删除。",
     "imageStatus": {
@@ -61,15 +77,25 @@
     "fieldLabel": "API 密钥",
     "placeholder": "sk-...",
     "save": "保存密钥",
+    "saving": "正在保存...",
     "validate": "重新验证",
+    "validating": "正在验证...",
     "delete": "删除密钥",
-    "currentStatus": "当前状态：{status}；密钥提示：{hint}",
+    "deleting": "正在删除...",
+    "deleteTitle": "删除 OpenAI API 密钥",
+    "deleteDescription": "将删除当前保存的 OpenAI API 密钥。此操作无法撤销。",
+    "deleteConfirm": "删除",
+    "deleteCancel": "取消",
+    "statusLabel": "密钥状态",
+    "keyHintLabel": "密钥提示",
+    "loading": "正在加载...",
     "noHint": "尚未配置",
     "status": {
       "not_configured": "尚未配置",
       "validation_required": "等待验证",
       "valid": "有效",
       "invalid": "无效"
+      ,"unknown": "未知"
     },
     "imageVerificationNote": "gpt-image-2 可能需要你的 OpenAI 组织完成验证后才能使用。"
   },
@@ -79,11 +105,16 @@
     "fieldLabel": "长期偏好",
     "placeholder": "例如：不吃香菜，偏好清淡家常菜，工作日尽量控制在 30 分钟内。",
     "save": "保存偏好",
+    "saving": "正在保存...",
+    "loading": "正在加载偏好...",
+    "retry": "重新加载",
     "saved": "偏好已保存。"
   },
   "history": {
     "title": "推荐历史",
     "empty": "尚无推荐历史。生成餐食推荐后，菜品文字和图片状态会显示在这里。",
+    "emptyAction": "去生成推荐",
+    "loading": "正在加载推荐历史...",
     "generatedAt": "生成时间：{date}",
     "estimatedMinutes": "预计 {minutes} 分钟",
     "retryImage": "重试图片",
@@ -95,6 +126,12 @@
     "deleteDishDescription": "将从历史中删除 {name} 及其菜品图片。此操作无法撤销。",
     "deleteConfirm": "删除",
     "deleteCancel": "取消"
+    ,"viewSteps": "查看做法",
+    "imageStatus": {
+      "pending": "图片生成中",
+      "succeeded": "图片已生成",
+      "failed": "图片生成失败"
+    }
   },
   "fridge": {
     "title": "我的冰箱",
@@ -116,6 +153,8 @@
     "retryImage": "重试图片",
     "mergeNote": "例如：番茄 2 个、空心菜 1 把。修改数量或单位不会重新生成图片；修改名称会重新生成。",
     "empty": "冰箱还是空的。先加入几样现有食材，再生成推荐。",
+    "loading": "正在加载冰箱...",
+    "retryLoad": "重新加载",
     "imageStatus": {
       "notRequested": "尚未生成图片",
       "pending": "图片生成中",

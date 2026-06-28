@@ -1,0 +1,189 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
+import { describe, expect, it } from "vitest";
+
+function read(path: string) {
+  return readFileSync(join(process.cwd(), path), "utf8");
+}
+
+describe("full-site UI redesign contract", () => {
+  it("uses layered redesign styles with OKLCH semantic tokens", () => {
+    const globals = read("src/app/globals.css");
+    const tokens = read("src/styles/tokens.css");
+
+    expect(globals).toContain('@import "../styles/tokens.css"');
+    expect(globals).toContain('@import "../styles/redesign.css"');
+    expect(tokens).toContain("oklch(");
+    expect(tokens).toContain("--color-primary");
+    expect(tokens).toContain("--color-danger");
+  });
+
+  it("provides responsive four-item mobile navigation and route-preserving locale links", () => {
+    const shell = read("src/components/app-shell.tsx");
+
+    expect(shell).toContain("app-mobile-nav");
+    expect(shell).toContain('t("recommend")');
+    expect(shell).toContain('t("history")');
+    expect(shell).toContain("LocaleSwitchLinkWithSearch");
+    expect(shell).toContain("useSearchParams");
+  });
+
+  it("exposes accessible consumption controls and explicit initial loading states", () => {
+    const recommend = read("src/components/recommend-workbench.tsx");
+    const fridge = read("src/components/fridge-workbench.tsx");
+    const history = read("src/components/history-workbench.tsx");
+
+    expect(recommend).toContain('aria-label={t("decreaseConsumption"');
+    expect(recommend).toContain('aria-label={t("increaseConsumption"');
+    expect(fridge).toContain('t("loading")');
+    expect(history).toContain('t("loading")');
+  });
+
+  it("uses Radix for the configuration modal as well as authentication", () => {
+    const provider = read("src/components/auth/auth-modal-provider.tsx");
+
+    expect(provider).toContain('@radix-ui/react-dialog');
+    expect(provider).toContain("Dialog.Content");
+  });
+
+  it("keeps mutations local and follows the approved desktop column order", () => {
+    const recommend = read("src/components/recommend-workbench.tsx");
+    const fridge = read("src/components/fridge-workbench.tsx");
+    const history = read("src/components/history-workbench.tsx");
+    const key = read("src/components/openai-key-workbench.tsx");
+    const styles = read("src/styles/redesign.css");
+
+    expect(recommend).toContain("retryingDishIds");
+    expect(recommend).toContain("confirmingDishIds");
+    expect(recommend).toContain("app-recommend-skeleton");
+    expect(fridge).toContain("deletingItemIds");
+    expect(fridge).toContain("retryingItemIds");
+    expect(fridge).not.toContain("setPendingDelete(null);\n    await remove");
+    expect(history).toContain("deletingRowIds");
+    expect(history).toContain("retryingRowIds");
+    expect(key).toContain("const [saving, setSaving]");
+    expect(key).toContain("const [validating, setValidating]");
+    expect(key).toContain("const [deleting, setDeleting]");
+    expect(styles).toContain("grid-template-columns: minmax(280px, 320px) minmax(0, 1fr)");
+    expect(styles).toContain("@media (max-width: 1023px)");
+  });
+
+  it("keeps history lightweight and mobile controls touch safe", () => {
+    const history = read("src/components/history-workbench.tsx");
+    const styles = read("src/styles/redesign.css");
+
+    expect(history).toContain("app-history-timeline");
+    expect(history).toContain("app-history-dish-row");
+    expect(history).toContain('href={`/${locale}/app`}');
+    expect(styles).toContain(".app-fridge-workspace {");
+    expect(styles).toContain(".app-history-dish-row");
+    expect(styles).not.toContain("min-height: 38px");
+    expect(styles).toContain(".app-confirm-dialog-actions");
+    expect(styles).toContain("flex-direction: column-reverse");
+  });
+
+  it("keeps concurrent errors adjacent and protects history children during parent deletion", () => {
+    const recommend = read("src/components/recommend-workbench.tsx");
+    const fridge = read("src/components/fridge-workbench.tsx");
+    const history = read("src/components/history-workbench.tsx");
+    const styles = read("src/styles/redesign.css");
+
+    expect(recommend).toContain("dishErrors");
+    expect(fridge).toContain("itemErrors");
+    expect(history).toContain("rowErrors");
+    expect(history).toContain("recommendationDeleting");
+    expect(styles).toContain(".auth-modal-close,");
+    expect(styles).toContain(".app-menu-link {");
+    expect(styles).toContain("min-height: 44px");
+  });
+
+  it("avoids one-sided accent borders used as decorative timeline tabs", () => {
+    const styles = read("src/styles/redesign.css");
+
+    expect(styles).not.toMatch(/border-(left|right):\s*(?:[3-9]|\d{2,})px/);
+  });
+
+  it("uses library icons and exposes account actions from the mobile more menu", () => {
+    const auth = read("src/components/auth/auth-modal.tsx");
+    const shell = read("src/components/app-shell.tsx");
+
+    expect(auth).not.toContain("<svg");
+    expect(auth).toContain('from "lucide-react"');
+    expect(shell).toContain("app-mobile-account");
+    expect(shell).toContain("<ClerkAuthActions");
+  });
+
+  it("makes recommendation history collapsible and prevents preference writes after load failure", () => {
+    const history = read("src/components/history-workbench.tsx");
+    const preferences = read("src/components/preferences-workbench.tsx");
+
+    expect(history).toContain('<details className="app-history-entry"');
+    expect(history).toContain('<summary className="app-history-entry-summary"');
+    expect(preferences).toContain("loadFailed");
+    expect(preferences).toContain("loading || loadFailed || saving");
+  });
+
+  it("routes shared Tailwind colors through OKLCH semantic tokens", () => {
+    const config = read("tailwind.config.ts");
+    const tokens = read("src/styles/tokens.css");
+    const styles = read("src/styles/redesign.css");
+
+    expect(config).not.toContain("hsl(var(");
+    expect(config).toContain('primary: "var(--color-primary)"');
+    expect(tokens).not.toMatch(/^\s*--background:/m);
+    expect(styles).not.toContain("font-size: clamp(");
+  });
+
+  it("keeps action contrast and Home color semantics release safe", () => {
+    const tokens = read("src/styles/tokens.css");
+    const styles = read("src/styles/redesign.css");
+
+    expect(tokens).toContain("--color-primary: oklch(50%");
+    expect(tokens).toContain("--color-danger: oklch(52%");
+    expect(styles).toMatch(/\.home-hero-cta\s*\{[^}]*background:\s*var\(--color-primary\)/s);
+    expect(styles).toMatch(/\.home-hero-logo-card\s*\{[^}]*border:\s*0/s);
+  });
+
+  it("keeps dialogs dismissible and navigation state programmatic", () => {
+    const auth = read("src/components/auth/auth-modal.tsx");
+    const confirm = read("src/components/confirm-delete-dialog.tsx");
+    const shell = read("src/components/app-shell.tsx");
+
+    expect(auth).not.toContain("onEscapeKeyDown");
+    expect(auth).not.toContain("onPointerDownOutside");
+    expect(confirm).not.toContain("onEscapeKeyDown");
+    expect(confirm).not.toContain("onPointerDownOutside");
+    expect(confirm).toContain("onCloseAutoFocus");
+    expect(shell).toContain('aria-current={isCurrentPath(');
+    expect(shell).toContain("isMorePath");
+    expect(shell).toContain("LocaleSwitchFallback");
+  });
+
+  it("protects destructive consumption and cross-operation races", () => {
+    const recommend = read("src/components/recommend-workbench.tsx");
+    const fridge = read("src/components/fridge-workbench.tsx");
+
+    expect(recommend).toContain("pendingConsumptionDish");
+    expect(recommend).toContain("recommendInteractionBusy");
+    expect(recommend).toContain("ConfirmDeleteDialog");
+    expect(fridge).toContain("loadFailed");
+    expect(fridge).toContain("nameInputRef");
+    expect(fridge).toContain("editingItemBusy");
+    expect(fridge).toContain("editingId === itemId");
+    expect(fridge).toContain("savingItemIdRef");
+  });
+
+  it("announces async failures and restores focus after protected actions", () => {
+    const recommend = read("src/components/recommend-workbench.tsx");
+    const history = read("src/components/history-workbench.tsx");
+    const key = read("src/components/openai-key-workbench.tsx");
+
+    expect(recommend).toContain('restoreFocusId="recommend-page-title"');
+    expect(history).toContain('restoreFocusId="history-page-title"');
+    expect(key).toContain('restoreFocusId="openai-key-page-title"');
+    expect(recommend).toContain('role="alert"');
+    expect(history).toContain('role="alert"');
+    expect(key).toContain('role="alert"');
+  });
+});

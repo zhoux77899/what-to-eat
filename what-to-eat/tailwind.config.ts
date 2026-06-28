@@ -7,19 +7,23 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        border: "hsl(var(--border))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
-        muted: "hsl(var(--muted))",
-        "muted-foreground": "hsl(var(--muted-foreground))",
-        primary: "hsl(var(--primary))",
-        "primary-foreground": "hsl(var(--primary-foreground))",
-        accent: "hsl(var(--accent))",
-        "accent-foreground": "hsl(var(--accent-foreground))",
-        destructive: "hsl(var(--destructive))",
-        "destructive-foreground": "hsl(var(--destructive-foreground))",
-        card: "hsl(var(--card))",
-        "card-foreground": "hsl(var(--card-foreground))"
+        border: "var(--color-outline)",
+        input: "var(--color-outline)",
+        ring: "var(--color-focus)",
+        background: "var(--color-kitchen)",
+        foreground: "var(--color-ink)",
+        muted: "var(--color-paper)",
+        "muted-foreground": "var(--color-ink-muted)",
+        primary: "var(--color-primary)",
+        "primary-foreground": "var(--color-surface)",
+        secondary: "var(--color-paper)",
+        "secondary-foreground": "var(--color-ink)",
+        accent: "var(--color-info)",
+        "accent-foreground": "var(--color-ink)",
+        destructive: "var(--color-danger)",
+        "destructive-foreground": "var(--color-surface)",
+        card: "var(--color-surface)",
+        "card-foreground": "var(--color-ink)"
       },
       borderRadius: {
         lg: "0.5rem",

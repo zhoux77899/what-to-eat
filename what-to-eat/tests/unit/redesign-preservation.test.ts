@@ -65,7 +65,9 @@ describe("redesign preservation and pre-flight", () => {
     expect(appShellSource).toContain('href={`/${locale}/preferences`}');
     expect(appShellSource).toContain('href={`/${locale}/history`}');
     expect(appShellSource).toContain('href={`/${locale}/settings/openai-key`}');
-    expect(appShellSource).toContain('href={`/${alternateLocale}`}');
+    expect(appShellSource).toContain("LocaleSwitchLinkWithSearch");
+    expect(appShellSource).toContain("useSearchParams");
+    expect(appShellSource).not.toContain("window.location.search");
   });
 
   it("keeps navigation labels in i18n resources unchanged", () => {
@@ -122,19 +124,17 @@ describe("redesign preservation and pre-flight", () => {
   it("keeps brand image treatment and kitchen accent tokens", () => {
     const brandSource = readProjectFile("src/components/brand-assets.tsx");
     const homeSource = readProjectFile("src/app/[locale]/page.tsx");
-    const globalCss = readProjectFile("src/app/globals.css");
+    const tokensCss = readProjectFile("src/styles/tokens.css");
 
     expect(brandSource).toContain("/brand/header-logo-zh.webp");
     expect(brandSource).toContain("/brand/header-logo-en.webp");
     expect(brandSource).toContain("/brand/app-icon-512.png");
     expect(homeSource).toContain("BrandLogoImage");
-    expect(globalCss).toContain("--accent: 24 82% 54%");
-    expect(globalCss).toContain("--kitchen-green: #80934a");
-    expect(globalCss).toContain("--kitchen-tomato: #e45e45");
-    expect(globalCss).toContain("--kitchen-yolk: #efb947");
-    expect(globalCss).toContain("--panel-radius: 0.875rem");
-    expect(globalCss).toContain("--control-radius: 0.625rem");
-    expect(globalCss).toContain("--sticker-radius: 0.375rem");
+    expect(tokensCss).toContain("--color-primary: oklch(");
+    expect(tokensCss).toContain("--color-danger: oklch(");
+    expect(tokensCss).toContain("--color-warning: oklch(");
+    expect(tokensCss).toContain("--radius-panel: 8px");
+    expect(tokensCss).toContain("--radius-control: 7px");
   });
 
   it("passes static pre-flight checks for the redesign source", () => {
@@ -166,5 +166,30 @@ describe("redesign preservation and pre-flight", () => {
 
       expect(source, file).not.toMatch(/[\u3400-\u9fff\u3040-\u30ff]/);
     }
+  });
+
+  it("isolates E2E from unrelated development servers", () => {
+    const runnerSource = readProjectFile("scripts/run-e2e.mjs");
+    const playwrightSource = readProjectFile("playwright.config.ts");
+
+    expect(runnerSource).toContain('process.env.E2E_PORT ?? "3011"');
+    expect(runnerSource).toMatch(/"--port",\s*e2ePort/);
+    expect(runnerSource).toContain("PLAYWRIGHT_BASE_URL");
+    expect(runnerSource).toContain("serverReadyPattern");
+    expect(runnerSource).not.toContain("if (!(await isServerReady()))");
+    expect(playwrightSource).toContain(
+      'process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3000"'
+    );
+  });
+
+  it("defines the approved viewport matrix and opt-in authenticated E2E suite", () => {
+    const playwrightSource = readProjectFile("playwright.config.ts");
+    const authenticatedSuite = "tests/e2e/authenticated.spec.ts";
+
+    expect(playwrightSource).toContain("width: 1440, height: 900");
+    expect(playwrightSource).toContain("width: 1024, height: 768");
+    expect(playwrightSource).toContain("width: 390, height: 844");
+    expect(playwrightSource).toContain("width: 360, height: 800");
+    expect(existsSync(join(projectRoot, authenticatedSuite))).toBe(true);
   });
 });

@@ -12,7 +12,9 @@ export default async function FridgePage({ params }: { params: Promise<{ locale:
     <AppShell locale={locale}>
       <section className="app-page app-workbench-page">
         <div className="app-page-heading">
-          <h1 className="app-page-title">{t("title")}</h1>
+          <h1 className="app-page-title" id="fridge-page-title" tabIndex={-1}>
+            {t("title")}
+          </h1>
           <p className="app-page-description">{t("description")}</p>
         </div>
         <FridgeWorkbench />

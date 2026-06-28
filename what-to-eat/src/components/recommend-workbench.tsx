@@ -1,10 +1,20 @@
 "use client";
 
-import { Check, Clock3, Lightbulb, LoaderCircle, Minus, Plus, Sparkles } from "lucide-react";
+import {
+  Check,
+  Clock3,
+  Lightbulb,
+  LoaderCircle,
+  Minus,
+  Plus,
+  RefreshCw,
+  Sparkles
+} from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { type FormEvent, useCallback, useEffect, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Button } from "@/components/ui/button";
 import {
   getImageStatusPollDelay,
@@ -72,12 +82,20 @@ function getDishImagePollDelay(dishes: Dish[]) {
 
 export function RecommendWorkbench() {
   const t = useTranslations("recommend");
+  const tErrors = useTranslations("errors");
   const [candidateCount, setCandidateCount] = useState("3");
   const [temporaryRequirement, setTemporaryRequirement] = useState("");
   const [dishes, setDishes] = useState<Dish[]>([]);
   const [confirmedDishIds, setConfirmedDishIds] = useState<string[]>([]);
   const [errorKey, setErrorKey] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [confirmingDishIds, setConfirmingDishIds] = useState<string[]>([]);
+  const [retryingDishIds, setRetryingDishIds] = useState<string[]>([]);
+  const [dishErrors, setDishErrors] = useState<Record<string, string>>({});
+  const [pendingConsumptionDish, setPendingConsumptionDish] = useState<Dish | null>(null);
+  const generationInFlightRef = useRef(false);
+  const confirmationInFlightRef = useRef(new Set<string>());
+  const recommendInteractionBusy = generating || confirmingDishIds.length > 0;
 
   const loadDishImages = useCallback(async () => {
     try {
@@ -125,7 +143,9 @@ export function RecommendWorkbench() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setBusy(true);
+    if (generationInFlightRef.current || confirmationInFlightRef.current.size > 0) return;
+    generationInFlightRef.current = true;
+    setGenerating(true);
 
     try {
       const result = await requestJson<RecommendationResponse>("/api/recommend", {
@@ -139,10 +159,12 @@ export function RecommendWorkbench() {
       setDishes(normalizeDishes(result.dishes));
       setConfirmedDishIds([]);
       setErrorKey(null);
+      setDishErrors({});
     } catch (error) {
       setErrorKey(getErrorTranslationKey(error));
     } finally {
-      setBusy(false);
+      generationInFlightRef.current = false;
+      setGenerating(false);
     }
   }
 
@@ -187,7 +209,9 @@ export function RecommendWorkbench() {
   }
 
   async function confirm(dish: Dish) {
-    setBusy(true);
+    if (generationInFlightRef.current || confirmationInFlightRef.current.has(dish.id)) return;
+    confirmationInFlightRef.current.add(dish.id);
+    setConfirmingDishIds((current) => [...current, dish.id]);
 
     try {
       await requestJson("/api/fridge-items/apply-consumption", {
@@ -196,18 +220,54 @@ export function RecommendWorkbench() {
         body: JSON.stringify({ consumptions: dish.consumptions })
       });
       setConfirmedDishIds((current) => [...current, dish.id]);
-      setErrorKey(null);
+      setPendingConsumptionDish((current) => (current?.id === dish.id ? null : current));
+      setDishErrors((current) => {
+        const next = { ...current };
+        delete next[dish.id];
+        return next;
+      });
     } catch (error) {
-      setErrorKey(getErrorTranslationKey(error));
+      setDishErrors((current) => ({
+        ...current,
+        [dish.id]: getErrorTranslationKey(error)
+      }));
     } finally {
-      setBusy(false);
+      confirmationInFlightRef.current.delete(dish.id);
+      setConfirmingDishIds((current) => current.filter((id) => id !== dish.id));
+    }
+  }
+
+  async function retryImage(dishId: string) {
+    setRetryingDishIds((current) => [...current, dishId]);
+
+    try {
+      await requestJson(`/api/recommendations/${dishId}/retry-image`, { method: "POST" });
+      setDishes((current) =>
+        current.map((dish) =>
+          dish.id === dishId
+            ? { ...dish, image: { ...dish.image, publicUrl: null, status: "pending" } }
+            : dish
+        )
+      );
+      setDishErrors((current) => {
+        const next = { ...current };
+        delete next[dishId];
+        return next;
+      });
+    } catch (error) {
+      setDishErrors((current) => ({
+        ...current,
+        [dishId]: getErrorTranslationKey(error)
+      }));
+    } finally {
+      setRetryingDishIds((current) => current.filter((id) => id !== dishId));
     }
   }
 
   return (
     <div className="app-workspace-grid app-recommend-workspace app-recommend-workbench">
       <RecommendationRequestStrip
-        busy={busy}
+        busy={recommendInteractionBusy}
         candidateCount={candidateCount}
         errorKey={errorKey}
         onCandidateCountChange={setCandidateCount}
@@ -217,20 +277,23 @@ export function RecommendWorkbench() {
       />
 
       {dishes.length > 0 ? (
-        <section className="app-recommend-results" aria-live="polite">
+        <section className="app-recommend-results">
           <div className="app-recommend-results-ribbon">
             <span>{t("resultsTitle")}</span>
           </div>
           <div className="app-recommend-dish-grid">
             {dishes.map((dish) => (
               <DishRecommendationCard
-                busy={busy}
+                busy={generating || confirmingDishIds.includes(dish.id)}
                 confirmed={confirmedDishIds.includes(dish.id)}
                 dish={dish}
+                errorKey={dishErrors[dish.id] ?? null}
                 key={dish.id}
                 onAdjustConsumption={adjustConsumption}
-                onConfirm={confirm}
+                onConfirm={setPendingConsumptionDish}
                 onConsumptionChange={updateConsumption}
+                onRetryImage={retryImage}
+                retryingImage={retryingDishIds.includes(dish.id)}
               />
             ))}
           </div>
@@ -239,7 +302,50 @@ export function RecommendWorkbench() {
             <span>{t("confirmationTip")}</span>
           </p>
         </section>
+      ) : generating ? (
+        <section className="app-recommend-results app-recommend-skeleton" role="status">
+          <span>{t("generating")}</span>
+          <div className="app-recommend-dish-grid" aria-hidden="true">
+            {[0, 1].map((item) => (
+              <div className="app-recipe-card app-skeleton" key={item}>
+                <span className="app-skeleton-line" />
+                <span className="app-skeleton-line app-skeleton-line-short" />
+                <span className="app-skeleton-line" />
+              </div>
+            ))}
+          </div>
+        </section>
       ) : null}
+      <ConfirmDeleteDialog
+        cancelLabel={t("confirmConsumptionCancel")}
+        confirmLabel={t("confirmConsumptionAction")}
+        description={
+          pendingConsumptionDish
+            ? dishErrors[pendingConsumptionDish.id]
+              ? `${t("confirmConsumptionDescription", {
+                  name: pendingConsumptionDish.name
+                })} ${tErrors(dishErrors[pendingConsumptionDish.id])}`
+              : t("confirmConsumptionDescription", { name: pendingConsumptionDish.name })
+            : ""
+        }
+        descriptionRole={
+          pendingConsumptionDish && dishErrors[pendingConsumptionDish.id] ? "alert" : undefined
+        }
+        disabled={
+          pendingConsumptionDish
+            ? confirmingDishIds.includes(pendingConsumptionDish.id)
+            : false
+        }
+        onConfirm={() => {
+          if (pendingConsumptionDish) void confirm(pendingConsumptionDish);
+        }}
+        onOpenChange={(open) => {
+          if (!open) setPendingConsumptionDish(null);
+        }}
+        open={pendingConsumptionDish !== null}
+        restoreFocusId="recommend-page-title"
+        title={t("confirmConsumptionTitle")}
+      />
     </div>
   );
 }
@@ -298,7 +404,11 @@ function RecommendationRequestStrip({
         )}
         <span className="home-paper-button-label">{t("generate")}</span>
       </Button>
-      {errorKey ? <p className="auth-modal-error app-request-error">{tErrors(errorKey)}</p> : null}
+      {errorKey ? (
+        <p className="auth-modal-error app-request-error" role="alert">
+          {tErrors(errorKey)}
+        </p>
+      ) : null}
     </form>
   );
 }
@@ -307,22 +417,29 @@ function DishRecommendationCard({
   busy,
   confirmed,
   dish,
+  errorKey,
   onAdjustConsumption,
   onConfirm,
-  onConsumptionChange
+  onConsumptionChange,
+  onRetryImage,
+  retryingImage
 }: {
   busy: boolean;
   confirmed: boolean;
   dish: Dish;
+  errorKey: string | null;
   onAdjustConsumption: (dishId: string, fridgeItemId: string, delta: number) => void;
   onConfirm: (dish: Dish) => void;
   onConsumptionChange: (dishId: string, fridgeItemId: string, consumedQuantity: number) => void;
+  onRetryImage: (dishId: string) => void;
+  retryingImage: boolean;
 }) {
   const t = useTranslations("recommend");
+  const tErrors = useTranslations("errors");
 
   return (
     <article className="app-recipe-card">
-      <DishImageFrame dish={dish} />
+      <DishImageFrame dish={dish} onRetry={onRetryImage} retrying={retryingImage} />
       <div className="app-recipe-card-body">
         <header className="app-recipe-card-header">
           <h2 className="app-card-title">{dish.name}</h2>
@@ -332,34 +449,55 @@ function DishRecommendationCard({
           </span>
         </header>
         <p className="app-muted-text">{dish.summary}</p>
-        <ol className="app-instruction-list">
-          {dish.instructions.map((instruction) => (
-            <li key={instruction}>{instruction}</li>
-          ))}
-        </ol>
-        <ConsumptionTable
-          confirmed={confirmed}
-          dish={dish}
-          onAdjustConsumption={onAdjustConsumption}
-          onConsumptionChange={onConsumptionChange}
-        />
-        <Button
-          className="home-paper-button app-paper-button-compact app-paper-button-danger app-confirm-consumption-button"
-          disabled={busy || confirmed || dish.consumptions.length === 0}
-          onClick={() => onConfirm(dish)}
-          type="button"
-        >
-          <Check className="app-button-icon" aria-hidden="true" />
-          <span className="home-paper-button-label">
-            {confirmed ? t("consumptionConfirmed") : t("confirmConsumption")}
-          </span>
-        </Button>
+        <details className="app-dish-details">
+          <summary>{t("viewSteps")}</summary>
+          <ol className="app-instruction-list">
+            {dish.instructions.map((instruction) => (
+              <li key={instruction}>{instruction}</li>
+            ))}
+          </ol>
+        </details>
+        <details className="app-consumption-details">
+          <summary>{t("consumptionTitle")}</summary>
+          <div className="app-consumption-details-body">
+            <ConsumptionTable
+              confirmed={confirmed}
+              dish={dish}
+              onAdjustConsumption={onAdjustConsumption}
+              onConsumptionChange={onConsumptionChange}
+            />
+            <Button
+              className="home-paper-button app-paper-button-compact app-paper-button-danger app-confirm-consumption-button"
+              disabled={busy || confirmed || dish.consumptions.length === 0}
+              onClick={() => onConfirm(dish)}
+              type="button"
+            >
+              <Check className="app-button-icon" aria-hidden="true" />
+              <span className="home-paper-button-label">
+                {confirmed ? t("consumptionConfirmed") : t("confirmConsumption")}
+              </span>
+            </Button>
+            {errorKey ? (
+              <p className="auth-modal-error" role="alert">
+                {tErrors(errorKey)}
+              </p>
+            ) : null}
+          </div>
+        </details>
       </div>
     </article>
   );
 }
 
-function DishImageFrame({ dish }: { dish: Dish }) {
+function DishImageFrame({
+  dish,
+  onRetry,
+  retrying
+}: {
+  dish: Dish;
+  onRetry: (dishId: string) => void;
+  retrying: boolean;
+}) {
   const t = useTranslations("recommend");
 
   return (
@@ -379,6 +517,18 @@ function DishImageFrame({ dish }: { dish: Dish }) {
       <span className="app-status-sticker app-image-status-sticker">
         {t(`imageStatus.${dish.image.status}`)}
       </span>
+      {dish.image.status === "failed" ? (
+        <Button
+          className="app-image-retry-button"
+          disabled={retrying}
+          onClick={() => onRetry(dish.id)}
+          type="button"
+          variant="secondary"
+        >
+          <RefreshCw className="app-button-icon" aria-hidden="true" />
+          <span>{retrying ? t("retryingImage") : t("retryImage")}</span>
+        </Button>
+      ) : null}
     </div>
   );
 }
@@ -398,14 +548,14 @@ function ConsumptionTable({
 
   return (
     <div className="app-consumption-table">
-      <h3 className="app-consumption-title">{t("consumptionTitle")}</h3>
       {dish.consumptions.length === 0 ? (
         <p className="app-muted-text">{t("noConsumption")}</p>
       ) : (
         dish.consumptions.map((consumption) => (
-          <label className="app-consumption-row" key={consumption.fridgeItemId}>
+          <div className="app-consumption-row" key={consumption.fridgeItemId}>
             <span className="app-consumption-name">{consumption.fridgeItemName}</span>
             <input
+              aria-label={t("consumptionQuantity", { name: consumption.fridgeItemName })}
               className="app-paper-input app-consumption-input"
               disabled={confirmed}
               min="0.001"
@@ -423,6 +573,7 @@ function ConsumptionTable({
             <span className="app-consumption-unit">{consumption.unit}</span>
             <span className="app-consumption-steppers" aria-hidden={confirmed}>
               <button
+                aria-label={t("decreaseConsumption", { name: consumption.fridgeItemName })}
                 className="app-stepper-button"
                 disabled={confirmed}
                 onClick={() => onAdjustConsumption(dish.id, consumption.fridgeItemId, -1)}
@@ -431,6 +582,7 @@ function ConsumptionTable({
                 <Minus className="app-stepper-icon" aria-hidden="true" />
               </button>
               <button
+                aria-label={t("increaseConsumption", { name: consumption.fridgeItemName })}
                 className="app-stepper-button"
                 disabled={confirmed}
                 onClick={() => onAdjustConsumption(dish.id, consumption.fridgeItemId, 1)}
@@ -439,7 +591,7 @@ function ConsumptionTable({
                 <Plus className="app-stepper-icon" aria-hidden="true" />
               </button>
             </span>
-          </label>
+          </div>
         ))
       )}
     </div>

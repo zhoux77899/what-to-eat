@@ -3,7 +3,7 @@
 import { ImageOff, Pencil, Plus, RefreshCw, Trash2, X } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { type FormEvent, useCallback, useEffect, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Button } from "@/components/ui/button";
@@ -52,23 +52,43 @@ export function FridgeWorkbench() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [errorKey, setErrorKey] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [savingItemId, setSavingItemId] = useState<string | null>(null);
+  const [deletingItemIds, setDeletingItemIds] = useState<string[]>([]);
+  const [retryingItemIds, setRetryingItemIds] = useState<string[]>([]);
+  const [itemErrors, setItemErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<FridgeItem | null>(null);
+  const itemRowRefs = useRef(new Map<string, HTMLElement>());
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const savingOperationRef = useRef(false);
+  const savingItemIdRef = useRef<string | null>(null);
+  const editingItemBusy = editingId !== null && retryingItemIds.includes(editingId);
 
-  const loadItems = useCallback(async () => {
+  const loadItems = useCallback(async (showLoading = false) => {
+    if (showLoading) setLoading(true);
     try {
       const data = await requestJson<{ items: FridgeItem[] }>("/api/fridge-items");
       setItems(normalizeFridgeItems(data.items));
       setErrorKey(null);
+      setLoadFailed(false);
     } catch (error) {
       setItems((current) => normalizeFridgeItems(current));
       setErrorKey(getErrorTranslationKey(error));
+      setLoadFailed(true);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    queueMicrotask(() => void loadItems());
+    queueMicrotask(() => void loadItems(true));
   }, [loadItems]);
+
+  useEffect(() => {
+    if (editingId) nameInputRef.current?.focus();
+  }, [editingId]);
 
   useEffect(() => {
     const pollDelay = getFridgeImagePollDelay(items);
@@ -86,7 +106,12 @@ export function FridgeWorkbench() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setBusy(true);
+    if (editingItemBusy || savingOperationRef.current) return;
+    const savedItemId = editingId;
+    savingOperationRef.current = true;
+    savingItemIdRef.current = savedItemId;
+    setSavingItemId(savedItemId);
+    setSaving(true);
 
     try {
       await requestJson(editingId ? `/api/fridge-items/${editingId}` : "/api/fridge-items", {
@@ -101,14 +126,27 @@ export function FridgeWorkbench() {
       setForm(EMPTY_FORM);
       setEditingId(null);
       await loadItems();
+      if (savedItemId) {
+        window.setTimeout(() => itemRowRefs.current.get(savedItemId)?.focus(), 0);
+      }
     } catch (error) {
       setErrorKey(getErrorTranslationKey(error));
     } finally {
-      setBusy(false);
+      savingOperationRef.current = false;
+      savingItemIdRef.current = null;
+      setSavingItemId(null);
+      setSaving(false);
     }
   }
 
   function startEditing(item: FridgeItem) {
+    if (
+      savingOperationRef.current ||
+      retryingItemIds.includes(item.id) ||
+      deletingItemIds.includes(item.id)
+    ) {
+      return;
+    }
     setEditingId(item.id);
     setForm({
       name: item.name,
@@ -118,15 +156,33 @@ export function FridgeWorkbench() {
   }
 
   async function remove(itemId: string) {
-    setBusy(true);
+    if (
+      editingId === itemId ||
+      savingItemIdRef.current === itemId ||
+      deletingItemIds.includes(itemId) ||
+      retryingItemIds.includes(itemId)
+    ) {
+      return false;
+    }
+    setDeletingItemIds((current) => [...current, itemId]);
 
     try {
       await requestJson(`/api/fridge-items/${itemId}`, { method: "DELETE" });
       await loadItems();
+      setItemErrors((current) => {
+        const next = { ...current };
+        delete next[itemId];
+        return next;
+      });
+      return true;
     } catch (error) {
-      setErrorKey(getErrorTranslationKey(error));
+      setItemErrors((current) => ({
+        ...current,
+        [itemId]: getErrorTranslationKey(error)
+      }));
+      return false;
     } finally {
-      setBusy(false);
+      setDeletingItemIds((current) => current.filter((id) => id !== itemId));
     }
   }
 
@@ -135,21 +191,37 @@ export function FridgeWorkbench() {
       return;
     }
 
-    const itemId = pendingDelete.id;
-    setPendingDelete(null);
-    await remove(itemId);
+    if (await remove(pendingDelete.id)) {
+      setPendingDelete(null);
+    }
   }
 
   async function retryImage(itemId: string) {
-    setBusy(true);
+    if (
+      editingId === itemId ||
+      savingItemIdRef.current === itemId ||
+      retryingItemIds.includes(itemId) ||
+      deletingItemIds.includes(itemId)
+    ) {
+      return;
+    }
+    setRetryingItemIds((current) => [...current, itemId]);
 
     try {
       await requestJson(`/api/fridge-items/${itemId}/retry-image`, { method: "POST" });
       await loadItems();
+      setItemErrors((current) => {
+        const next = { ...current };
+        delete next[itemId];
+        return next;
+      });
     } catch (error) {
-      setErrorKey(getErrorTranslationKey(error));
+      setItemErrors((current) => ({
+        ...current,
+        [itemId]: getErrorTranslationKey(error)
+      }));
     } finally {
-      setBusy(false);
+      setRetryingItemIds((current) => current.filter((id) => id !== itemId));
     }
   }
 
@@ -158,12 +230,40 @@ export function FridgeWorkbench() {
       className={cn("app-workspace-grid app-fridge-workspace", editingId && "app-fridge-workspace-editing")}
     >
       <section className="app-recipe-card app-fridge-inventory-panel">
-        {items.length === 0 ? (
-          <p className="app-muted-text">{t("empty")}</p>
+        {loading ? (
+          <div className="app-loading-state" role="status">
+            <div className="app-skeleton">
+              <span>{t("loading")}</span>
+              <span className="app-skeleton-line" aria-hidden="true" />
+              <span className="app-skeleton-line app-skeleton-line-short" aria-hidden="true" />
+            </div>
+          </div>
+        ) : loadFailed && items.length === 0 ? (
+          <div className="app-empty-state" role="alert">
+            <p>{errorKey ? tErrors(errorKey) : null}</p>
+            <Button
+              className="home-paper-button app-paper-button-secondary"
+              onClick={() => void loadItems(true)}
+              type="button"
+              variant="secondary"
+            >
+              {t("retryLoad")}
+            </Button>
+          </div>
+        ) : items.length === 0 ? (
+          <p className="app-empty-state">{t("empty")}</p>
         ) : (
           <div className="app-fridge-item-list">
             {items.map((item) => (
-              <article className="app-fridge-item-row" key={item.id}>
+              <article
+                className="app-fridge-item-row"
+                key={item.id}
+                ref={(element) => {
+                  if (element) itemRowRefs.current.set(item.id, element);
+                  else itemRowRefs.current.delete(item.id);
+                }}
+                tabIndex={-1}
+              >
                 <div className="app-image-frame app-fridge-image-frame">
                   {item.imageUrl ? (
                     <Image
@@ -191,6 +291,10 @@ export function FridgeWorkbench() {
                   <div className="app-action-row app-action-row-compact">
                     <Button
                       className="home-paper-button app-paper-button-compact app-paper-button-secondary"
+                      disabled={
+                        saving ||
+                        deletingItemIds.includes(item.id) || retryingItemIds.includes(item.id)
+                      }
                       onClick={() => startEditing(item)}
                       type="button"
                       variant="secondary"
@@ -201,7 +305,12 @@ export function FridgeWorkbench() {
                     {item.imageStatus === "failed" ? (
                       <Button
                         className="home-paper-button app-paper-button-compact app-paper-button-secondary"
-                        disabled={busy}
+                        disabled={
+                          deletingItemIds.includes(item.id) ||
+                          retryingItemIds.includes(item.id) ||
+                          savingItemId === item.id ||
+                          editingId === item.id
+                        }
                         onClick={() => retryImage(item.id)}
                         type="button"
                         variant="secondary"
@@ -212,7 +321,12 @@ export function FridgeWorkbench() {
                     ) : null}
                     <Button
                       className="home-paper-button app-paper-button-compact app-paper-button-danger"
-                      disabled={busy}
+                      disabled={
+                        editingId === item.id ||
+                        savingItemId === item.id ||
+                        deletingItemIds.includes(item.id) ||
+                        retryingItemIds.includes(item.id)
+                      }
                       onClick={() => setPendingDelete(item)}
                       type="button"
                       variant="ghost"
@@ -221,6 +335,11 @@ export function FridgeWorkbench() {
                       <span className="home-paper-button-label">{t("delete")}</span>
                     </Button>
                   </div>
+                  {itemErrors[item.id] ? (
+                    <p className="auth-modal-error" role="alert">
+                      {tErrors(itemErrors[item.id])}
+                    </p>
+                  ) : null}
                 </div>
               </article>
             ))}
@@ -235,9 +354,11 @@ export function FridgeWorkbench() {
             {t("name")}
             <Input
               className="app-paper-input"
+              disabled={saving || editingItemBusy}
               maxLength={80}
               onChange={(event) => setForm({ ...form, name: event.target.value })}
               required
+              ref={nameInputRef}
               value={form.name}
             />
           </label>
@@ -245,6 +366,7 @@ export function FridgeWorkbench() {
             {t("quantity")}
             <Input
               className="app-paper-input"
+              disabled={saving || editingItemBusy}
               min="1"
               onChange={(event) => setForm({ ...form, quantity: event.target.value })}
               required
@@ -257,6 +379,7 @@ export function FridgeWorkbench() {
             {t("unit")}
             <Input
               className="app-paper-input"
+              disabled={saving || editingItemBusy}
               maxLength={24}
               onChange={(event) => setForm({ ...form, unit: event.target.value })}
               required
@@ -264,7 +387,10 @@ export function FridgeWorkbench() {
             />
           </label>
           <div className="app-action-row">
-            <Button className="home-paper-button app-paper-button-primary" disabled={busy}>
+            <Button
+              className="home-paper-button app-paper-button-primary"
+              disabled={saving || editingItemBusy}
+            >
               <Plus className="app-button-icon" aria-hidden="true" />
               <span className="home-paper-button-label">
                 {editingId ? t("saveChanges") : t("add")}
@@ -273,9 +399,16 @@ export function FridgeWorkbench() {
             {editingId ? (
               <Button
                 className="home-paper-button app-paper-button-secondary"
+                disabled={saving}
                 onClick={() => {
+                  if (savingOperationRef.current) return;
+                  const cancelledItemId = editingId;
                   setEditingId(null);
                   setForm(EMPTY_FORM);
+                  window.setTimeout(
+                    () => cancelledItemId && itemRowRefs.current.get(cancelledItemId)?.focus(),
+                    0
+                  );
                 }}
                 type="button"
                 variant="secondary"
@@ -287,13 +420,17 @@ export function FridgeWorkbench() {
           </div>
         </form>
         <p className="app-muted-text">{t("mergeNote")}</p>
-        {errorKey ? <p className="auth-modal-error">{tErrors(errorKey)}</p> : null}
+        {errorKey && !(loadFailed && items.length === 0) ? (
+          <p className="auth-modal-error" role="alert">
+            {tErrors(errorKey)}
+          </p>
+        ) : null}
       </section>
       <ConfirmDeleteDialog
         cancelLabel={t("deleteCancel")}
         confirmLabel={t("deleteConfirm")}
         description={t("deleteDescription", { name: pendingDelete?.name ?? "" })}
-        disabled={busy}
+        disabled={pendingDelete ? deletingItemIds.includes(pendingDelete.id) : false}
         onConfirm={() => void confirmDeleteItem()}
         onOpenChange={(open) => {
           if (!open) {
@@ -301,6 +438,7 @@ export function FridgeWorkbench() {
           }
         }}
         open={pendingDelete !== null}
+        restoreFocusId="fridge-page-title"
         title={t("deleteTitle")}
       />
     </div>
