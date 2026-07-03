@@ -1,0 +1,29 @@
+:root {
+  --color-kitchen: oklch(96% 0.018 88);
+  --color-surface: oklch(99% 0.006 88);
+  --color-paper: oklch(94% 0.035 82);
+  --color-paper-strong: oklch(89% 0.055 82);
+  --color-ink: oklch(25% 0.035 65);
+  --color-ink-muted: oklch(43% 0.035 68);
+  --color-outline: oklch(29% 0.04 64);
+  --color-primary: oklch(50% 0.14 135);
+  --color-primary-strong: oklch(43% 0.12 137);
+  --color-primary-soft: oklch(91% 0.065 132);
+  --color-danger: oklch(52% 0.18 33);
+  --color-danger-soft: oklch(93% 0.045 32);
+  --color-warning: oklch(83% 0.16 84);
+  --color-warning-soft: oklch(95% 0.055 88);
+  --color-info: oklch(67% 0.09 205);
+  --color-info-soft: oklch(94% 0.035 205);
+  --color-focus: oklch(52% 0.12 225);
+  --radius-panel: 8px;
+  --radius-control: 7px;
+  --radius-small: 6px;
+  --shadow-control: 2px 2px 0 var(--color-outline);
+  --shadow-panel: 4px 4px 0 var(--color-outline);
+  --layout-max: 1180px;
+  --header-height: 72px;
+  --mobile-nav-height: 76px;
+  --motion-fast: 160ms;
+  --motion-standard: 220ms;
+}

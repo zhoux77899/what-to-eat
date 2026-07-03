@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
+import { resolve } from "node:path";
 
 async function expectSignInModalReady(page: Page) {
   await expect(page.getByRole("dialog", { name: "登录" })).toBeVisible();
@@ -14,9 +15,16 @@ async function expectSignInModalReady(page: Page) {
   await expect(page.getByText("Clerk 登录尚未配置。请配置 Clerk 环境变量后重启开发服务器。")).toBeVisible();
 }
 
-test("renders Chinese and English locale home pages", async ({ page }) => {
+test("renders Chinese and English locale home pages", async ({ page }, testInfo) => {
   await page.goto("/zh");
   await expect(page.getByRole("heading", { name: "今天吃什么" })).toBeVisible();
+
+  if (testInfo.project.name === "tablet-1024") {
+    await page.screenshot({
+      fullPage: true,
+      path: resolve(process.cwd(), "..", "docs", "design", "renders", "final-home-tablet-1024.png")
+    });
+  }
 
   await page.goto("/en");
   await expect(page.getByRole("heading", { name: "What to eat today" })).toBeVisible();

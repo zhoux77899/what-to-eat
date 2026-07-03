@@ -3,261 +3,124 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-const projectRoot = process.cwd();
-
-function readProjectFile(path: string) {
-  return readFileSync(join(projectRoot, path), "utf8");
+function read(path: string) {
+  return readFileSync(join(process.cwd(), path), "utf8");
 }
 
-function readCssRule(source: string, selector: string) {
-  const start = source.indexOf(`${selector} {`);
+describe("signed-in product UI design", () => {
+  it("keeps the real brand artwork and adds the three-step home workflow", () => {
+    const home = read("src/app/[locale]/page.tsx");
+    const styles = read("src/styles/redesign.css");
 
-  if (start === -1) {
-    return "";
-  }
+    expect(home).toContain("BrandLogoImage");
+    expect(home).toContain("home-hero-steps");
+    expect(home).toContain('t("stepFridge")');
+    expect(home).toContain('t("stepRecommend")');
+    expect(home).toContain('t("stepCook")');
+    expect(styles).toContain('url("/images/home-table-hero.png")');
+    expect(home).not.toContain("<svg");
+  });
 
-  const end = source.indexOf("\n}", start);
-  return end === -1 ? source.slice(start) : source.slice(start, end + 2);
-}
+  it("uses layered tokens and an active redesign stylesheet instead of the legacy cascade", () => {
+    const globals = read("src/app/globals.css");
+    const tokens = read("src/styles/tokens.css");
+    const styles = read("src/styles/redesign.css");
 
-describe("signed-in page surface design", () => {
-  const signedInPages = [
-    "src/app/[locale]/app/page.tsx",
-    "src/app/[locale]/fridge/page.tsx",
-    "src/app/[locale]/preferences/page.tsx",
-    "src/app/[locale]/history/page.tsx",
-    "src/app/[locale]/settings/openai-key/page.tsx"
-  ];
+    expect(globals).toContain('@import "../styles/tokens.css"');
+    expect(globals).toContain('@import "../styles/redesign.css"');
+    expect(globals).not.toContain("legacy.css");
+    expect(tokens).toContain("--color-primary: oklch(");
+    expect(tokens).toContain("--radius-panel: 8px");
+    expect(styles).toContain(".app-shell-header");
+    expect(styles).toContain(".app-recipe-card");
+    expect(styles).not.toContain("linear-gradient");
+    expect(styles).not.toContain("radial-gradient");
+    expect(styles).not.toContain("backdrop-filter");
+  });
 
-  it("removes card components from every signed-in page reached from the app menu", () => {
-    for (const path of signedInPages) {
-      const pageSource = readProjectFile(path);
+  it("provides desktop primary navigation and a four-destination mobile navigation", () => {
+    const shell = read("src/components/app-shell.tsx");
+    const styles = read("src/styles/redesign.css");
 
-      expect(pageSource, path).not.toContain("@/components/ui/card");
-      expect(pageSource, path).not.toContain("<Card");
+    expect(shell).toContain('t("recommend")');
+    expect(shell).toContain('href={`/${locale}/fridge`}');
+    expect(shell).toContain('href={`/${locale}/history`}');
+    expect(shell).toContain("app-mobile-nav");
+    expect(shell).toContain("app-mobile-more");
+    expect(shell).toContain("LocaleSwitchLinkWithSearch");
+    expect(shell).toContain("LocaleSwitchFallback");
+    expect(styles).toContain("grid-template-columns: repeat(4, minmax(0, 1fr))");
+  });
+
+  it("keeps recommendation input compact and makes dish state local and accessible", () => {
+    const workbench = read("src/components/recommend-workbench.tsx");
+    const styles = read("src/styles/redesign.css");
+
+    expect(workbench).toContain("app-recommend-request-strip");
+    expect(workbench).toContain("app-recommend-dish-grid");
+    expect(workbench).toContain("confirmingDishId");
+    expect(workbench).not.toContain("setBusy");
+    expect(workbench).toContain('aria-label={t("decreaseConsumption"');
+    expect(workbench).toContain('aria-label={t("increaseConsumption"');
+    expect(workbench).toContain("app-dish-details");
+    expect(workbench).toContain('<details className="app-consumption-details"');
+    expect(workbench).toContain('<summary>{t("consumptionTitle")}</summary>');
+    expect(styles).toContain("grid-template-columns: minmax(280px, 320px) minmax(0, 1fr)");
+  });
+
+  it("separates initial loading from empty fridge and history states", () => {
+    const fridge = read("src/components/fridge-workbench.tsx");
+    const history = read("src/components/history-workbench.tsx");
+
+    expect(fridge).toContain("const [loading, setLoading]");
+    expect(fridge).toContain("app-loading-state");
+    expect(fridge).toContain("app-empty-state");
+    expect(history).toContain("const [loading, setLoading]");
+    expect(history).toContain("app-loading-state");
+    expect(history).toContain("app-empty-state");
+    expect(history).toContain("app-dish-details");
+  });
+
+  it("uses explicit dirty, busy, validation, and protected delete states in settings", () => {
+    const preferences = read("src/components/preferences-workbench.tsx");
+    const key = read("src/components/openai-key-workbench.tsx");
+
+    expect(preferences).toContain("setSaved(false)");
+    expect(preferences).toContain('saving ? t("saving")');
+    expect(key).toContain("const [saving, setSaving]");
+    expect(key).toContain("const [validating, setValidating]");
+    expect(key).toContain("const [deleting, setDeleting]");
+    expect(key).toContain("ConfirmDeleteDialog");
+    expect(key).toContain("const [hasStoredKey, setHasStoredKey]");
+    expect(key).not.toContain("app-key-status");
+    expect(key).not.toContain("currentStatus");
+  });
+
+  it("uses Radix dialogs for auth configuration and destructive confirmation", () => {
+    const provider = read("src/components/auth/auth-modal-provider.tsx");
+    const confirm = read("src/components/confirm-delete-dialog.tsx");
+
+    expect(provider).toContain('@radix-ui/react-dialog');
+    expect(provider).toContain("Dialog.Content");
+    expect(confirm).toContain('@radix-ui/react-dialog');
+    expect(confirm).not.toContain("onEscapeKeyDown");
+    expect(confirm).not.toContain("onPointerDownOutside");
+    expect(confirm).toContain("Dialog.Close");
+  });
+
+  it("keeps route pages free of decorative card wrappers", () => {
+    const pages = [
+      "src/app/[locale]/app/page.tsx",
+      "src/app/[locale]/fridge/page.tsx",
+      "src/app/[locale]/preferences/page.tsx",
+      "src/app/[locale]/history/page.tsx",
+      "src/app/[locale]/settings/openai-key/page.tsx"
+    ];
+
+    for (const path of pages) {
+      const source = read(path);
+      expect(source, path).not.toContain("@/components/ui/card");
+      expect(source, path).not.toContain("<Card");
     }
-  });
-
-  it("uses the illustrated recipe board for the recommendation page instead of the old table prop scene", () => {
-    const pageSource = readProjectFile("src/app/[locale]/app/page.tsx");
-    const globalCss = readProjectFile("src/app/globals.css");
-    const recipeBoardRule = readCssRule(globalCss, ".app-recipe-board");
-
-    expect(pageSource).toContain("app-recipe-board");
-    expect(pageSource).not.toContain("app-table-plate");
-    expect(pageSource).not.toContain("app-table-canvas");
-    expect(recipeBoardRule).toContain("display: grid");
-    expect(recipeBoardRule).not.toContain("box-shadow:");
-    expect(recipeBoardRule).not.toMatch(/\n\s*border:/);
-  });
-
-  it("uses one side-panel prompt request form, result ribbon, recipe cards, and confirmation tip", () => {
-    const pageSource = readProjectFile("src/app/[locale]/app/page.tsx");
-    const workbenchSource = readProjectFile("src/components/recommend-workbench.tsx");
-    const globalCss = readProjectFile("src/app/globals.css");
-    const recommendWorkspaceRule = readCssRule(globalCss, ".app-recommend-workspace");
-    const requestStripRule = readCssRule(globalCss, ".app-recommend-request-strip");
-    const resultsRule = readCssRule(globalCss, ".app-recommend-results");
-    const hasHiddenHeading =
-      pageSource.includes('className="sr-only"') &&
-      pageSource.includes('id="recommend-page-title"') &&
-      pageSource.includes('aria-labelledby="recommend-page-title"');
-    const hasAriaLabel = pageSource.includes('aria-label={t("title")}');
-
-    expect(pageSource).not.toContain("app-table-description");
-    expect(pageSource).not.toContain("app-table-model-note");
-    expect(pageSource).not.toContain("ImageIcon");
-    expect(pageSource).not.toContain("MEAL_IMAGE_MODEL");
-    expect(pageSource).not.toContain("TEXT_RECOMMENDATION_MODEL");
-    expect(hasHiddenHeading || hasAriaLabel).toBe(true);
-    expect(workbenchSource).toContain("app-workspace-grid app-recommend-workspace");
-    expect(workbenchSource).toContain("app-recommend-request-strip");
-    expect(workbenchSource).toContain("app-recommend-results-ribbon");
-    expect(workbenchSource).toContain("app-recommend-dish-grid");
-    expect(workbenchSource).toContain("app-recipe-card");
-    expect(workbenchSource).toContain("app-recommend-tip");
-    expect(workbenchSource).toContain('t("confirmationTip")');
-    expect(workbenchSource).toContain('t("generate")');
-    expect(workbenchSource).not.toContain("mealIdea");
-    expect(workbenchSource).not.toContain("app-craving-field");
-    expect(workbenchSource).not.toContain("app-temporary-requirement-field");
-    expect(workbenchSource.match(/<textarea/g)?.length ?? 0).toBe(1);
-    expect(workbenchSource.match(/temporaryRequirementPlaceholder/g)?.length ?? 0).toBe(1);
-    expect(workbenchSource).toContain("temporaryRequirement: temporaryRequirement.trim() || null");
-    expect(recommendWorkspaceRule).toContain(
-      "grid-template-columns: minmax(0, 1fr) minmax(15rem, 18rem)"
-    );
-    expect(recommendWorkspaceRule).toContain("gap: clamp(2rem, 3vw, 2.5rem)");
-    expect(requestStripRule).toContain("align-self: start");
-    expect(requestStripRule).toContain("grid-column: 2");
-    expect(requestStripRule).toContain("grid-row: 1");
-    expect(requestStripRule).toContain("grid-template-columns: 1fr");
-    expect(requestStripRule).toContain("position: sticky");
-    expect(resultsRule).toContain("grid-column: 1");
-  });
-
-  it("defines the shared illustrated kitchen design system for signed-in pages", () => {
-    const globalCss = readProjectFile("src/app/globals.css");
-    const workbenchPageRule = readCssRule(globalCss, ".app-workbench-page");
-    const workbenchFormRule = readCssRule(globalCss, ".app-workbench-form");
-
-    expect(globalCss).toContain(".app-kitchen-page");
-    expect(globalCss).toContain(".app-recipe-board");
-    expect(globalCss).toContain(".app-recipe-card");
-    expect(globalCss).toContain(".app-status-sticker");
-    expect(globalCss).toContain(".app-image-frame");
-    expect(globalCss).toContain(".app-workbench-page");
-    expect(globalCss).toContain(".app-workbench-surface");
-    expect(globalCss).toContain(".app-paper-card");
-    expect(workbenchPageRule).toContain("width: 100%");
-    expect(workbenchPageRule).not.toContain("max-width");
-    expect(workbenchFormRule).toContain("width: 100%");
-    expect(workbenchFormRule).not.toContain("max-width");
-  });
-
-  it("keeps fridge beside recommendation as a primary navigation destination", () => {
-    const appShellSource = readProjectFile("src/components/app-shell.tsx");
-    const menuPanelIndex = appShellSource.indexOf('<div className="app-menu-panel">');
-    const fridgeLinkIndex = appShellSource.indexOf('href={`/${locale}/fridge`}');
-    const primaryNavigation = appShellSource.slice(0, menuPanelIndex);
-
-    expect(fridgeLinkIndex).toBeGreaterThan(-1);
-    expect(fridgeLinkIndex).toBeLessThan(menuPanelIndex);
-    expect(primaryNavigation).toContain(
-      'isCurrentPath(`/${locale}/fridge`) && "app-nav-primary-active"'
-    );
-    expect(appShellSource).toContain("BrandLogoImage");
-    expect(appShellSource).not.toContain("app-shell-notification-button");
-    expect(appShellSource).not.toContain("Bell");
-    expect(appShellSource).not.toContain("Utensils");
-  });
-
-  it("keeps menu-page workbench surfaces open instead of drawing a framed background band", () => {
-    const globalCss = readProjectFile("src/app/globals.css");
-    const workbenchSurfaceRule = readCssRule(globalCss, ".app-workbench-surface");
-
-    expect(workbenchSurfaceRule).not.toContain("border-block");
-    expect(globalCss).not.toContain(".app-workbench-surface::before");
-  });
-
-  it("reuses the static brand assets in layout metadata and app shell", () => {
-    const layoutSource = readProjectFile("src/app/[locale]/layout.tsx");
-    const appShellSource = readProjectFile("src/components/app-shell.tsx");
-    const brandSource = readProjectFile("src/components/brand-assets.tsx");
-
-    expect(layoutSource).toContain("/favicon.ico");
-    expect(layoutSource).toContain("/brand/app-icon-512.png");
-    expect(appShellSource).toContain("BrandLogoImage");
-    expect(brandSource).toContain("/brand/header-logo-zh.webp");
-    expect(brandSource).toContain("/brand/header-logo-en.webp");
-  });
-
-  it("uses the shared recipe visual language across signed-in workbench pages", () => {
-    const fridgeSource = readProjectFile("src/components/fridge-workbench.tsx");
-    const historySource = readProjectFile("src/components/history-workbench.tsx");
-    const preferencesSource = readProjectFile("src/components/preferences-workbench.tsx");
-    const openAiKeySource = readProjectFile("src/components/openai-key-workbench.tsx");
-
-    expect(fridgeSource).toContain("app-recipe-card app-fridge-inventory-panel");
-    expect(fridgeSource).toContain("app-image-frame");
-    expect(fridgeSource).toContain("app-status-sticker");
-    expect(historySource).toContain("app-recipe-card app-history-dish-card");
-    expect(historySource).toContain("app-image-frame");
-    expect(historySource).toContain("app-status-sticker");
-    expect(preferencesSource).toContain("app-workbench-surface app-workbench-form app-kitchen-panel");
-    expect(openAiKeySource).toContain("app-workbench-surface app-workbench-form app-kitchen-panel");
-    expect(openAiKeySource).toContain("app-status-sticker");
-  });
-
-  it("maps the fridge inventory and form panels to the same columns as app recipes and generation", () => {
-    const fridgeSource = readProjectFile("src/components/fridge-workbench.tsx");
-    const globalCss = readProjectFile("src/app/globals.css");
-    const inventoryPanelIndex = fridgeSource.indexOf("app-fridge-inventory-panel");
-    const formPanelIndex = fridgeSource.indexOf("app-fridge-form-panel");
-    const fridgeWorkspaceRule = readCssRule(globalCss, ".app-fridge-workspace");
-    const inventoryPanelRule = readCssRule(globalCss, ".app-fridge-inventory-panel");
-    const formPanelRule = readCssRule(globalCss, ".app-fridge-form-panel");
-    const mobileEditingFormRule = readCssRule(
-      globalCss,
-      ".app-fridge-workspace-editing .app-fridge-form-panel"
-    );
-
-    expect(inventoryPanelIndex).toBeGreaterThan(-1);
-    expect(formPanelIndex).toBeGreaterThan(inventoryPanelIndex);
-    expect(fridgeSource).toContain("app-fridge-item-row");
-    expect(fridgeSource).not.toContain('className="app-paper-card app-form-card"');
-    expect(fridgeWorkspaceRule).toContain("gap: clamp(2rem, 3vw, 2.5rem)");
-    expect(fridgeWorkspaceRule).toContain(
-      "grid-template-columns: minmax(0, 1fr) minmax(15rem, 18rem)"
-    );
-    expect(fridgeSource).not.toContain("grid-cols-2");
-    expect(inventoryPanelRule).toContain("align-self: start");
-    expect(inventoryPanelRule).toContain("grid-column: 1");
-    expect(inventoryPanelRule).toContain("grid-row: 1");
-    expect(formPanelRule).toContain("align-self: start");
-    expect(formPanelRule).toContain("grid-column: 2");
-    expect(formPanelRule).toContain("grid-row: 1");
-    expect(formPanelRule).toContain("position: static");
-    expect(formPanelRule).not.toContain("top:");
-    expect(mobileEditingFormRule).toContain("order: -1");
-  });
-
-  it("uses compact paper buttons for workbench row actions", () => {
-    const fridgeSource = readProjectFile("src/components/fridge-workbench.tsx");
-    const openAiKeySource = readProjectFile("src/components/openai-key-workbench.tsx");
-    const historySource = readProjectFile("src/components/history-workbench.tsx");
-    const recommendSource = readProjectFile("src/components/recommend-workbench.tsx");
-    const globalCss = readProjectFile("src/app/globals.css");
-
-    expect(globalCss).toContain(".app-paper-button-compact");
-    expect(globalCss).toContain(".app-paper-button-danger");
-    expect(fridgeSource).toContain(
-      "home-paper-button app-paper-button-compact app-paper-button-secondary"
-    );
-    expect(fridgeSource).toContain(
-      "home-paper-button app-paper-button-compact app-paper-button-danger"
-    );
-    expect(openAiKeySource).toContain(
-      "home-paper-button app-paper-button-compact app-paper-button-secondary"
-    );
-    expect(openAiKeySource).toContain(
-      "home-paper-button app-paper-button-compact app-paper-button-danger"
-    );
-    expect(historySource).toContain(
-      "home-paper-button app-paper-button-compact app-paper-button-secondary"
-    );
-    expect(recommendSource).toContain(
-      "home-paper-button app-paper-button-compact app-paper-button-danger"
-    );
-  });
-
-  it("uses one shared Radix confirmation dialog for destructive workbench actions", () => {
-    const dialogSource = readProjectFile("src/components/confirm-delete-dialog.tsx");
-    const fridgeSource = readProjectFile("src/components/fridge-workbench.tsx");
-    const historySource = readProjectFile("src/components/history-workbench.tsx");
-    const globalCss = readProjectFile("src/app/globals.css");
-    const confirmBackdropRule = readCssRule(globalCss, ".app-confirm-dialog-backdrop");
-
-    expect(dialogSource).toContain('@radix-ui/react-dialog');
-    expect(dialogSource).toContain("Dialog.Content");
-    expect(dialogSource).toContain("ConfirmDeleteDialog");
-    expect(dialogSource).toContain(
-      "home-paper-button app-paper-button-compact app-paper-button-secondary"
-    );
-    expect(dialogSource).toContain(
-      "home-paper-button app-paper-button-compact app-paper-button-danger"
-    );
-    expect(fridgeSource).toContain("ConfirmDeleteDialog");
-    expect(historySource).toContain("ConfirmDeleteDialog");
-    expect(globalCss).toContain(".app-confirm-dialog-card");
-    expect(confirmBackdropRule).toContain("--hero-ink: var(--auth-ink)");
-    expect(confirmBackdropRule).toContain("--hero-paper: var(--auth-paper)");
-  });
-
-  it("avoids viewport-height minimums on the minimal recommendation surface", () => {
-    const globalCss = readProjectFile("src/app/globals.css");
-
-    expect(globalCss).not.toMatch(/\.app-table-page-minimal\s*{[^}]*min-height:\s*calc\(100svh/s);
-    expect(globalCss).not.toMatch(/\.app-recipe-board\s*{[^}]*min-height:\s*calc\(100svh/s);
   });
 });

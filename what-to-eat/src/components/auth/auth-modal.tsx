@@ -2,6 +2,7 @@
 
 import { useSignIn } from "@clerk/nextjs";
 import * as Dialog from "@radix-ui/react-dialog";
+import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -75,23 +76,6 @@ function GitHubStickerIcon() {
   );
 }
 
-function CloseStickerIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="auth-modal-close-icon"
-      fill="none"
-      height="24"
-      viewBox="0 0 24 24"
-      width="24"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path d="M7.2 7.4c3.2 3 5.6 5.3 9.6 9.2" />
-      <path d="M16.8 7.1c-3.7 3.2-6.1 6.1-9.4 9.7" />
-    </svg>
-  );
-}
-
 export function AuthModal({ locale, open, returnTo, onClose }: AuthModalProps) {
   const t = useTranslations("auth");
   const signInSignal = useSignIn();
@@ -100,7 +84,6 @@ export function AuthModal({ locale, open, returnTo, onClose }: AuthModalProps) {
 
   const completeUrl = returnTo ?? `/${locale}/app`;
   const isSignInLoaded = signInSignal.fetchStatus !== "fetching" && Boolean(signInSignal.signIn);
-
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
       onClose();
@@ -145,8 +128,12 @@ export function AuthModal({ locale, open, returnTo, onClose }: AuthModalProps) {
                 </Dialog.Description>
               </div>
               <Dialog.Close asChild>
-                <button aria-label={t("close")} className="auth-modal-close" type="button">
-                  <CloseStickerIcon />
+                <button
+                  aria-label={t("close")}
+                  className="auth-modal-close"
+                  type="button"
+                >
+                  <X aria-hidden="true" className="auth-modal-close-icon" />
                 </button>
               </Dialog.Close>
             </div>

@@ -95,6 +95,26 @@ describe("AuthModal", () => {
     expect(screen.getByRole("button", { name: "使用 GitHub 登录" })).toBeEnabled();
   });
 
+  it("keeps an escape path available while an OAuth request is pending", async () => {
+    let finishSso: ((result: { error: null }) => void) | undefined;
+    startSso.mockReturnValue(
+      new Promise((resolve) => {
+        finishSso = resolve;
+      })
+    );
+    const onClose = vi.fn();
+
+    renderWithIntl(<AuthModal locale="zh" onClose={onClose} open returnTo="/zh/app" />);
+    fireEvent.click(screen.getByRole("button", { name: "使用 Google 登录" }));
+
+    const closeButton = screen.getByRole("button", { name: "关闭" });
+    expect(closeButton).toBeEnabled();
+    fireEvent.click(closeButton);
+    expect(onClose).toHaveBeenCalledOnce();
+
+    finishSso?.({ error: null });
+  });
+
   it("uses Radix Dialog primitives for modal focus management", () => {
     const source = readFileSync(
       path.join(process.cwd(), "src", "components", "auth", "auth-modal.tsx"),
@@ -104,6 +124,13 @@ describe("AuthModal", () => {
     expect(source).toContain('@radix-ui/react-dialog');
     expect(source).toContain("Dialog.Root");
     expect(source).toContain("Dialog.Content");
+  });
+
+  it("renders the hand-drawn provider stickers", () => {
+    renderWithIntl(<AuthModal locale="zh" onClose={vi.fn()} open returnTo="/zh/app" />);
+
+    expect(document.querySelector(".auth-provider-icon-google")).toBeInTheDocument();
+    expect(document.querySelector(".auth-provider-icon-github")).toBeInTheDocument();
   });
 });
 
