@@ -1,9 +1,9 @@
 "use client";
 
-import { Save } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 
+import { AppIcon } from "@/components/ui/app-icon";
 import { Button } from "@/components/ui/button";
 import { getErrorTranslationKey, requestJson } from "@/lib/api-client";
 
@@ -112,7 +112,7 @@ export function PreferencesWorkbench({ locale }: { locale: "zh" | "en" }) {
             keyboardSubmitRef.current = event.detail === 0;
           }}
         >
-          <Save className="app-button-icon" aria-hidden="true" />
+          <AppIcon className="app-button-icon" name="save" />
           <span className="home-paper-button-label">{saving ? t("saving") : t("save")}</span>
         </Button>
       </div>

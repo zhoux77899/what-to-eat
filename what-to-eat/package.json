@@ -28,7 +28,6 @@
     "clsx": "latest",
     "dotenv": "^17.4.2",
     "drizzle-orm": "latest",
-    "lucide-react": "latest",
     "next": "latest",
     "next-intl": "latest",
     "openai": "^6.39.1",

@@ -131,15 +131,50 @@ describe("full-site UI redesign contract", () => {
     expect(styles).not.toMatch(/border-(left|right):\s*(?:[3-9]|\d{2,})px/);
   });
 
-  it("restores provider sticker artwork and keeps account actions only where needed", () => {
+  it("uses raster provider sticker artwork and keeps account actions only where needed", () => {
     const auth = read("src/components/auth/auth-modal.tsx");
     const shell = read("src/components/app-shell.tsx");
+    const globals = read("src/app/globals.css");
+    const styles = read("src/styles/redesign.css");
 
     expect(auth).toContain("GoogleStickerIcon");
     expect(auth).toContain("GitHubStickerIcon");
-    expect(auth).toContain("auth-provider-icon-paper");
+    expect(auth).toContain('src="/ui/providers/google.webp"');
+    expect(auth).toContain('src="/ui/providers/github.webp"');
+    expect(auth).not.toContain("<svg");
     expect(shell).not.toContain('className="app-menu-account"');
     expect(shell).toContain('className="app-mobile-account"');
+    expect(shell).toContain('className="app-user-button"');
+    expect(globals).toContain(".app-user-button::before");
+    expect(globals).toContain('border-image-source: var(--app-sliced-skin)');
+    expect(globals).toContain('border-image-slice: 30 76 fill');
+    expect(globals).toContain("aspect-ratio: 10 / 3");
+    expect(globals).toContain("background-size: calc(100% - 8px) auto");
+    expect(globals).toMatch(
+      /\.app-user-button\s*\{[^}]*--app-sliced-skin:\s*url\("\/ui\/buttons\/secondary-default\.webp"\)/s
+    );
+    expect(styles).toMatch(
+      /\.auth-provider-button:hover\s*\{[^}]*background-color:\s*var\(--color-primary-soft\)/s
+    );
+    expect(styles).not.toMatch(/\.auth-provider-button:hover\s*\{[^}]*background:\s*/s);
+  });
+
+  it("keeps generated button states inside a fixed safe frame", () => {
+    const globals = read("src/app/globals.css");
+    const styles = read("src/styles/redesign.css");
+
+    expect(globals).toContain(
+      "--app-button-skin-size: calc(100% - 8px) calc(100% - 6px)"
+    );
+    expect(globals).not.toContain("background-size: 100% 100%");
+    expect(globals).toContain(".home-paper-button:focus-visible");
+    expect(globals).toMatch(
+      /\.home-paper-button:hover,[\s\S]*?background-position:\s*center;[\s\S]*?background-repeat:\s*no-repeat;[\s\S]*?background-size:\s*var\(--app-button-skin-size\);/
+    );
+    expect(styles).toMatch(
+      /\.home-paper-button:hover,[^}]*background-color:\s*var\(--color-paper\)/s
+    );
+    expect(styles).not.toMatch(/\.home-paper-button:hover,[^}]*background:\s*/s);
   });
 
   it("makes recommendation history collapsible and prevents preference writes after load failure", () => {

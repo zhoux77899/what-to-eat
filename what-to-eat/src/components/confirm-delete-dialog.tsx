@@ -1,8 +1,8 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import { X } from "lucide-react";
 
+import { AppIcon } from "@/components/ui/app-icon";
 import { Button } from "@/components/ui/button";
 
 type ConfirmDeleteDialogProps = {
@@ -58,7 +58,7 @@ export function ConfirmDeleteDialog({
                   className="auth-modal-close"
                   type="button"
                 >
-                  <X className="auth-modal-close-icon" aria-hidden="true" />
+                  <AppIcon className="auth-modal-close-icon" name="close" />
                 </button>
               </Dialog.Close>
             </div>

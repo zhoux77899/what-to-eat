@@ -1,10 +1,10 @@
 "use client";
 
-import { ShieldCheck, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useEffect, useState } from "react";
 
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
+import { AppIcon } from "@/components/ui/app-icon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getErrorTranslationKey, requestJson } from "@/lib/api-client";
@@ -109,7 +109,7 @@ export function OpenAiKeyWorkbench() {
           className="home-paper-button app-paper-button-primary"
           disabled={!loaded || keyBusy || apiKey.trim().length === 0}
         >
-          <ShieldCheck className="app-button-icon" aria-hidden="true" />
+          <AppIcon className="app-button-icon" name="secure-key" />
           <span className="home-paper-button-label">
             {saving ? t("saving") : t("save")}
           </span>
@@ -132,7 +132,7 @@ export function OpenAiKeyWorkbench() {
           type="button"
           variant="ghost"
         >
-          <Trash2 className="app-button-icon" aria-hidden="true" />
+          <AppIcon className="app-button-icon" name="delete" />
           <span className="home-paper-button-label">{t("delete")}</span>
         </Button>
       </div>

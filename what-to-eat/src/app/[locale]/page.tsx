@@ -1,9 +1,9 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Languages, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 import { ProtectedLink } from "@/components/auth/protected-link";
 import { BrandLogoImage } from "@/components/brand-assets";
+import { AppIcon } from "@/components/ui/app-icon";
 
 export default async function HomePage({
   params,
@@ -38,7 +38,7 @@ export default async function HomePage({
         className="home-paper-button home-language-toggle"
         href={localeHref}
       >
-        <Languages className="home-paper-button-icon" aria-hidden="true" />
+        <AppIcon className="home-paper-button-icon" name="language" />
         <span className="home-paper-button-label">{navigationT("language")}</span>
       </Link>
       <section className="home-hero-stage">
@@ -50,7 +50,7 @@ export default async function HomePage({
           />
         </div>
         <ProtectedLink className="home-paper-button home-hero-cta" href={`/${locale}/app`}>
-          <Sparkles className="home-paper-button-icon" aria-hidden="true" />
+          <AppIcon className="home-paper-button-icon" name="generate" />
           <span className="home-paper-button-label home-hero-cta-label">{t("primaryAction")}</span>
         </ProtectedLink>
       </section>

@@ -1,7 +1,6 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import { X } from "lucide-react";
 import {
   createContext,
   useCallback,
@@ -15,6 +14,7 @@ import { useTranslations } from "next-intl";
 
 import { AuthModal } from "@/components/auth/auth-modal";
 import { useAuthRuntime } from "@/components/auth/auth-runtime-provider";
+import { AppIcon } from "@/components/ui/app-icon";
 import { normalizeAuthReturnTo } from "@/lib/auth-return";
 
 type AuthModalContextValue = {
@@ -127,7 +127,7 @@ function AuthConfigurationModal({ open, onClose }: { open: boolean; onClose: () 
               </div>
               <Dialog.Close asChild>
                 <button aria-label={t("close")} className="auth-modal-close" type="button">
-                  <X className="auth-modal-close-icon" aria-hidden="true" />
+                  <AppIcon className="auth-modal-close-icon" name="close" />
                 </button>
               </Dialog.Close>
             </div>

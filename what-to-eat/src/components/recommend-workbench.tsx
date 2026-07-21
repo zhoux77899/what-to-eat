@@ -1,20 +1,11 @@
 "use client";
 
-import {
-  Check,
-  Clock3,
-  Lightbulb,
-  LoaderCircle,
-  Minus,
-  Plus,
-  RefreshCw,
-  Sparkles
-} from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
+import { AppIcon } from "@/components/ui/app-icon";
 import { Button } from "@/components/ui/button";
 import {
   getImageStatusPollDelay,
@@ -298,7 +289,7 @@ export function RecommendWorkbench() {
             ))}
           </div>
           <p className="app-recommend-tip">
-            <Lightbulb className="app-inline-icon" aria-hidden="true" />
+            <AppIcon className="app-inline-icon" name="tip" />
             <span>{t("confirmationTip")}</span>
           </p>
         </section>
@@ -397,7 +388,7 @@ function RecommendationRequestStrip({
             onClick={() => changeCandidateCount(-1)}
             type="button"
           >
-            <Minus aria-hidden="true" />
+            <AppIcon name="minus" />
           </button>
           <output className="app-candidate-count-value" aria-live="polite">
             {candidateCountValue}
@@ -409,15 +400,15 @@ function RecommendationRequestStrip({
             onClick={() => changeCandidateCount(1)}
             type="button"
           >
-            <Plus aria-hidden="true" />
+            <AppIcon name="plus" />
           </button>
         </div>
       </div>
       <Button className="home-paper-button app-paper-button-primary app-generate-button" disabled={busy}>
         {busy ? (
-          <LoaderCircle className="app-button-icon animate-spin" aria-hidden="true" />
+          <AppIcon className="app-button-icon animate-spin" name="loading" />
         ) : (
-          <Sparkles className="app-button-icon" aria-hidden="true" />
+          <AppIcon className="app-button-icon" name="generate" />
         )}
         <span className="home-paper-button-label">{t("generate")}</span>
       </Button>
@@ -461,7 +452,7 @@ function DishRecommendationCard({
         <header className="app-recipe-card-header">
           <h2 className="app-card-title">{dish.name}</h2>
           <span className="app-status-sticker app-time-sticker">
-            <Clock3 className="app-inline-icon" aria-hidden="true" />
+            <AppIcon className="app-inline-icon" name="clock" />
             {t("estimatedMinutes", { minutes: dish.estimatedMinutes })}
           </span>
         </header>
@@ -489,7 +480,7 @@ function DishRecommendationCard({
               onClick={() => onConfirm(dish)}
               type="button"
             >
-              <Check className="app-button-icon" aria-hidden="true" />
+              <AppIcon className="app-button-icon" name="confirm" />
               <span className="home-paper-button-label">
                 {confirmed ? t("consumptionConfirmed") : t("confirmConsumption")}
               </span>
@@ -536,13 +527,13 @@ function DishImageFrame({
       </span>
       {dish.image.status === "failed" ? (
         <Button
-          className="app-image-retry-button"
+          className="home-paper-button app-paper-button-compact app-paper-button-secondary app-image-retry-button"
           disabled={retrying}
           onClick={() => onRetry(dish.id)}
           type="button"
           variant="secondary"
         >
-          <RefreshCw className="app-button-icon" aria-hidden="true" />
+          <AppIcon className="app-button-icon" name="retry" />
           <span>{retrying ? t("retryingImage") : t("retryImage")}</span>
         </Button>
       ) : null}
@@ -596,7 +587,7 @@ function ConsumptionTable({
                 onClick={() => onAdjustConsumption(dish.id, consumption.fridgeItemId, -1)}
                 type="button"
               >
-                <Minus className="app-stepper-icon" aria-hidden="true" />
+                <AppIcon className="app-stepper-icon" name="minus" />
               </button>
               <button
                 aria-label={t("increaseConsumption", { name: consumption.fridgeItemName })}
@@ -605,7 +596,7 @@ function ConsumptionTable({
                 onClick={() => onAdjustConsumption(dish.id, consumption.fridgeItemId, 1)}
                 type="button"
               >
-                <Plus className="app-stepper-icon" aria-hidden="true" />
+                <AppIcon className="app-stepper-icon" name="plus" />
               </button>
             </span>
           </div>

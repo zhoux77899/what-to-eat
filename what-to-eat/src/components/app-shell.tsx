@@ -1,16 +1,6 @@
 "use client";
 
 import { UserButton, useAuth, useUser } from "@clerk/nextjs";
-import {
-  ClipboardList,
-  ChevronDown,
-  History,
-  KeyRound,
-  Languages,
-  MoreHorizontal,
-  Refrigerator,
-  SlidersHorizontal
-} from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -20,6 +10,7 @@ import { useAuthModal } from "@/components/auth/auth-modal-provider";
 import { useAuthRuntime } from "@/components/auth/auth-runtime-provider";
 import { ProtectedLink } from "@/components/auth/protected-link";
 import { BrandLogoImage } from "@/components/brand-assets";
+import { AppIcon } from "@/components/ui/app-icon";
 import { cn } from "@/lib/utils";
 
 type AppShellProps = {
@@ -62,7 +53,7 @@ function AppShellContent({ locale, children }: AppShellProps) {
               )}
               href={`/${locale}/app`}
             >
-              <ClipboardList className="app-nav-icon" aria-hidden="true" />
+              <AppIcon className="app-nav-icon" name="recommend" />
               <span className="home-paper-button-label">{t("recommend")}</span>
             </ProtectedLink>
 
@@ -74,7 +65,7 @@ function AppShellContent({ locale, children }: AppShellProps) {
               )}
               href={`/${locale}/fridge`}
             >
-              <Refrigerator className="app-nav-icon" aria-hidden="true" />
+              <AppIcon className="app-nav-icon" name="fridge" />
               <span className="home-paper-button-label">{t("fridge")}</span>
             </ProtectedLink>
 
@@ -86,7 +77,7 @@ function AppShellContent({ locale, children }: AppShellProps) {
               )}
               href={`/${locale}/history`}
             >
-              <History className="app-nav-icon" aria-hidden="true" />
+              <AppIcon className="app-nav-icon" name="history" />
               <span className="home-paper-button-label">{t("history")}</span>
             </ProtectedLink>
 
@@ -99,7 +90,7 @@ function AppShellContent({ locale, children }: AppShellProps) {
                 )}
               >
                 <span className="home-paper-button-label">{t("more")}</span>
-                <ChevronDown className="app-nav-icon app-menu-chevron" aria-hidden="true" />
+                <AppIcon className="app-nav-icon app-menu-chevron" name="chevron-down" />
               </summary>
               <div className="app-menu-panel">
                 <ProtectedLink
@@ -112,7 +103,7 @@ function AppShellContent({ locale, children }: AppShellProps) {
                   )}
                   href={`/${locale}/preferences`}
                 >
-                  <SlidersHorizontal className="app-menu-link-icon" aria-hidden="true" />
+                  <AppIcon className="app-menu-link-icon" name="preferences" />
                   <span>{t("preferences")}</span>
                 </ProtectedLink>
                 <ProtectedLink
@@ -125,7 +116,7 @@ function AppShellContent({ locale, children }: AppShellProps) {
                   )}
                   href={`/${locale}/settings/openai-key`}
                 >
-                  <KeyRound className="app-menu-link-icon" aria-hidden="true" />
+                  <AppIcon className="app-menu-link-icon" name="api-key" />
                   <span>{t("openAiKey")}</span>
                 </ProtectedLink>
                 <Suspense fallback={<LocaleSwitchFallback label={t("language")} />}>
@@ -159,7 +150,7 @@ function AppShellContent({ locale, children }: AppShellProps) {
           )}
           href={`/${locale}/app`}
         >
-          <ClipboardList className="app-mobile-nav-icon" aria-hidden="true" />
+          <AppIcon className="app-mobile-nav-icon" name="recommend" />
           <span>{t("recommend")}</span>
         </ProtectedLink>
         <ProtectedLink
@@ -170,7 +161,7 @@ function AppShellContent({ locale, children }: AppShellProps) {
           )}
           href={`/${locale}/fridge`}
         >
-          <Refrigerator className="app-mobile-nav-icon" aria-hidden="true" />
+          <AppIcon className="app-mobile-nav-icon" name="fridge" />
           <span>{t("fridge")}</span>
         </ProtectedLink>
         <ProtectedLink
@@ -181,7 +172,7 @@ function AppShellContent({ locale, children }: AppShellProps) {
           )}
           href={`/${locale}/history`}
         >
-          <History className="app-mobile-nav-icon" aria-hidden="true" />
+          <AppIcon className="app-mobile-nav-icon" name="history" />
           <span>{t("history")}</span>
         </ProtectedLink>
         <details className="app-mobile-more">
@@ -189,7 +180,7 @@ function AppShellContent({ locale, children }: AppShellProps) {
             aria-current={isMorePath ? "page" : undefined}
             className={cn("app-mobile-nav-link", isMorePath && "app-mobile-nav-link-active")}
           >
-            <MoreHorizontal className="app-mobile-nav-icon" aria-hidden="true" />
+            <AppIcon className="app-mobile-nav-icon" name="more" />
             <span>{t("more")}</span>
           </summary>
           <div className="app-mobile-more-panel">
@@ -201,7 +192,7 @@ function AppShellContent({ locale, children }: AppShellProps) {
               )}
               href={`/${locale}/preferences`}
             >
-              <SlidersHorizontal className="app-menu-link-icon" aria-hidden="true" />
+              <AppIcon className="app-menu-link-icon" name="preferences" />
               <span>{t("preferences")}</span>
             </ProtectedLink>
             <ProtectedLink
@@ -214,7 +205,7 @@ function AppShellContent({ locale, children }: AppShellProps) {
               )}
               href={`/${locale}/settings/openai-key`}
             >
-              <KeyRound className="app-menu-link-icon" aria-hidden="true" />
+              <AppIcon className="app-menu-link-icon" name="api-key" />
               <span>{t("openAiKey")}</span>
             </ProtectedLink>
             <Suspense fallback={<LocaleSwitchFallback label={t("language")} />}>
@@ -246,7 +237,7 @@ function LocaleSwitchLinkWithSearch({ href, label }: { href: string; label: stri
 function LocaleSwitchLink({ href, label }: { href: string; label: string }) {
   return (
     <Link className="app-menu-link" href={href}>
-      <Languages className="app-menu-link-icon" aria-hidden="true" />
+      <AppIcon className="app-menu-link-icon" name="language" />
       <span>{label}</span>
     </Link>
   );
@@ -255,7 +246,7 @@ function LocaleSwitchLink({ href, label }: { href: string; label: string }) {
 function LocaleSwitchFallback({ label }: { label: string }) {
   return (
     <span className="app-menu-link" aria-disabled="true">
-      <Languages className="app-menu-link-icon" aria-hidden="true" />
+      <AppIcon className="app-menu-link-icon" name="language" />
       <span>{label}</span>
     </span>
   );

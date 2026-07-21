@@ -1,11 +1,11 @@
 "use client";
 
-import { ImageOff, Pencil, Plus, RefreshCw, Trash2, X } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
+import { AppIcon } from "@/components/ui/app-icon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -275,7 +275,7 @@ export function FridgeWorkbench() {
                       width={224}
                     />
                   ) : (
-                    <ImageOff className="app-image-frame-icon" />
+                    <AppIcon className="app-image-frame-icon" name="image-unavailable" />
                   )}
                 </div>
                 <div className="grid gap-2">
@@ -299,7 +299,7 @@ export function FridgeWorkbench() {
                       type="button"
                       variant="secondary"
                     >
-                      <Pencil className="app-button-icon" aria-hidden="true" />
+                      <AppIcon className="app-button-icon" name="edit" />
                       <span className="home-paper-button-label">{t("edit")}</span>
                     </Button>
                     {item.imageStatus === "failed" ? (
@@ -315,7 +315,7 @@ export function FridgeWorkbench() {
                         type="button"
                         variant="secondary"
                       >
-                        <RefreshCw className="app-button-icon" aria-hidden="true" />
+                        <AppIcon className="app-button-icon" name="retry" />
                         <span className="home-paper-button-label">{t("retryImage")}</span>
                       </Button>
                     ) : null}
@@ -331,7 +331,7 @@ export function FridgeWorkbench() {
                       type="button"
                       variant="ghost"
                     >
-                      <Trash2 className="app-button-icon" aria-hidden="true" />
+                      <AppIcon className="app-button-icon" name="delete" />
                       <span className="home-paper-button-label">{t("delete")}</span>
                     </Button>
                   </div>
@@ -391,7 +391,7 @@ export function FridgeWorkbench() {
               className="home-paper-button app-paper-button-primary"
               disabled={saving || editingItemBusy}
             >
-              <Plus className="app-button-icon" aria-hidden="true" />
+              <AppIcon className="app-button-icon" name="add" />
               <span className="home-paper-button-label">
                 {editingId ? t("saveChanges") : t("add")}
               </span>
@@ -413,7 +413,7 @@ export function FridgeWorkbench() {
                 type="button"
                 variant="secondary"
               >
-                <X className="app-button-icon" aria-hidden="true" />
+                <AppIcon className="app-button-icon" name="close" />
                 <span className="home-paper-button-label">{t("cancel")}</span>
               </Button>
             ) : null}
