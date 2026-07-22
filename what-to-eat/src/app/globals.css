@@ -1,5 +1,6 @@
 @import "../styles/tokens.css";
 @import "../styles/redesign.css";
+@import "../styles/button-skins.generated.css";
 
 @tailwind base;
 @tailwind components;
@@ -16,91 +17,207 @@
   user-select: none;
 }
 
-.home-paper-button,
-.app-image-retry-button {
-  --app-button-default: url("/ui/buttons/secondary-default.webp");
-  --app-button-hover: url("/ui/buttons/secondary-hover.webp");
-  --app-button-pressed: url("/ui/buttons/secondary-pressed.webp");
-  --app-button-skin-size: calc(100% - 8px) calc(100% - 6px);
+.app-button-surface {
   position: relative;
   isolation: isolate;
   border: 0;
   border-radius: 0;
   background-color: transparent;
-  background-image: var(--app-button-default);
-  background-position: center;
-  background-repeat: no-repeat;
-  /* Keep every generated state inside the same safe frame so the painted edge never gets clipped. */
-  background-size: var(--app-button-skin-size);
+  background-image: none;
   box-shadow: none;
   color: var(--color-ink);
   transition: filter var(--motion-fast) ease, opacity var(--motion-fast) ease,
     translate var(--motion-fast) ease;
 }
 
-.home-paper-button:hover,
-.home-paper-button:focus-visible,
-.app-image-retry-button:hover,
-.app-image-retry-button:focus-visible {
+.app-button-surface:hover,
+.app-button-surface:focus-visible,
+.app-button-surface:focus-within {
   background-color: transparent;
-  background-image: var(--app-button-hover);
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: var(--app-button-skin-size);
+  background-image: none;
   filter: saturate(1.04);
   translate: 0 -1px;
 }
 
-.home-paper-button:active,
-.app-image-retry-button:active {
+.app-button-surface:active {
   background-color: transparent;
-  background-image: var(--app-button-pressed);
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: var(--app-button-skin-size);
+  background-image: none;
   box-shadow: none;
   filter: none;
   translate: 0 1px;
 }
 
-.home-paper-button:disabled,
-.app-image-retry-button:disabled {
-  background-image: var(--app-button-default);
+.app-button-surface:is(:disabled, [aria-disabled="true"]) {
+  background-image: none;
   box-shadow: none;
   filter: grayscale(0.18);
   opacity: 0.52;
   translate: none;
 }
 
-.home-paper-button.app-paper-button-primary,
-.home-paper-button.home-hero-cta,
-.home-paper-button.app-nav-primary-active,
-.home-paper-button.app-menu-trigger-active {
-  --app-button-default: url("/ui/buttons/primary-default.webp");
-  --app-button-hover: url("/ui/buttons/primary-hover.webp");
-  --app-button-pressed: url("/ui/buttons/primary-pressed.webp");
-  background-color: transparent;
+.app-button-tone-primary {
   color: white;
   text-shadow: 0 1px 0 color-mix(in oklch, var(--color-outline) 70%, transparent);
 }
 
-.home-paper-button.app-paper-button-secondary,
-.home-paper-button.app-sign-in-button {
-  --app-button-default: url("/ui/buttons/secondary-default.webp");
-  --app-button-hover: url("/ui/buttons/secondary-hover.webp");
-  --app-button-pressed: url("/ui/buttons/secondary-pressed.webp");
-  background-color: transparent;
+.app-button-tone-secondary {
   color: var(--color-ink);
   text-shadow: none;
 }
 
-.home-paper-button.app-paper-button-danger {
-  --app-button-default: url("/ui/buttons/danger-default.webp");
-  --app-button-hover: url("/ui/buttons/danger-hover.webp");
-  --app-button-pressed: url("/ui/buttons/danger-pressed.webp");
-  background-color: transparent;
+.app-button-tone-danger {
   color: white;
   text-shadow: 0 1px 0 color-mix(in oklch, var(--color-outline) 75%, transparent);
+}
+
+.app-button-ghost {
+  background: transparent;
+  color: var(--color-ink);
+  text-shadow: none;
+}
+
+.app-button-size-compact {
+  min-height: 44px;
+  padding: 8px 24px;
+  font-size: 0.875rem;
+}
+
+.app-button-size-default {
+  min-height: 44px;
+  padding: 8px 24px;
+  font-size: 0.875rem;
+}
+
+.app-button-size-hero {
+  min-height: 54px;
+  padding: 12px 32px;
+  font-size: 1.08rem;
+}
+
+.app-button-size-provider {
+  display: grid;
+  width: min(100%, 360px);
+  height: 64px;
+  min-height: 64px;
+  grid-template-columns: 40px minmax(0, 1fr) 40px;
+  padding: 10px 24px;
+  font-size: 1rem;
+}
+
+.app-button-skin {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  display: grid;
+  grid-template-columns:
+    var(--app-button-skin-left-track) minmax(0, 1fr)
+    var(--app-button-skin-right-track);
+  grid-template-rows:
+    var(--app-button-skin-top-track) minmax(0, 1fr)
+    var(--app-button-skin-bottom-track);
+  background-image: var(--app-button-skin-center);
+  background-position: center;
+  background-repeat: repeat;
+  background-size: 1px 1px;
+  border-radius: 5px;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+.app-button-skin-slice {
+  display: block;
+  min-width: 0;
+  min-height: 0;
+  background-repeat: no-repeat;
+}
+
+.app-button-skin-slice[data-slice="top-left"] {
+  z-index: 2;
+  grid-area: 1 / 1;
+  background-image: var(--app-button-skin-top-left);
+  background-position: left top;
+  background-size:
+    var(--app-button-skin-left-track)
+    var(--app-button-skin-top-track);
+}
+
+.app-button-skin-slice[data-slice="top"] {
+  position: relative;
+  z-index: 1;
+  left: -1px;
+  grid-area: 1 / 2;
+  width: calc(100% + 2px);
+  background-image: var(--app-button-skin-top);
+  background-position: center var(--app-button-skin-top-offset);
+  background-repeat: repeat-x;
+  background-size: 1px auto;
+}
+
+.app-button-skin-slice[data-slice="top-right"] {
+  z-index: 2;
+  grid-area: 1 / 3;
+  background-image: var(--app-button-skin-top-right);
+  background-position: right top;
+  background-size:
+    var(--app-button-skin-right-track)
+    var(--app-button-skin-top-track);
+}
+
+.app-button-skin-slice[data-slice="left"] {
+  position: relative;
+  z-index: 1;
+  top: -1px;
+  grid-area: 2 / 1;
+  height: calc(100% + 2px);
+  background-image: var(--app-button-skin-left);
+  background-position: var(--app-button-skin-left-offset) center;
+  background-repeat: repeat-y;
+  background-size: auto 1px;
+}
+
+.app-button-skin-slice[data-slice="right"] {
+  position: relative;
+  z-index: 1;
+  top: -1px;
+  grid-area: 2 / 3;
+  height: calc(100% + 2px);
+  background-image: var(--app-button-skin-right);
+  background-position: calc(100% - var(--app-button-skin-right-offset)) center;
+  background-repeat: repeat-y;
+  background-size: auto 1px;
+}
+
+.app-button-skin-slice[data-slice="bottom-left"] {
+  z-index: 2;
+  grid-area: 3 / 1;
+  background-image: var(--app-button-skin-bottom-left);
+  background-position: left bottom;
+  background-size:
+    var(--app-button-skin-left-track)
+    var(--app-button-skin-bottom-track);
+}
+
+.app-button-skin-slice[data-slice="bottom"] {
+  position: relative;
+  z-index: 1;
+  left: -1px;
+  grid-area: 3 / 2;
+  width: calc(100% + 2px);
+  background-image: var(--app-button-skin-bottom);
+  background-position: center calc(100% - var(--app-button-skin-bottom-offset));
+  background-repeat: repeat-x;
+  background-size: 1px auto;
+}
+
+.app-button-skin-slice[data-slice="bottom-right"] {
+  z-index: 2;
+  grid-area: 3 / 3;
+  background-image: var(--app-button-skin-bottom-right);
+  background-position: right bottom;
+  background-size:
+    var(--app-button-skin-right-track)
+    var(--app-button-skin-bottom-track);
 }
 
 .home-paper-button-icon {
@@ -192,91 +309,29 @@
 }
 
 .auth-provider-button {
-  --app-provider-skin: url("/ui/buttons/secondary-default.webp");
-  position: relative;
-  width: min(100%, 360px);
-  min-height: 0;
-  aspect-ratio: 10 / 3;
-  grid-template-columns: 48px minmax(0, 1fr) 48px;
-  isolation: isolate;
-  padding: 12px 26px;
-  border: 0;
-  border-radius: 0;
-  background-color: transparent;
-  background-image: var(--app-provider-skin);
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: calc(100% - 8px) auto;
-  box-shadow: none;
+  font-weight: 760;
 }
 
 .app-user-button {
-  --app-sliced-skin: url("/ui/buttons/secondary-default.webp");
   position: relative;
   isolation: isolate;
   border: 0;
   border-radius: 0;
   background: transparent;
   box-shadow: none;
+  min-height: 44px;
+  padding-inline: 24px;
 }
 
-.app-user-button::before {
-  content: "";
-  position: absolute;
-  z-index: 0;
-  inset: 2px 3px;
-  border: 16px solid transparent;
-  border-image-source: var(--app-sliced-skin);
-  border-image-slice: 30 76 fill;
-  border-image-width: 16px 38px;
-  border-image-repeat: stretch;
-  pointer-events: none;
-}
-
-.app-user-button > * {
+.app-user-button > :not(.app-button-skin) {
   position: relative;
   z-index: 1;
 }
 
-.app-user-button:hover,
-.app-user-button:focus-within {
-  --app-sliced-skin: url("/ui/buttons/secondary-hover.webp");
-}
-
-.auth-provider-button:hover,
-.auth-provider-button:focus-visible {
-  --app-provider-skin: url("/ui/buttons/secondary-hover.webp");
-  background-color: transparent;
-  background-image: var(--app-provider-skin);
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: calc(100% - 8px) auto;
-  filter: saturate(1.04);
-  translate: 0 -1px;
-}
-
-.auth-provider-button:active {
-  --app-provider-skin: url("/ui/buttons/secondary-pressed.webp");
-  background-color: transparent;
-  background-image: var(--app-provider-skin);
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: calc(100% - 8px) auto;
-  filter: none;
-  translate: 0 1px;
-}
-
-.auth-provider-button:disabled {
-  --app-provider-skin: url("/ui/buttons/secondary-default.webp");
-  filter: grayscale(0.18);
-  opacity: 0.52;
-  translate: none;
-}
-
 .auth-provider-icon {
   display: block;
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   margin-inline: auto;
   object-fit: contain;
 }
@@ -313,7 +368,7 @@
   height: 32px;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 860px) {
   .home-paper-button-icon,
   .app-nav-icon,
   .app-button-icon {

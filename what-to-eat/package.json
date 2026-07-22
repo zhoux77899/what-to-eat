@@ -4,6 +4,7 @@
   "private": true,
   "packageManager": "pnpm@11.1.2",
   "scripts": {
+    "assets:buttons": "node scripts/generate-button-slices.mjs",
     "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",

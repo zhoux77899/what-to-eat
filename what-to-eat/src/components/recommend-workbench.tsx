@@ -404,7 +404,7 @@ function RecommendationRequestStrip({
           </button>
         </div>
       </div>
-      <Button className="home-paper-button app-paper-button-primary app-generate-button" disabled={busy}>
+      <Button className="app-generate-button" disabled={busy} variant="primary">
         {busy ? (
           <AppIcon className="app-button-icon animate-spin" name="loading" />
         ) : (
@@ -475,10 +475,12 @@ function DishRecommendationCard({
               onConsumptionChange={onConsumptionChange}
             />
             <Button
-              className="home-paper-button app-paper-button-compact app-paper-button-danger app-confirm-consumption-button"
+              className="app-confirm-consumption-button"
               disabled={busy || confirmed || dish.consumptions.length === 0}
               onClick={() => onConfirm(dish)}
+              size="compact"
               type="button"
+              variant="danger"
             >
               <AppIcon className="app-button-icon" name="confirm" />
               <span className="home-paper-button-label">
@@ -527,9 +529,10 @@ function DishImageFrame({
       </span>
       {dish.image.status === "failed" ? (
         <Button
-          className="home-paper-button app-paper-button-compact app-paper-button-secondary app-image-retry-button"
+          className="app-image-retry-button"
           disabled={retrying}
           onClick={() => onRetry(dish.id)}
+          size="compact"
           type="button"
           variant="secondary"
         >

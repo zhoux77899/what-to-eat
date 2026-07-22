@@ -106,8 +106,8 @@ export function OpenAiKeyWorkbench() {
       </label>
       <div className="app-action-row">
         <Button
-          className="home-paper-button app-paper-button-primary"
           disabled={!loaded || keyBusy || apiKey.trim().length === 0}
+          variant="primary"
         >
           <AppIcon className="app-button-icon" name="secure-key" />
           <span className="home-paper-button-label">
@@ -115,9 +115,9 @@ export function OpenAiKeyWorkbench() {
           </span>
         </Button>
         <Button
-          className="home-paper-button app-paper-button-compact app-paper-button-secondary"
           disabled={!loaded || keyBusy || status === "not_configured"}
           onClick={validate}
+          size="compact"
           type="button"
           variant="secondary"
         >
@@ -126,11 +126,11 @@ export function OpenAiKeyWorkbench() {
           </span>
         </Button>
         <Button
-          className="home-paper-button app-paper-button-compact app-paper-button-danger"
           disabled={!loaded || keyBusy || !hasStoredKey}
           onClick={() => setDeleteOpen(true)}
+          size="compact"
           type="button"
-          variant="ghost"
+          variant="danger"
         >
           <AppIcon className="app-button-icon" name="delete" />
           <span className="home-paper-button-label">{t("delete")}</span>

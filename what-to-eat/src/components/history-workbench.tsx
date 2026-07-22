@@ -180,9 +180,9 @@ export function HistoryWorkbench({ locale }: { locale: string }) {
     return (
       <div className="app-empty-state">
         <p>{t("empty")}</p>
-        <Link className="home-paper-button app-paper-button-primary" href={`/${locale}/app`}>
-          {t("emptyAction")}
-        </Link>
+        <Button asChild variant="primary">
+          <Link href={`/${locale}/app`}>{t("emptyAction")}</Link>
+        </Button>
       </div>
     );
   }
@@ -208,7 +208,6 @@ export function HistoryWorkbench({ locale }: { locale: string }) {
           <div className="app-history-entry-body">
           <div className="app-history-entry-header app-action-row app-action-row-compact">
             <Button
-              className="home-paper-button app-paper-button-compact app-paper-button-danger"
               disabled={deletingRowIds.includes(recommendation.id)}
               onClick={() =>
                 setPendingDelete({
@@ -217,8 +216,9 @@ export function HistoryWorkbench({ locale }: { locale: string }) {
                   type: "recommendation"
                 })
               }
+              size="compact"
               type="button"
-              variant="ghost"
+              variant="danger"
             >
               <AppIcon className="app-button-icon" name="delete" />
               <span className="home-paper-button-label">{t("deleteRecommendation")}</span>
@@ -268,13 +268,13 @@ export function HistoryWorkbench({ locale }: { locale: string }) {
                   <div className="app-action-row app-action-row-compact">
                     {dish.imageStatus === "failed" ? (
                       <Button
-                        className="home-paper-button app-paper-button-compact app-paper-button-secondary"
                         disabled={
                           recommendationDeleting(recommendation.id) ||
                           deletingRowIds.includes(dish.id) ||
                           retryingRowIds.includes(dish.id)
                         }
                         onClick={() => retryImage(dish.id)}
+                        size="compact"
                         type="button"
                         variant="secondary"
                       >
@@ -283,7 +283,6 @@ export function HistoryWorkbench({ locale }: { locale: string }) {
                       </Button>
                     ) : null}
                     <Button
-                      className="home-paper-button app-paper-button-compact app-paper-button-danger"
                       disabled={
                         recommendationDeleting(recommendation.id) ||
                         deletingRowIds.includes(dish.id) ||
@@ -296,8 +295,9 @@ export function HistoryWorkbench({ locale }: { locale: string }) {
                           type: "dish"
                         })
                       }
+                      size="compact"
                       type="button"
-                      variant="ghost"
+                      variant="danger"
                     >
                       <AppIcon className="app-button-icon" name="delete" />
                       <span className="home-paper-button-label">{t("deleteDish")}</span>

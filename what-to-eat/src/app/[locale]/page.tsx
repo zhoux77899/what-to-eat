@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ProtectedLink } from "@/components/auth/protected-link";
 import { BrandLogoImage } from "@/components/brand-assets";
 import { AppIcon } from "@/components/ui/app-icon";
+import { Button } from "@/components/ui/button";
 
 export default async function HomePage({
   params,
@@ -33,14 +34,17 @@ export default async function HomePage({
   return (
     <main aria-label={t("pageLabel")} className="home-hero">
       <h1 className="sr-only">{t("title")}</h1>
-      <Link
-        aria-label={navigationT("language")}
-        className="home-paper-button home-language-toggle"
-        href={localeHref}
+      <Button
+        asChild
+        className="home-language-toggle"
+        size="compact"
+        variant="secondary"
       >
-        <AppIcon className="home-paper-button-icon" name="language" />
-        <span className="home-paper-button-label">{navigationT("language")}</span>
-      </Link>
+        <Link aria-label={navigationT("language")} href={localeHref}>
+          <AppIcon className="home-paper-button-icon" name="language" />
+          <span className="home-paper-button-label">{navigationT("language")}</span>
+        </Link>
+      </Button>
       <section className="home-hero-stage">
         <div className="home-hero-logo-card">
           <BrandLogoImage
@@ -49,10 +53,14 @@ export default async function HomePage({
             locale={brandLocale}
           />
         </div>
-        <ProtectedLink className="home-paper-button home-hero-cta" href={`/${locale}/app`}>
-          <AppIcon className="home-paper-button-icon" name="generate" />
-          <span className="home-paper-button-label home-hero-cta-label">{t("primaryAction")}</span>
-        </ProtectedLink>
+        <Button asChild className="home-hero-cta" size="hero" variant="primary">
+          <ProtectedLink href={`/${locale}/app`}>
+            <AppIcon className="home-paper-button-icon" name="generate" />
+            <span className="home-paper-button-label home-hero-cta-label">
+              {t("primaryAction")}
+            </span>
+          </ProtectedLink>
+        </Button>
       </section>
       <aside aria-label={t("stepsLabel")} className="home-hero-steps">
         {[t("stepFridge"), t("stepRecommend"), t("stepCook")].map((step, index) => (

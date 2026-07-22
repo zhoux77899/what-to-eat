@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { AppIcon } from "@/components/ui/app-icon";
+import { Button } from "@/components/ui/button";
 
 type AuthModalProps = {
   locale: string;
@@ -108,28 +109,32 @@ export function AuthModal({ locale, open, returnTo, onClose }: AuthModalProps) {
             </div>
 
             <div className="auth-provider-list">
-              <button
+              <Button
                 className="auth-provider-button auth-provider-button-google"
                 disabled={!isSignInLoaded || pendingStrategy !== null}
                 onClick={() => void startOAuth("oauth_google")}
+                size="provider"
                 type="button"
+                variant="secondary"
               >
                 <GoogleStickerIcon />
                 <span className="auth-provider-button-label">
                   {pendingStrategy === "oauth_google" ? t("loading") : t("signInWithGoogle")}
                 </span>
-              </button>
-              <button
+              </Button>
+              <Button
                 className="auth-provider-button auth-provider-button-github"
                 disabled={!isSignInLoaded || pendingStrategy !== null}
                 onClick={() => void startOAuth("oauth_github")}
+                size="provider"
                 type="button"
+                variant="secondary"
               >
                 <GitHubStickerIcon />
                 <span className="auth-provider-button-label">
                   {pendingStrategy === "oauth_github" ? t("loading") : t("signInWithGitHub")}
                 </span>
-              </button>
+              </Button>
             </div>
 
             {hasError ? (

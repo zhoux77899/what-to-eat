@@ -65,7 +65,7 @@ export function ConfirmDeleteDialog({
             <div className="app-confirm-dialog-actions">
               <Dialog.Close asChild>
                 <Button
-                  className="home-paper-button app-paper-button-compact app-paper-button-secondary"
+                  size="compact"
                   type="button"
                   variant="secondary"
                 >
@@ -73,11 +73,11 @@ export function ConfirmDeleteDialog({
                 </Button>
               </Dialog.Close>
               <Button
-                className="home-paper-button app-paper-button-compact app-paper-button-danger"
                 disabled={disabled}
                 onClick={onConfirm}
+                size="compact"
                 type="button"
-                variant="ghost"
+                variant="danger"
               >
                 <span className="home-paper-button-label">{confirmLabel}</span>
               </Button>

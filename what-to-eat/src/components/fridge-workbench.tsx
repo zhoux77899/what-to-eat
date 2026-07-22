@@ -242,7 +242,6 @@ export function FridgeWorkbench() {
           <div className="app-empty-state" role="alert">
             <p>{errorKey ? tErrors(errorKey) : null}</p>
             <Button
-              className="home-paper-button app-paper-button-secondary"
               onClick={() => void loadItems(true)}
               type="button"
               variant="secondary"
@@ -290,12 +289,12 @@ export function FridgeWorkbench() {
                   </div>
                   <div className="app-action-row app-action-row-compact">
                     <Button
-                      className="home-paper-button app-paper-button-compact app-paper-button-secondary"
                       disabled={
                         saving ||
                         deletingItemIds.includes(item.id) || retryingItemIds.includes(item.id)
                       }
                       onClick={() => startEditing(item)}
+                      size="compact"
                       type="button"
                       variant="secondary"
                     >
@@ -304,7 +303,6 @@ export function FridgeWorkbench() {
                     </Button>
                     {item.imageStatus === "failed" ? (
                       <Button
-                        className="home-paper-button app-paper-button-compact app-paper-button-secondary"
                         disabled={
                           deletingItemIds.includes(item.id) ||
                           retryingItemIds.includes(item.id) ||
@@ -312,6 +310,7 @@ export function FridgeWorkbench() {
                           editingId === item.id
                         }
                         onClick={() => retryImage(item.id)}
+                        size="compact"
                         type="button"
                         variant="secondary"
                       >
@@ -320,7 +319,6 @@ export function FridgeWorkbench() {
                       </Button>
                     ) : null}
                     <Button
-                      className="home-paper-button app-paper-button-compact app-paper-button-danger"
                       disabled={
                         editingId === item.id ||
                         savingItemId === item.id ||
@@ -328,8 +326,9 @@ export function FridgeWorkbench() {
                         retryingItemIds.includes(item.id)
                       }
                       onClick={() => setPendingDelete(item)}
+                      size="compact"
                       type="button"
-                      variant="ghost"
+                      variant="danger"
                     >
                       <AppIcon className="app-button-icon" name="delete" />
                       <span className="home-paper-button-label">{t("delete")}</span>
@@ -388,8 +387,8 @@ export function FridgeWorkbench() {
           </label>
           <div className="app-action-row">
             <Button
-              className="home-paper-button app-paper-button-primary"
               disabled={saving || editingItemBusy}
+              variant="primary"
             >
               <AppIcon className="app-button-icon" name="add" />
               <span className="home-paper-button-label">
@@ -398,7 +397,6 @@ export function FridgeWorkbench() {
             </Button>
             {editingId ? (
               <Button
-                className="home-paper-button app-paper-button-secondary"
                 disabled={saving}
                 onClick={() => {
                   if (savingOperationRef.current) return;

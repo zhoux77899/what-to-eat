@@ -1093,7 +1093,7 @@ textarea {
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 860px) {
   .app-page-title {
     font-size: 1.65rem;
   }
