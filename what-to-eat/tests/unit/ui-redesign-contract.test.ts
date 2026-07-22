@@ -14,6 +14,7 @@ describe("full-site UI redesign contract", () => {
 
     expect(globals).toContain('@import "../styles/tokens.css"');
     expect(globals).toContain('@import "../styles/redesign.css"');
+    expect(globals).toContain('@import "../styles/button-skins.generated.css"');
     expect(tokens).toContain("oklch(");
     expect(tokens).toContain("--color-primary");
     expect(tokens).toContain("--color-danger");
@@ -131,15 +132,56 @@ describe("full-site UI redesign contract", () => {
     expect(styles).not.toMatch(/border-(left|right):\s*(?:[3-9]|\d{2,})px/);
   });
 
-  it("restores provider sticker artwork and keeps account actions only where needed", () => {
+  it("uses raster provider artwork and the shared tileable account surface", () => {
     const auth = read("src/components/auth/auth-modal.tsx");
     const shell = read("src/components/app-shell.tsx");
+    const globals = read("src/app/globals.css");
 
     expect(auth).toContain("GoogleStickerIcon");
     expect(auth).toContain("GitHubStickerIcon");
-    expect(auth).toContain("auth-provider-icon-paper");
+    expect(auth).toContain('src="/ui/providers/google.webp"');
+    expect(auth).toContain('src="/ui/providers/github.webp"');
+    expect(auth).not.toContain("<svg");
     expect(shell).not.toContain('className="app-menu-account"');
     expect(shell).toContain('className="app-mobile-account"');
+    expect(shell).toContain('className="app-button-surface app-user-button"');
+    expect(shell).toContain('<ButtonSkin tone="secondary" />');
+    expect(auth).toContain('size="provider"');
+    expect(globals).toContain("height: 64px");
+    expect(globals).toContain("grid-template-columns: 40px minmax(0, 1fr) 40px");
+    expect(globals).not.toContain("aspect-ratio: 10 / 3");
+    expect(globals).not.toContain("border-image");
+  });
+
+  it("assembles minimal repeated button slices without full-frame runtime scaling", () => {
+    const globals = read("src/app/globals.css");
+    const generated = read("src/styles/button-skins.generated.css");
+    const button = read("src/components/ui/button.tsx");
+    const skin = read("src/components/ui/button-skin.tsx");
+    const generator = read("scripts/generate-button-slices.mjs");
+    const skinRule = globals.match(/\.app-button-skin \{[\s\S]*?\n\}/)?.[0] ?? "";
+
+    expect(button).toContain("Slottable");
+    expect(button).toContain('danger: "app-button-tone-danger"');
+    expect(skin).toContain("buttonSkinSlices");
+    expect(skin).toContain('data-slice={slice}');
+    expect(globals).toContain("background-repeat: repeat");
+    expect(globals).toContain("background-size: 1px 1px");
+    expect(globals).toContain("background-repeat: repeat-x");
+    expect(globals).toContain("background-repeat: repeat-y");
+    expect(globals).toContain("width: calc(100% + 2px)");
+    expect(globals).not.toContain("background-size: 100% 100%");
+    expect(globals).not.toContain("grid-template-rows: 30fr 48fr 30fr");
+    expect(generator).toContain("repeatSample = { x: 179, y: 53, size: 2 }");
+    expect(generator).toContain('assetRecord(rect, name, "repeat-x")');
+    expect(generator).toContain('assetRecord(rect, name, "repeat-y")');
+    expect(generated).toContain("/ui/buttons/slices/primary/default/top-left.webp");
+    expect(generated).toContain("/ui/buttons/slices/danger/pressed/bottom-right.webp");
+    expect(generated).not.toMatch(/\/ui\/buttons\/(primary|secondary|danger)-(default|hover|pressed)\.webp/);
+    expect(generated).toContain("--app-button-skin-top-offset");
+    expect(skinRule).toContain("border-radius: 5px");
+    expect(skinRule).toContain("overflow: hidden");
+    expect(globals).not.toContain("aspect-ratio");
   });
 
   it("makes recommendation history collapsible and prevents preference writes after load failure", () => {

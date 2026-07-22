@@ -1,0 +1,135 @@
+{
+  "generator": "built-in ImageGen precise-object-edit with deterministic Sharp reconstruction",
+  "canvas": {
+    "width": 360,
+    "height": 108
+  },
+  "canonicalBounds": {
+    "left": 28,
+    "top": 4,
+    "width": 304,
+    "height": 100
+  },
+  "tones": {
+    "primary": {
+      "prompt": "Use case: precise-object-edit\nAsset type: Japanese anime cooking-game UI button background master\nInput images: Image 1 is the edit target and exact geometry reference.\nPrimary request: Remove only the visible mottled paper/fabric texture from the olive-green interior. Rebuild the interior as one perfectly uniform, opaque flat olive-green color sampled from the original image.\nComposition: Preserve the exact wide rounded-rectangle silhouette, proportions, padding, and centered placement of Image 1.\nStyle: Preserve the original hand-drawn Japanese game UI style.\nConstraints: Keep the corner flourishes, pale-gold inner highlights, dark double outline, lower shadow, antialiased edges, original olive-green palette, and every decorative line in exactly the same position and thickness. Change only the interior texture. No gradient, noise, grain, paper texture, fabric texture, lighting variation, text, icon, watermark, or new decoration.\nBackdrop: Place the entire button on one perfectly flat solid #00FFFF chroma-key background. The backdrop must contain no shadows, gradients, texture, reflections, or color variation. Do not use #00FFFF anywhere inside the button.",
+      "generatedSourceSha256": "7d397e18927eb2574fee29eedd533f920361202cb17d19a3f52cc0440618a22b",
+      "originalMasterSha256": {
+        "default": "68c65e900b4b7a88679937c09a5ecc6fe80b122f4c1da99166f967710d385f48",
+        "hover": "9e11245a55a35f46cf63f1b45407c7cc08461735fb6638f1967861a9ab463e76",
+        "pressed": "59a6f094201dea4b82bf8bc79e613057842efdd9546aafa37af2fd7d518a79d0"
+      },
+      "outputMasterSha256": {
+        "default": "b08130813fcfee42ed56ac6d207c5618d42b271a57ff6ce04b689f0939043fdd",
+        "hover": "f76eab132e00e5ddabdf29ca9288a96eb152a253828ae78d57a4204e6c678699",
+        "pressed": "eb7aa12c626cb541ee9440210f1612c4444d3de3510918757dc7d0989d6f20d2"
+      },
+      "states": {
+        "default": {
+          "fill": "#7b893d",
+          "deltaOklab": [
+            0,
+            0,
+            0
+          ]
+        },
+        "hover": {
+          "fill": "#949e3a",
+          "deltaOklab": [
+            0.06925292,
+            -0.00326454,
+            0.0226804
+          ]
+        },
+        "pressed": {
+          "fill": "#5b6a2a",
+          "deltaOklab": [
+            -0.1043777,
+            0.00226514,
+            -0.01265918
+          ]
+        }
+      }
+    },
+    "secondary": {
+      "prompt": "Use case: precise-object-edit\nAsset type: Japanese anime cooking-game UI button background master\nInput images: Image 1 is the edit target and exact geometry reference.\nPrimary request: Remove only the visible paper texture from the warm ivory interior. Rebuild the interior as one perfectly uniform, opaque flat warm-ivory color sampled from the original image.\nComposition: Preserve the exact wide rounded-rectangle silhouette, proportions, padding, and centered placement of Image 1.\nStyle: Preserve the original hand-drawn Japanese game UI style.\nConstraints: Keep the corner flourishes, pale-gold inner highlights, dark double outline, lower shadow, antialiased edges, original warm-ivory palette, and every decorative line in exactly the same position and thickness. Change only the interior texture. No gradient, noise, grain, paper texture, fabric texture, lighting variation, text, icon, watermark, or new decoration.\nBackdrop: Place the entire button on one perfectly flat solid #00FFFF chroma-key background. The backdrop must contain no shadows, gradients, texture, reflections, or color variation. Do not use #00FFFF anywhere inside the button.",
+      "generatedSourceSha256": "b36679706a09f467e64cf8b3d5847ad4bc76f842b9bd2e803f1bb985a006d9cd",
+      "originalMasterSha256": {
+        "default": "31a25c990dd5a5383c58769217cd809fb1cb449135918b085c260ff790cfeb79",
+        "hover": "cd12ac378681032cf46bdf0d869dcc6b9d028fc2491dd30581873960d050f517",
+        "pressed": "5d9fff79641c531b377716ea90dc316b89a01350ddf6559dbb268fc1fe7c1cbf"
+      },
+      "outputMasterSha256": {
+        "default": "1b640cd38b648ce3534761b758fd9f7098d83f5731e12249f22d46f590512b83",
+        "hover": "f101fb2127022f290dfb24bf0f84321e7736ae413e899a1c09260f4476274d76",
+        "pressed": "856dc0e54a9ea5caad3a746ea0d7f20301bd73241c1e61c4a29096753eb8d666"
+      },
+      "states": {
+        "default": {
+          "fill": "#f9f1da",
+          "deltaOklab": [
+            0,
+            0,
+            0
+          ]
+        },
+        "hover": {
+          "fill": "#fcf1d3",
+          "deltaOklab": [
+            0.00075036,
+            0.00037326,
+            0.00945821
+          ]
+        },
+        "pressed": {
+          "fill": "#f2e2c5",
+          "deltaOklab": [
+            -0.04012496,
+            0.00601643,
+            0.0102671
+          ]
+        }
+      }
+    },
+    "danger": {
+      "prompt": "Use case: precise-object-edit\nAsset type: Japanese anime cooking-game UI button background master\nInput images: Image 1 is the edit target and exact geometry reference.\nPrimary request: Remove only the visible mottled paper/fabric texture from the vivid red interior. Rebuild the interior as one perfectly uniform, opaque flat vivid-red color sampled from the original image.\nComposition: Preserve the exact wide rounded-rectangle silhouette, proportions, padding, and centered placement of Image 1.\nStyle: Preserve the original hand-drawn Japanese game UI style.\nConstraints: Keep the corner flourishes, pale-gold inner highlights, dark double outline, lower shadow, antialiased edges, original vivid-red palette, and every decorative line in exactly the same position and thickness. Change only the interior texture. No gradient, noise, grain, paper texture, fabric texture, lighting variation, text, icon, watermark, or new decoration.\nBackdrop: Place the entire button on one perfectly flat solid #00FFFF chroma-key background. The backdrop must contain no shadows, gradients, texture, reflections, or color variation. Do not use #00FFFF anywhere inside the button.",
+      "generatedSourceSha256": "c55e3f1f84151e75cf0a548dadfde89f1d9e5de80e5cad3aae093eea5f2680f7",
+      "originalMasterSha256": {
+        "default": "b5341b6292207d260999d2e67cac500433ebb18c3653418074e8be10f326b9ad",
+        "hover": "447be4806d09df5103a9aa2919000a21b265c7f17d4f0c56096883df7de539cb",
+        "pressed": "d88f895429bdde757be8ce6aaa9356abc9db602666709e88c23113b8ef449833"
+      },
+      "outputMasterSha256": {
+        "default": "1feee4fbdc28a5d31dd7044283829a60d87990d9f4627ef3488c6c34239eacaa",
+        "hover": "017c834d9c1129a55edae21da17d41e7477d1287ae593d4ede976480cc8429aa",
+        "pressed": "8be3af2ef190bdbcc77bf5c22355c7de9a4d4d34da1ce51dd7c2446587ce282d"
+      },
+      "states": {
+        "default": {
+          "fill": "#f9291e",
+          "deltaOklab": [
+            0,
+            0,
+            0
+          ]
+        },
+        "hover": {
+          "fill": "#fd1111",
+          "deltaOklab": [
+            -0.00323356,
+            0.01216318,
+            0.00476624
+          ]
+        },
+        "pressed": {
+          "fill": "#e90a0c",
+          "deltaOklab": [
+            -0.04229647,
+            -0.00042486,
+            -0.00216163
+          ]
+        }
+      }
+    }
+  }
+}

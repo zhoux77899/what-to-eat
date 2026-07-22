@@ -1,12 +1,12 @@
 "use client";
 
-import { ChevronDown, ImageOff, RefreshCw, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
+import { AppIcon } from "@/components/ui/app-icon";
 import { Button } from "@/components/ui/button";
 import {
   getImageStatusPollDelay,
@@ -180,9 +180,9 @@ export function HistoryWorkbench({ locale }: { locale: string }) {
     return (
       <div className="app-empty-state">
         <p>{t("empty")}</p>
-        <Link className="home-paper-button app-paper-button-primary" href={`/${locale}/app`}>
-          {t("emptyAction")}
-        </Link>
+        <Button asChild variant="primary">
+          <Link href={`/${locale}/app`}>{t("emptyAction")}</Link>
+        </Button>
       </div>
     );
   }
@@ -196,18 +196,18 @@ export function HistoryWorkbench({ locale }: { locale: string }) {
       ) : null}
       {recommendations.map((recommendation) => (
         <details className="app-history-entry" key={recommendation.id}>
+          <AppIcon className="app-history-timeline-marker" name="timeline-marker" />
           <summary className="app-history-entry-summary">
             <span className="app-muted-text">
               {t("generatedAt", {
                 date: new Date(recommendation.createdAt).toLocaleString(recommendation.locale)
               })}
             </span>
-            <ChevronDown className="app-history-entry-chevron" aria-hidden="true" />
+            <AppIcon className="app-history-entry-chevron" name="chevron-down" />
           </summary>
           <div className="app-history-entry-body">
           <div className="app-history-entry-header app-action-row app-action-row-compact">
             <Button
-              className="home-paper-button app-paper-button-compact app-paper-button-danger"
               disabled={deletingRowIds.includes(recommendation.id)}
               onClick={() =>
                 setPendingDelete({
@@ -216,10 +216,11 @@ export function HistoryWorkbench({ locale }: { locale: string }) {
                   type: "recommendation"
                 })
               }
+              size="compact"
               type="button"
-              variant="ghost"
+              variant="danger"
             >
-              <Trash2 className="app-button-icon" aria-hidden="true" />
+              <AppIcon className="app-button-icon" name="delete" />
               <span className="home-paper-button-label">{t("deleteRecommendation")}</span>
             </Button>
           </div>
@@ -242,7 +243,7 @@ export function HistoryWorkbench({ locale }: { locale: string }) {
                       width={224}
                     />
                   ) : (
-                    <ImageOff className="app-image-frame-icon" />
+                    <AppIcon className="app-image-frame-icon" name="image-unavailable" />
                   )}
                 </div>
                 <div className="grid gap-2">
@@ -267,22 +268,21 @@ export function HistoryWorkbench({ locale }: { locale: string }) {
                   <div className="app-action-row app-action-row-compact">
                     {dish.imageStatus === "failed" ? (
                       <Button
-                        className="home-paper-button app-paper-button-compact app-paper-button-secondary"
                         disabled={
                           recommendationDeleting(recommendation.id) ||
                           deletingRowIds.includes(dish.id) ||
                           retryingRowIds.includes(dish.id)
                         }
                         onClick={() => retryImage(dish.id)}
+                        size="compact"
                         type="button"
                         variant="secondary"
                       >
-                        <RefreshCw className="app-button-icon" aria-hidden="true" />
+                        <AppIcon className="app-button-icon" name="retry" />
                         <span className="home-paper-button-label">{t("retryImage")}</span>
                       </Button>
                     ) : null}
                     <Button
-                      className="home-paper-button app-paper-button-compact app-paper-button-danger"
                       disabled={
                         recommendationDeleting(recommendation.id) ||
                         deletingRowIds.includes(dish.id) ||
@@ -295,10 +295,11 @@ export function HistoryWorkbench({ locale }: { locale: string }) {
                           type: "dish"
                         })
                       }
+                      size="compact"
                       type="button"
-                      variant="ghost"
+                      variant="danger"
                     >
-                      <Trash2 className="app-button-icon" aria-hidden="true" />
+                      <AppIcon className="app-button-icon" name="delete" />
                       <span className="home-paper-button-label">{t("deleteDish")}</span>
                     </Button>
                   </div>

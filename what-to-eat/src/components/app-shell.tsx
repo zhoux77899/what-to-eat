@@ -1,16 +1,6 @@
 "use client";
 
 import { UserButton, useAuth, useUser } from "@clerk/nextjs";
-import {
-  ClipboardList,
-  ChevronDown,
-  History,
-  KeyRound,
-  Languages,
-  MoreHorizontal,
-  Refrigerator,
-  SlidersHorizontal
-} from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -20,6 +10,9 @@ import { useAuthModal } from "@/components/auth/auth-modal-provider";
 import { useAuthRuntime } from "@/components/auth/auth-runtime-provider";
 import { ProtectedLink } from "@/components/auth/protected-link";
 import { BrandLogoImage } from "@/components/brand-assets";
+import { AppIcon } from "@/components/ui/app-icon";
+import { Button } from "@/components/ui/button";
+import { ButtonSkin } from "@/components/ui/button-skin";
 import { cn } from "@/lib/utils";
 
 type AppShellProps = {
@@ -54,53 +47,61 @@ function AppShellContent({ locale, children }: AppShellProps) {
           <span className="app-shell-brand-divider" aria-hidden="true" />
 
           <nav aria-label={t("appNavigation")} className="app-shell-nav">
-            <ProtectedLink
-              aria-current={isCurrentPath(`/${locale}/app`) ? "page" : undefined}
-              className={cn(
-                "home-paper-button app-nav-primary",
-                isCurrentPath(`/${locale}/app`) && "app-nav-primary-active"
-              )}
-              href={`/${locale}/app`}
+            <Button
+              asChild
+              size="compact"
+              variant={isCurrentPath(`/${locale}/app`) ? "primary" : "secondary"}
             >
-              <ClipboardList className="app-nav-icon" aria-hidden="true" />
-              <span className="home-paper-button-label">{t("recommend")}</span>
-            </ProtectedLink>
+              <ProtectedLink
+                aria-current={isCurrentPath(`/${locale}/app`) ? "page" : undefined}
+                className="app-nav-primary"
+                href={`/${locale}/app`}
+              >
+                <AppIcon className="app-nav-icon" name="recommend" />
+                <span className="home-paper-button-label">{t("recommend")}</span>
+              </ProtectedLink>
+            </Button>
 
-            <ProtectedLink
-              aria-current={isCurrentPath(`/${locale}/fridge`) ? "page" : undefined}
-              className={cn(
-                "home-paper-button app-nav-primary",
-                isCurrentPath(`/${locale}/fridge`) && "app-nav-primary-active"
-              )}
-              href={`/${locale}/fridge`}
+            <Button
+              asChild
+              size="compact"
+              variant={isCurrentPath(`/${locale}/fridge`) ? "primary" : "secondary"}
             >
-              <Refrigerator className="app-nav-icon" aria-hidden="true" />
-              <span className="home-paper-button-label">{t("fridge")}</span>
-            </ProtectedLink>
+              <ProtectedLink
+                aria-current={isCurrentPath(`/${locale}/fridge`) ? "page" : undefined}
+                className="app-nav-primary"
+                href={`/${locale}/fridge`}
+              >
+                <AppIcon className="app-nav-icon" name="fridge" />
+                <span className="home-paper-button-label">{t("fridge")}</span>
+              </ProtectedLink>
+            </Button>
 
-            <ProtectedLink
-              aria-current={isCurrentPath(`/${locale}/history`) ? "page" : undefined}
-              className={cn(
-                "home-paper-button app-nav-primary",
-                isCurrentPath(`/${locale}/history`) && "app-nav-primary-active"
-              )}
-              href={`/${locale}/history`}
+            <Button
+              asChild
+              size="compact"
+              variant={isCurrentPath(`/${locale}/history`) ? "primary" : "secondary"}
             >
-              <History className="app-nav-icon" aria-hidden="true" />
-              <span className="home-paper-button-label">{t("history")}</span>
-            </ProtectedLink>
+              <ProtectedLink
+                aria-current={isCurrentPath(`/${locale}/history`) ? "page" : undefined}
+                className="app-nav-primary"
+                href={`/${locale}/history`}
+              >
+                <AppIcon className="app-nav-icon" name="history" />
+                <span className="home-paper-button-label">{t("history")}</span>
+              </ProtectedLink>
+            </Button>
 
             <details className="app-shell-menu">
-              <summary
-                aria-current={isMorePath ? "page" : undefined}
-                className={cn(
-                  "home-paper-button app-menu-trigger",
-                  isMorePath && "app-menu-trigger-active"
-                )}
-              >
-                <span className="home-paper-button-label">{t("more")}</span>
-                <ChevronDown className="app-nav-icon app-menu-chevron" aria-hidden="true" />
-              </summary>
+              <Button asChild size="compact" variant={isMorePath ? "primary" : "secondary"}>
+                <summary
+                  aria-current={isMorePath ? "page" : undefined}
+                  className="app-menu-trigger"
+                >
+                  <span className="home-paper-button-label">{t("more")}</span>
+                  <AppIcon className="app-nav-icon app-menu-chevron" name="chevron-down" />
+                </summary>
+              </Button>
               <div className="app-menu-panel">
                 <ProtectedLink
                   aria-current={
@@ -112,7 +113,7 @@ function AppShellContent({ locale, children }: AppShellProps) {
                   )}
                   href={`/${locale}/preferences`}
                 >
-                  <SlidersHorizontal className="app-menu-link-icon" aria-hidden="true" />
+                  <AppIcon className="app-menu-link-icon" name="preferences" />
                   <span>{t("preferences")}</span>
                 </ProtectedLink>
                 <ProtectedLink
@@ -125,7 +126,7 @@ function AppShellContent({ locale, children }: AppShellProps) {
                   )}
                   href={`/${locale}/settings/openai-key`}
                 >
-                  <KeyRound className="app-menu-link-icon" aria-hidden="true" />
+                  <AppIcon className="app-menu-link-icon" name="api-key" />
                   <span>{t("openAiKey")}</span>
                 </ProtectedLink>
                 <Suspense fallback={<LocaleSwitchFallback label={t("language")} />}>
@@ -159,7 +160,7 @@ function AppShellContent({ locale, children }: AppShellProps) {
           )}
           href={`/${locale}/app`}
         >
-          <ClipboardList className="app-mobile-nav-icon" aria-hidden="true" />
+          <AppIcon className="app-mobile-nav-icon" name="recommend" />
           <span>{t("recommend")}</span>
         </ProtectedLink>
         <ProtectedLink
@@ -170,7 +171,7 @@ function AppShellContent({ locale, children }: AppShellProps) {
           )}
           href={`/${locale}/fridge`}
         >
-          <Refrigerator className="app-mobile-nav-icon" aria-hidden="true" />
+          <AppIcon className="app-mobile-nav-icon" name="fridge" />
           <span>{t("fridge")}</span>
         </ProtectedLink>
         <ProtectedLink
@@ -181,7 +182,7 @@ function AppShellContent({ locale, children }: AppShellProps) {
           )}
           href={`/${locale}/history`}
         >
-          <History className="app-mobile-nav-icon" aria-hidden="true" />
+          <AppIcon className="app-mobile-nav-icon" name="history" />
           <span>{t("history")}</span>
         </ProtectedLink>
         <details className="app-mobile-more">
@@ -189,7 +190,7 @@ function AppShellContent({ locale, children }: AppShellProps) {
             aria-current={isMorePath ? "page" : undefined}
             className={cn("app-mobile-nav-link", isMorePath && "app-mobile-nav-link-active")}
           >
-            <MoreHorizontal className="app-mobile-nav-icon" aria-hidden="true" />
+            <AppIcon className="app-mobile-nav-icon" name="more" />
             <span>{t("more")}</span>
           </summary>
           <div className="app-mobile-more-panel">
@@ -201,7 +202,7 @@ function AppShellContent({ locale, children }: AppShellProps) {
               )}
               href={`/${locale}/preferences`}
             >
-              <SlidersHorizontal className="app-menu-link-icon" aria-hidden="true" />
+              <AppIcon className="app-menu-link-icon" name="preferences" />
               <span>{t("preferences")}</span>
             </ProtectedLink>
             <ProtectedLink
@@ -214,7 +215,7 @@ function AppShellContent({ locale, children }: AppShellProps) {
               )}
               href={`/${locale}/settings/openai-key`}
             >
-              <KeyRound className="app-menu-link-icon" aria-hidden="true" />
+              <AppIcon className="app-menu-link-icon" name="api-key" />
               <span>{t("openAiKey")}</span>
             </ProtectedLink>
             <Suspense fallback={<LocaleSwitchFallback label={t("language")} />}>
@@ -246,7 +247,7 @@ function LocaleSwitchLinkWithSearch({ href, label }: { href: string; label: stri
 function LocaleSwitchLink({ href, label }: { href: string; label: string }) {
   return (
     <Link className="app-menu-link" href={href}>
-      <Languages className="app-menu-link-icon" aria-hidden="true" />
+      <AppIcon className="app-menu-link-icon" name="language" />
       <span>{label}</span>
     </Link>
   );
@@ -255,7 +256,7 @@ function LocaleSwitchLink({ href, label }: { href: string; label: string }) {
 function LocaleSwitchFallback({ label }: { label: string }) {
   return (
     <span className="app-menu-link" aria-disabled="true">
-      <Languages className="app-menu-link-icon" aria-hidden="true" />
+      <AppIcon className="app-menu-link-icon" name="language" />
       <span>{label}</span>
     </span>
   );
@@ -277,19 +278,22 @@ function ClerkAuthActions({
 
   if (isLoaded && !isSignedIn) {
     return (
-      <button
-        className="home-paper-button app-sign-in-button"
+      <Button
+        className="app-sign-in-button"
         onClick={() => requestSignIn(`/${locale}/app`)}
+        size="compact"
         type="button"
+        variant="secondary"
       >
         <span className="home-paper-button-label">{signInLabel}</span>
-      </button>
+      </Button>
     );
   }
 
   if (isLoaded && isSignedIn) {
     return (
-      <div className="app-user-button">
+      <div className="app-button-surface app-user-button">
+        <ButtonSkin tone="secondary" />
         <span className="app-user-name">{displayName}</span>
         <UserButton />
       </div>
@@ -303,12 +307,14 @@ function LocalAuthActions({ locale, signInLabel }: { locale: string; signInLabel
   const { requestSignIn } = useAuthModal();
 
   return (
-    <button
-      className="home-paper-button app-sign-in-button"
+    <Button
+      className="app-sign-in-button"
       onClick={() => requestSignIn(`/${locale}/app`)}
+      size="compact"
       type="button"
+      variant="secondary"
     >
       <span className="home-paper-button-label">{signInLabel}</span>
-    </button>
+    </Button>
   );
 }

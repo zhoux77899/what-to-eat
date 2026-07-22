@@ -1,10 +1,10 @@
 "use client";
 
-import { ShieldCheck, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useEffect, useState } from "react";
 
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
+import { AppIcon } from "@/components/ui/app-icon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getErrorTranslationKey, requestJson } from "@/lib/api-client";
@@ -106,18 +106,18 @@ export function OpenAiKeyWorkbench() {
       </label>
       <div className="app-action-row">
         <Button
-          className="home-paper-button app-paper-button-primary"
           disabled={!loaded || keyBusy || apiKey.trim().length === 0}
+          variant="primary"
         >
-          <ShieldCheck className="app-button-icon" aria-hidden="true" />
+          <AppIcon className="app-button-icon" name="secure-key" />
           <span className="home-paper-button-label">
             {saving ? t("saving") : t("save")}
           </span>
         </Button>
         <Button
-          className="home-paper-button app-paper-button-compact app-paper-button-secondary"
           disabled={!loaded || keyBusy || status === "not_configured"}
           onClick={validate}
+          size="compact"
           type="button"
           variant="secondary"
         >
@@ -126,13 +126,13 @@ export function OpenAiKeyWorkbench() {
           </span>
         </Button>
         <Button
-          className="home-paper-button app-paper-button-compact app-paper-button-danger"
           disabled={!loaded || keyBusy || !hasStoredKey}
           onClick={() => setDeleteOpen(true)}
+          size="compact"
           type="button"
-          variant="ghost"
+          variant="danger"
         >
-          <Trash2 className="app-button-icon" aria-hidden="true" />
+          <AppIcon className="app-button-icon" name="delete" />
           <span className="home-paper-button-label">{t("delete")}</span>
         </Button>
       </div>

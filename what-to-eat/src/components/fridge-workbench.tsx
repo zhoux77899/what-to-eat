@@ -1,11 +1,11 @@
 "use client";
 
-import { ImageOff, Pencil, Plus, RefreshCw, Trash2, X } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
+import { AppIcon } from "@/components/ui/app-icon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -242,7 +242,6 @@ export function FridgeWorkbench() {
           <div className="app-empty-state" role="alert">
             <p>{errorKey ? tErrors(errorKey) : null}</p>
             <Button
-              className="home-paper-button app-paper-button-secondary"
               onClick={() => void loadItems(true)}
               type="button"
               variant="secondary"
@@ -275,7 +274,7 @@ export function FridgeWorkbench() {
                       width={224}
                     />
                   ) : (
-                    <ImageOff className="app-image-frame-icon" />
+                    <AppIcon className="app-image-frame-icon" name="image-unavailable" />
                   )}
                 </div>
                 <div className="grid gap-2">
@@ -290,21 +289,20 @@ export function FridgeWorkbench() {
                   </div>
                   <div className="app-action-row app-action-row-compact">
                     <Button
-                      className="home-paper-button app-paper-button-compact app-paper-button-secondary"
                       disabled={
                         saving ||
                         deletingItemIds.includes(item.id) || retryingItemIds.includes(item.id)
                       }
                       onClick={() => startEditing(item)}
+                      size="compact"
                       type="button"
                       variant="secondary"
                     >
-                      <Pencil className="app-button-icon" aria-hidden="true" />
+                      <AppIcon className="app-button-icon" name="edit" />
                       <span className="home-paper-button-label">{t("edit")}</span>
                     </Button>
                     {item.imageStatus === "failed" ? (
                       <Button
-                        className="home-paper-button app-paper-button-compact app-paper-button-secondary"
                         disabled={
                           deletingItemIds.includes(item.id) ||
                           retryingItemIds.includes(item.id) ||
@@ -312,15 +310,15 @@ export function FridgeWorkbench() {
                           editingId === item.id
                         }
                         onClick={() => retryImage(item.id)}
+                        size="compact"
                         type="button"
                         variant="secondary"
                       >
-                        <RefreshCw className="app-button-icon" aria-hidden="true" />
+                        <AppIcon className="app-button-icon" name="retry" />
                         <span className="home-paper-button-label">{t("retryImage")}</span>
                       </Button>
                     ) : null}
                     <Button
-                      className="home-paper-button app-paper-button-compact app-paper-button-danger"
                       disabled={
                         editingId === item.id ||
                         savingItemId === item.id ||
@@ -328,10 +326,11 @@ export function FridgeWorkbench() {
                         retryingItemIds.includes(item.id)
                       }
                       onClick={() => setPendingDelete(item)}
+                      size="compact"
                       type="button"
-                      variant="ghost"
+                      variant="danger"
                     >
-                      <Trash2 className="app-button-icon" aria-hidden="true" />
+                      <AppIcon className="app-button-icon" name="delete" />
                       <span className="home-paper-button-label">{t("delete")}</span>
                     </Button>
                   </div>
@@ -388,17 +387,16 @@ export function FridgeWorkbench() {
           </label>
           <div className="app-action-row">
             <Button
-              className="home-paper-button app-paper-button-primary"
               disabled={saving || editingItemBusy}
+              variant="primary"
             >
-              <Plus className="app-button-icon" aria-hidden="true" />
+              <AppIcon className="app-button-icon" name="add" />
               <span className="home-paper-button-label">
                 {editingId ? t("saveChanges") : t("add")}
               </span>
             </Button>
             {editingId ? (
               <Button
-                className="home-paper-button app-paper-button-secondary"
                 disabled={saving}
                 onClick={() => {
                   if (savingOperationRef.current) return;
@@ -413,7 +411,7 @@ export function FridgeWorkbench() {
                 type="button"
                 variant="secondary"
               >
-                <X className="app-button-icon" aria-hidden="true" />
+                <AppIcon className="app-button-icon" name="close" />
                 <span className="home-paper-button-label">{t("cancel")}</span>
               </Button>
             ) : null}

@@ -1,6 +1,387 @@
 @import "../styles/tokens.css";
 @import "../styles/redesign.css";
+@import "../styles/button-skins.generated.css";
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Generated Japanese cooking-game UI assets. Runtime uses lossless WebP; PNG sources live beside them. */
+.app-generated-icon {
+  display: block;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+.app-button-surface {
+  position: relative;
+  isolation: isolate;
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  background-image: none;
+  box-shadow: none;
+  color: var(--color-ink);
+  transition: filter var(--motion-fast) ease, opacity var(--motion-fast) ease,
+    translate var(--motion-fast) ease;
+}
+
+.app-button-surface:hover,
+.app-button-surface:focus-visible,
+.app-button-surface:focus-within {
+  background-color: transparent;
+  background-image: none;
+  filter: saturate(1.04);
+  translate: 0 -1px;
+}
+
+.app-button-surface:active {
+  background-color: transparent;
+  background-image: none;
+  box-shadow: none;
+  filter: none;
+  translate: 0 1px;
+}
+
+.app-button-surface:is(:disabled, [aria-disabled="true"]) {
+  background-image: none;
+  box-shadow: none;
+  filter: grayscale(0.18);
+  opacity: 0.52;
+  translate: none;
+}
+
+.app-button-tone-primary {
+  color: white;
+  text-shadow: 0 1px 0 color-mix(in oklch, var(--color-outline) 70%, transparent);
+}
+
+.app-button-tone-secondary {
+  color: var(--color-ink);
+  text-shadow: none;
+}
+
+.app-button-tone-danger {
+  color: white;
+  text-shadow: 0 1px 0 color-mix(in oklch, var(--color-outline) 75%, transparent);
+}
+
+.app-button-ghost {
+  background: transparent;
+  color: var(--color-ink);
+  text-shadow: none;
+}
+
+.app-button-size-compact {
+  min-height: 44px;
+  padding: 8px 24px;
+  font-size: 0.875rem;
+}
+
+.app-button-size-default {
+  min-height: 44px;
+  padding: 8px 24px;
+  font-size: 0.875rem;
+}
+
+.app-button-size-hero {
+  min-height: 54px;
+  padding: 12px 32px;
+  font-size: 1.08rem;
+}
+
+.app-button-size-provider {
+  display: grid;
+  width: min(100%, 360px);
+  height: 64px;
+  min-height: 64px;
+  grid-template-columns: 40px minmax(0, 1fr) 40px;
+  padding: 10px 24px;
+  font-size: 1rem;
+}
+
+.app-button-skin {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  display: grid;
+  grid-template-columns:
+    var(--app-button-skin-left-track) minmax(0, 1fr)
+    var(--app-button-skin-right-track);
+  grid-template-rows:
+    var(--app-button-skin-top-track) minmax(0, 1fr)
+    var(--app-button-skin-bottom-track);
+  background-image: var(--app-button-skin-center);
+  background-position: center;
+  background-repeat: repeat;
+  background-size: 1px 1px;
+  border-radius: 5px;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+.app-button-skin-slice {
+  display: block;
+  min-width: 0;
+  min-height: 0;
+  background-repeat: no-repeat;
+}
+
+.app-button-skin-slice[data-slice="top-left"] {
+  z-index: 2;
+  grid-area: 1 / 1;
+  background-image: var(--app-button-skin-top-left);
+  background-position: left top;
+  background-size:
+    var(--app-button-skin-left-track)
+    var(--app-button-skin-top-track);
+}
+
+.app-button-skin-slice[data-slice="top"] {
+  position: relative;
+  z-index: 1;
+  left: -1px;
+  grid-area: 1 / 2;
+  width: calc(100% + 2px);
+  background-image: var(--app-button-skin-top);
+  background-position: center var(--app-button-skin-top-offset);
+  background-repeat: repeat-x;
+  background-size: 1px auto;
+}
+
+.app-button-skin-slice[data-slice="top-right"] {
+  z-index: 2;
+  grid-area: 1 / 3;
+  background-image: var(--app-button-skin-top-right);
+  background-position: right top;
+  background-size:
+    var(--app-button-skin-right-track)
+    var(--app-button-skin-top-track);
+}
+
+.app-button-skin-slice[data-slice="left"] {
+  position: relative;
+  z-index: 1;
+  top: -1px;
+  grid-area: 2 / 1;
+  height: calc(100% + 2px);
+  background-image: var(--app-button-skin-left);
+  background-position: var(--app-button-skin-left-offset) center;
+  background-repeat: repeat-y;
+  background-size: auto 1px;
+}
+
+.app-button-skin-slice[data-slice="right"] {
+  position: relative;
+  z-index: 1;
+  top: -1px;
+  grid-area: 2 / 3;
+  height: calc(100% + 2px);
+  background-image: var(--app-button-skin-right);
+  background-position: calc(100% - var(--app-button-skin-right-offset)) center;
+  background-repeat: repeat-y;
+  background-size: auto 1px;
+}
+
+.app-button-skin-slice[data-slice="bottom-left"] {
+  z-index: 2;
+  grid-area: 3 / 1;
+  background-image: var(--app-button-skin-bottom-left);
+  background-position: left bottom;
+  background-size:
+    var(--app-button-skin-left-track)
+    var(--app-button-skin-bottom-track);
+}
+
+.app-button-skin-slice[data-slice="bottom"] {
+  position: relative;
+  z-index: 1;
+  left: -1px;
+  grid-area: 3 / 2;
+  width: calc(100% + 2px);
+  background-image: var(--app-button-skin-bottom);
+  background-position: center calc(100% - var(--app-button-skin-bottom-offset));
+  background-repeat: repeat-x;
+  background-size: 1px auto;
+}
+
+.app-button-skin-slice[data-slice="bottom-right"] {
+  z-index: 2;
+  grid-area: 3 / 3;
+  background-image: var(--app-button-skin-bottom-right);
+  background-position: right bottom;
+  background-size:
+    var(--app-button-skin-right-track)
+    var(--app-button-skin-bottom-track);
+}
+
+.home-paper-button-icon {
+  width: 30px;
+  height: 30px;
+}
+
+.app-nav-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.app-menu-link-icon {
+  width: 32px;
+  height: 32px;
+}
+
+.app-button-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.app-inline-icon {
+  width: 26px;
+  height: 26px;
+}
+
+.app-image-frame-icon {
+  width: 64px;
+  height: 64px;
+}
+
+.app-stepper-button {
+  display: grid;
+  place-items: center;
+  padding: 3px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.app-stepper-button:hover {
+  background: transparent;
+  filter: brightness(1.04) saturate(1.08);
+  translate: 0 -1px;
+}
+
+.app-stepper-button:active {
+  filter: brightness(0.97);
+  translate: 0 1px;
+}
+
+.app-stepper-button:disabled {
+  filter: grayscale(0.5);
+  opacity: 0.42;
+  translate: none;
+}
+
+.app-stepper-button .app-generated-icon,
+.app-stepper-icon {
+  width: 34px;
+  height: 34px;
+}
+
+.auth-modal-close {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  transition: filter var(--motion-fast) ease, translate var(--motion-fast) ease;
+}
+
+.auth-modal-close:hover {
+  filter: brightness(1.06) saturate(1.08);
+  translate: 0 -1px;
+}
+
+.auth-modal-close:active {
+  filter: brightness(0.96);
+  translate: 0 1px;
+}
+
+.auth-modal-close-icon {
+  width: 36px;
+  height: 36px;
+}
+
+.auth-provider-list {
+  justify-items: center;
+}
+
+.auth-provider-button {
+  font-weight: 760;
+}
+
+.app-user-button {
+  position: relative;
+  isolation: isolate;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  min-height: 44px;
+  padding-inline: 24px;
+}
+
+.app-user-button > :not(.app-button-skin) {
+  position: relative;
+  z-index: 1;
+}
+
+.auth-provider-icon {
+  display: block;
+  width: 40px;
+  height: 40px;
+  margin-inline: auto;
+  object-fit: contain;
+}
+
+.auth-provider-button-label {
+  text-align: center;
+}
+
+.home-language-toggle {
+  width: fit-content;
+  justify-self: end;
+}
+
+.app-history-entry::after {
+  left: 10px;
+}
+
+.app-history-timeline-marker {
+  position: absolute;
+  z-index: 1;
+  top: 7px;
+  left: -2px;
+  width: 25px;
+  height: 25px;
+}
+
+.app-history-entry-chevron {
+  width: 30px;
+  height: 30px;
+}
+
+.app-mobile-nav-icon {
+  width: 32px;
+  height: 32px;
+}
+
+@media (max-width: 860px) {
+  .home-paper-button-icon,
+  .app-nav-icon,
+  .app-button-icon {
+    width: 26px;
+    height: 26px;
+  }
+
+  .app-mobile-nav-icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .app-history-timeline-marker {
+    left: -3px;
+  }
+}
